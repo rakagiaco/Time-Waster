@@ -15,14 +15,16 @@ let config = {
     physics: {
         default: 'arcade',
         arcade: {
-            //debug: true,
+            debug: true,
             gravity: {
                 x: 0,
                 y: 0
             }
         }
     },
-    scene: []
+    zoom: 2,
+    scene: [Loader, World]
 }
 
 let game = new Phaser.Game(config)
+
