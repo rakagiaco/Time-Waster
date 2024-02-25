@@ -1,5 +1,8 @@
 # Main Stuff
 - load all assets
-- program base world with tilemap
 - add all characters
-- add basic movement for characters
+
+- begin inheritance chain construction
+- build game state machin
+- build npc state machine
+- build player state machine

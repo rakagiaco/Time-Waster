@@ -116,18 +116,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":4,
-                 "name":"enemy_spawn",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":300,
-                 "y":914
-                }, 
-                {
-                 "height":0,
                  "id":7,
                  "name":"enemy_spawn",
                  "point":true,

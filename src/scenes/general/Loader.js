@@ -21,6 +21,14 @@ class Loader extends Phaser.Scene{
         this.load.image('npc-1', '/img/npc-1.png')
         this.load.image('npc-2', '/img/npc-1.png')
         this.load.image('player', '/img/player.png')
+
+        //load quests
+        this.load.json('quest-1', '/quests/quest-1.json')
+        this.load.json('quest-2', '/quests/quest-2.json')
+        this.load.json('quest-3', '/quests/quest-3.json')
+        this.load.json('quest-4', '/quests/quest-4.json')
+        this.load.json('quest-5', '/quests/quest-5.json')
+        
     }
 
     create(){this.scene.start('worldScene')}

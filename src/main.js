@@ -22,9 +22,10 @@ let config = {
             }
         }
     },
-    zoom: 2,
     scene: [Loader, World]
 }
 
 let game = new Phaser.Game(config)
+
+let keyUp, keyDown, keyLeft, keyRight
 
