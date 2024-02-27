@@ -123,8 +123,44 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":186,
-                 "y":905.5
+                 "x":92.6666666666667,
+                 "y":922.833333333333
+                }, 
+                {
+                 "height":0,
+                 "id":9,
+                 "name":"enemy_spawn",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":40,
+                 "y":980
+                }, 
+                {
+                 "height":0,
+                 "id":10,
+                 "name":"enemy_spawn",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":178.666666666667,
+                 "y":977.333333333333
+                }, 
+                {
+                 "height":0,
+                 "id":12,
+                 "name":"enemy_spawn",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":136,
+                 "y":922.666666666667
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -133,7 +169,7 @@
          "y":0
         }],
  "nextlayerid":3,
- "nextobjectid":8,
+ "nextobjectid":15,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.10.2",

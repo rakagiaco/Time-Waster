@@ -4,23 +4,7 @@ class Player extends Entity{
 
         /* this.FSM = new StateMachine('vanilla', {
             vanilla: new mainState(),
-            fire: new fireState(),
-            water: new waterState(),
-            earth: new earthState(),
-            air: new airState(),
-            fireAir: new fireAirState(),
-            fireEarth: new fireEarthState(),
-            fireWater: new fireWaterState(),
-            airEarth: new airEarthState(),
-            airWater: new airWaterState(),
-            earthWater: new earthWaterState(),
-            fireAirEarth: new fireAirEarthState(),
-            fireAirWater: new fireAirWaterState(),
-            airEarthWater: new airEarthWaterState(),
-            earthWaterFire: new earthWaterFireState(),
-            meta: new metaState()
         }, [scene, this])   */
-
 
         //camera
         scene.cameras.main.startFollow(this, true, 0.25,0.25)
@@ -28,14 +12,10 @@ class Player extends Entity{
 
         //state machines
         this.animsFSM = new StateMachine('idle', {
-            idle: new idleState(),
-            moving: new movingState()
+            idle: new idlePlayerState(),
+            moving: new movingState(),
+            interacting: new interactionPlayerState(),
         }, [scene, this])
-
-
-
-        //physical
-        this.VELOCITY = 300
 
         //input
         keyUp = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
@@ -46,20 +26,23 @@ class Player extends Entity{
 
     update(){
         this.animsFSM.step()
-        super.update()
+       // console.log(this.y)
     }
 }
 
-class idleState extends State{
+class idlePlayerState extends State{
     enter(scene, player){
         console.log('in idle')
         player.setVelocity(0)
     }
 
-    execute(){
-        if(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown){
-            this.stateMachine.transition('moving')
-            return
+
+    execute(scene, player){
+        if(player.canMove){
+            if(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown){
+                this.stateMachine.transition('moving')
+                return
+            }
         }
     }
 }
@@ -92,5 +75,11 @@ class movingState extends State{
         moveDirection.normalize()
      
         player.setVelocity(player.VELOCITY * moveDirection.x, player.VELOCITY * moveDirection.y)
+    }
+}
+
+class interactionPlayerState extends State{
+    enter(scene, player){
+        player.setVelocity(0)
     }
 }
