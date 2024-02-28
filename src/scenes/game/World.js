@@ -33,17 +33,19 @@ class World extends Phaser.Scene{
 
         console.log(this.cameras.main.x)
         //spawn entities
+        this.enemies = [] // physics group overrites properties
+        objlayer.objects.forEach(element => {
+            if(element.name === 'enemy_spawn')
+            this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 150, [element.x, element.y]))
+        });
         this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
         
-        objlayer.objects.forEach(element => {
-            if(element.name === 'enemy_spawn')
-                new Enemy(this, element.x, element.y, 'enemy-1', 0, undefined, 150, [element.x, element.y])
-        });
-             
+        
 
         //debug code
         /*************************************** */
+        this.p1.VELOCITY = 400
         let debugToggle = this.input.keyboard.addKey('F')
         this.physics.world.drawDebug = false
         debugToggle.on('down', ()=> {

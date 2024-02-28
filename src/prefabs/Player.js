@@ -9,7 +9,6 @@ class Player extends Entity{
         //camera
         scene.cameras.main.startFollow(this, true, 0.25,0.25)
 
-
         //state machines
         this.animsFSM = new StateMachine('idle', {
             idle: new idlePlayerState(),
@@ -28,6 +27,9 @@ class Player extends Entity{
         this.animsFSM.step()
        // console.log(this.y)
     }
+
+    handleCollision(){
+    }
 }
 
 class idlePlayerState extends State{
@@ -35,7 +37,6 @@ class idlePlayerState extends State{
         console.log('in idle')
         player.setVelocity(0)
     }
-
 
     execute(scene, player){
         if(player.canMove){
@@ -80,6 +81,7 @@ class movingState extends State{
 
 class interactionPlayerState extends State{
     enter(scene, player){
+        console.log('in player interaction')
         player.setVelocity(0)
     }
 }

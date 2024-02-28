@@ -9,7 +9,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         scene.events.on('update', this.update, this)
 
         //physical properties
-        this.VELOCITY = 300
+        this.VELOCITY = 100
         this.setCollideWorldBounds(true)
 
         //nonphysical
@@ -18,11 +18,15 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.isAlive = true
         this.HIT_POINTS = _hitPoints
         this.INTERVAL_ID = undefined
-        this.reset = true
+        this.reset_e = true
         this.canMove = true
-        
-        this.setScale(2.5)
-        this.setInteractive()      
+        this.entity_text = scene.add.text(this.x, this.y, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0)
+        this.setScale(2.5)    
+
+        scene.physics.add.collider(this, scene.enemies, ()=>{
+            //console.log(`collision between ${this.entity_type} and an enemy`)
+            this.handleCollision()
+        })
     }
 
 
@@ -34,5 +38,12 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         if(!this.isAlive){
             this.destroy()
         }
+    }
+
+    //derived classes override this
+    handleCollision(){}
+
+    getPosition(){
+        return [this.x, this.y]
     }
 }

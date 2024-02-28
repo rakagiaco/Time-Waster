@@ -1,8 +1,9 @@
-class Ally extends NPC{
+class Ally extends Entity{
     constructor(scene, x, y, texture, frames, _name='NPC-friendly', _hitPoints, _quests = []){
         super(scene, x, y, texture, frames, _name, _hitPoints)
 
         this.quests = _quests
+        this.setInteractive()
 
         this.FSM = new StateMachine('idle',{
             idle: new idleAllyState(),
@@ -34,6 +35,10 @@ class Ally extends NPC{
 
     update(){
         this.FSM.step()
+    }
+
+    handleCollision(){
+
     }
 }
 
@@ -68,7 +73,7 @@ class interactionAllyState extends State{
         // Create a rectangle to act as the background of the popup
         const window = scene.add.graphics();
         window.fillStyle(0x000000, 0.75); // Color and alpha (transparency)
-        window.fillRect(scene.cameras.main.scrollX + scene.cameras.main.width/4 , scene.cameras.main.scrollY + scene.cameras.main.height/8, 400, 500);
+        window.fillRect(scene.cameras.main.scrollX + scene.cameras.main.width/4 , scene.cameras.main.scrollY + scene.cameras.main.height/8, 500, 600);
 
         // Position and size of the rectangle
         closeBTN = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width/4, scene.cameras.main.scrollY + scene.cameras.main.height/8, "exit", {fill: '#FFFFFF'})
