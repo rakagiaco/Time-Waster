@@ -8,6 +8,8 @@ class Enemy extends Entity{
             idle: new idleEnemyState(),
             pursuit: new pursuitEnemyState()
         }, [scene, this])
+
+        
         //nonphysical
         this.spawnOrigin = _origin
         this.detectionDistance = 150
@@ -16,7 +18,7 @@ class Enemy extends Entity{
 
 
         //physical
-        this.VELOCITY = 50
+        super.VELOCITY = 50
     }
 
     init(){
@@ -24,16 +26,12 @@ class Enemy extends Entity{
     }
 
     update(){
-
         this.FSM.step()
-        
-        this.entity_text.x = this.x
-        this.entity_text.y = this.y
+        this.updateNamePlate()
     }
 
     //collision handler
     handleCollision(){
-        this.setVelocity(-this.body.velocity.x, -this.body.velocity.y)
     }
 
 
@@ -82,7 +80,7 @@ function resetPosition(enemy, scene){
     enemy.setVelocity(0)
     enemy.setVelocityY(enemy.VELOCITY)  
     if(enemy.y >= 899){
-        scene.time.delayedCall(5000, ()=>{enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(3500 - 1750 + 1)) + 1750), enemy, scene)
+        scene.time.delayedCall(5000, ()=>{enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
         })
     }
 }
@@ -131,7 +129,7 @@ function listen(scene, enemy){
 class idleEnemyState extends State{
     enter(scene, enemy){
         console.log('in enemy idle')
-        enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(3500 - 1750 + 1)) + 1750), enemy, scene)
+        enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
     }
 
     execute(scene, enemy){

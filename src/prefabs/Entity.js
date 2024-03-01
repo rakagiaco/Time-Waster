@@ -35,9 +35,6 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
     create(){}
 
     update(){
-        if(!this.isAlive){
-            this.destroy()
-        }
     }
 
     //derived classes override this
@@ -45,5 +42,10 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
 
     getPosition(){
         return [this.x, this.y]
+    }
+
+    updateNamePlate(){
+        this.entity_text.x = this.x
+        this.entity_text.y = this.y
     }
 }
