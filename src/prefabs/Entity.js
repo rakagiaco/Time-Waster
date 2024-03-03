@@ -22,6 +22,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.canMove = true
         this.entity_text = scene.add.text(this.x, this.y, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0)
         this.setScale(2.5)    
+        this.audioContext = []
 
         scene.physics.add.collider(this, scene.enemies, ()=>{
             //console.log(`collision between ${this.entity_type} and an enemy`)

@@ -6,6 +6,8 @@ class Player extends Entity{
             vanilla: new mainState(),
         }, [scene, this])   */
 
+        //properties
+
         //camera
         scene.cameras.main.startFollow(this, true, 0.25,0.25)
 
@@ -14,6 +16,7 @@ class Player extends Entity{
             idle: new idlePlayerState(),
             moving: new movingState(),
             interacting: new interactionPlayerState(),
+            swim: new inWaterPlayerState()
         }, [scene, this])
 
         //input
@@ -30,35 +33,8 @@ class Player extends Entity{
 
     handleCollision(){
     }
-}
 
-class idlePlayerState extends State{
-    enter(scene, player){
-        console.log('in idle')
-        player.setVelocity(0)
-    }
-
-    execute(scene, player){
-        if(player.canMove){
-            if(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown){
-                this.stateMachine.transition('moving')
-                return
-            }
-        }
-    }
-}
-
-class movingState extends State{
-    enter(){
-        console.log('in moving')
-    }
-
-    execute(scene, player){
-        if(!(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown)) {
-            this.stateMachine.transition('idle')
-            return
-        }
-        
+    handleMovement(){        
         // handle movement
         let moveDirection = new Phaser.Math.Vector2(0, 0)
         if(keyUp.isDown){
@@ -75,13 +51,65 @@ class movingState extends State{
         // normalize movement vector, update position, and play proper animation
         moveDirection.normalize()
      
-        player.setVelocity(player.VELOCITY * moveDirection.x, player.VELOCITY * moveDirection.y)
+        this.setVelocity(this.VELOCITY * moveDirection.x, this.VELOCITY * moveDirection.y)
+    }
+    
+}
+
+
+class idlePlayerState extends State{
+    enter(scene, player){
+        console.log('in player: idle')
+        player.setVelocity(0)
+    }
+
+    execute(scene, player){
+        if(player.canMove){
+            if(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown){
+                this.stateMachine.transition('moving')
+                return
+            }
+        }
+    }
+}
+
+class movingState extends State{
+    enter(scene,player){
+        console.log('in player: moving')
+        scene.sound.play('walking', {rate: 2})
+    }
+
+    execute(scene, player){
+        if(!(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown)) {
+            scene.sound.stopAll()
+            this.stateMachine.transition('idle')
+        }else{
+            player.handleMovement()
+        }
     }
 }
 
 class interactionPlayerState extends State{
     enter(scene, player){
-        console.log('in player interaction')
+        console.log('in player: interaction')
         player.setVelocity(0)
     }
+}
+
+class inWaterPlayerState extends State{
+    enter(scene, player){
+        console.log('in player: water state')
+        player.VELOCITY = player.VELOCITY / 2
+        scene.sound.play('in-water')
+    }
+
+    execute(scene, player){
+        player.handleMovement()
+        if(!scene.physics.overlap(player, scene.watersprite)){
+            scene.sound.stopAll()
+            player.VELOCITY = player.VELOCITY*2
+            this.stateMachine.transition('idle')
+        }
+    }
+
 }

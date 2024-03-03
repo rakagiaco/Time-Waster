@@ -13,11 +13,12 @@ class World extends Phaser.Scene{
     
         //load map
         const map = this.add.tilemap('tilemapJSON')
-        const tileset = map.addTilesetImage('base (1)', 'base-tileset')
+        const tileset = map.addTilesetImage('base_tileset', 'base-tileset')
         const bgLayer = map.createLayer('Background', tileset)
         const playerSpawn = map.findObject('Player/NPC', obj => obj.name === 'p_spawn')
         const npc1Spawn = map.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
         const objlayer = map.getObjectLayer('Player/NPC')
+
         // const enemySpawn = map.findObject('Player/NPC', obj => obj.name === 'enemy_spawn')
         
         //camera stuff
@@ -32,6 +33,15 @@ class World extends Phaser.Scene{
         }
 
         console.log(this.cameras.main.x)
+
+
+        //spawn sprites
+         
+        this.watersprite = this.physics.add.sprite(1000,200, 'water-pond', 0).setScale(5).setImmovable(true)
+        this.watersprite.anims.play('water-moving', true)
+
+       // this.mountains = this.physics.add.sprite(3500, 1250, 'mountains', 0).setScale(3).setRotation(2)
+
         //spawn entities
         this.enemies = [] // physics group overrites properties
         objlayer.objects.forEach(element => {
@@ -41,11 +51,17 @@ class World extends Phaser.Scene{
         this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
         
-        
+        this.physics.add.overlap(this.p1, this.watersprite, ()=>{
+            if(this.p1.animsFSM.state != 'swim'){
+                this.sound.stopAll()
+                this.p1.animsFSM.transition('swim')
+            }
+        })
+
 
         //debug code
         /*************************************** */
-        this.p1.VELOCITY = 400
+        this.p1.VELOCITY = 1000
         let debugToggle = this.input.keyboard.addKey('F')
         this.physics.world.drawDebug = false
         debugToggle.on('down', ()=> {
@@ -60,6 +76,8 @@ class World extends Phaser.Scene{
 
     }
 
-    update(){}
+    update(){
+       
+    }
     
 }
