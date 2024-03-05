@@ -32,11 +32,11 @@ class World extends Phaser.Scene{
             this.quests.push(this.cache.json.get(`quest-${i + 1}`)) 
         }
 
-        console.log(this.cameras.main.x)
+        let x = CreateQuestObject(this.quests[0])
 
+        console.log(x)
 
         //spawn sprites
-         
         this.watersprite = this.physics.add.sprite(1000,200, 'water-pond', 0).setScale(5).setImmovable(true)
         this.watersprite.anims.play('water-moving', true)
 
@@ -46,7 +46,7 @@ class World extends Phaser.Scene{
         this.enemies = [] // physics group overrites properties
         objlayer.objects.forEach(element => {
             if(element.name === 'enemy_spawn')
-            this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 150, [element.x, element.y]))
+            this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 10, [element.x, element.y]))
         });
         this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
@@ -59,7 +59,7 @@ class World extends Phaser.Scene{
         })
 
 
-        //debug code
+        //debug co
         /*************************************** */
         this.p1.VELOCITY = 1000
         let debugToggle = this.input.keyboard.addKey('F')
@@ -80,4 +80,21 @@ class World extends Phaser.Scene{
        
     }
     
+}
+
+
+function CreateQuestObject(jsonData){
+    let returnObj = {
+        "questnumber" : jsonData.questdata.questnumber,
+        "verb" : jsonData.questdata.verb,
+        "type" : jsonData.questdata.type,
+        "ammount" : jsonData.questdata.ammount,
+        "actual" : 0,
+        "requiredquests" : {
+            "num" : jsonData.questdata.requiredquests.num,
+            "names" : jsonData.questdata.requiredquests.names
+        }
+    }
+
+    return returnObj
 }

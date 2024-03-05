@@ -1,11 +1,17 @@
 {   
-    "quest_number": 2,
     "name" : "Further Concerns",
     "description" : "Well, now that I have these herbs, I can analyze them. Ah yes, I see now. It seems the herbs indeed possess some form of magic, or magical essence that is. This essence is similar to that of the essence that scoured the valley centuries ago. Although It is being nullified by something, some unknown malignance, possibly. You see Traveler, I think that this valley hides many of its secrets in plain sight.The herbs have told us some basic information about the current state of the valley. Alas, if we are to continue in this exploration for the source of the valley's famine, we must continue with the thorough investigation of the valley.Traveler, there are some Nepias just to the south of here. Their blood contains a special property that reverses the nullification we see in these herbs. I want you to slay some of them, and bring me their blood.",
     "requirements" : "___ wants you to collect 10 phials of Nepias blood",
-    "completion-text" : "There you are! I have been waiting quite some time… Have you gathered what  I asked of you ?",
-    "required-quests" : {
-        "num" : 1,
-        "name" : "quest-1"
+    "completiontext" : "There you are! I have been waiting quite some time… Have you gathered what  I asked of you ?",
+       
+    "questdata" : {
+        "questnumber": 2,
+        "verb" : "kill",
+        "type" : "Nepian Scout",
+        "ammount" : 10,
+        "requiredquests" : {
+            "num" : 1,
+            "names" : ["quest-1"]
+        }
     }
 }

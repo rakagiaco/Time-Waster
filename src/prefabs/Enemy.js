@@ -6,13 +6,15 @@ class Enemy extends Entity{
         //fsm
         this.FSM = new StateMachine('idle', {
             idle: new idleEnemyState(),
-            pursuit: new pursuitEnemyState()
+            pursuit: new pursuitEnemyState(),
+            combat: new combatEnemyState(),
+            dead: new deadEnemyState()
         }, [scene, this])
 
         
         //nonphysical
         this.spawnOrigin = _origin
-        this.detectionDistance = 150
+        this.detectionDistance = 200
         this.setOrigin(0)
         this.entity_text.setAlpha(1)
 
@@ -26,15 +28,21 @@ class Enemy extends Entity{
     }
 
     update(){
-        this.FSM.step()
-        this.updateNamePlate()
+        if(this.isAlive){
+            super.update()
+            super.updateNamePlate()
+            this.FSM.step()
+        }
     }
 
     //collision handler
     handleCollision(){
+        console.log('enemy collide')
     }
 
-
+    handleClick(){
+        console.log('enemy click')
+    }
 }
 
 //-------------------------------------------------------------------------------
@@ -75,7 +83,6 @@ function updateMovement(enemy, scene){
 
 //seems like this kind of works
 function resetPosition(enemy, scene){
-    console.log(enemy.y)
     clearInterval(enemy.INTERVAL_ID)
     enemy.setVelocity(0)
     enemy.setVelocityY(enemy.VELOCITY)  
@@ -116,6 +123,7 @@ function listen(scene, enemy){
     let x1 = x[0]
     let y1 = x[1]
 
+    //true if player is in range (150 px)
     if(x1 > (enemy.x-enemy.detectionDistance) && x1 < (enemy.x+enemy.detectionDistance) && y1 > (enemy.y-enemy.detectionDistance) && y1 < (enemy.y+enemy.detectionDistance)){
         return true
     } else {
@@ -128,12 +136,11 @@ function listen(scene, enemy){
 
 class idleEnemyState extends State{
     enter(scene, enemy){
-        console.log('in enemy idle')
         enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
     }
 
     execute(scene, enemy){
-        if(listen(scene, enemy)){
+        if(listen(scene, enemy)){ //player is in range
             this.stateMachine.transition('pursuit')
         }
         if(enemy.y < 900){ //maybe use config here for better properties
@@ -145,7 +152,6 @@ class idleEnemyState extends State{
 class pursuitEnemyState extends State{
     enter(scene, enemy){
         clearInterval(enemy.INTERVAL_ID)
-        console.log('in pursuit state')
     }
 
     execute(scene, enemy){
@@ -154,4 +160,48 @@ class pursuitEnemyState extends State{
         }
         pursuit(scene, enemy)
     }
+}
+
+class combatEnemyState extends State{
+    enter(scene, enemy){
+    }
+
+    execute(scene, enemy){
+        enemy.setVelocity(0)
+    }
+}
+
+
+class deadEnemyState extends State{
+    enter(scene, enemy){
+        console.log('enemy dying')
+
+        //die
+        enemy.isAlive = false
+        clearInterval(enemy.INTERVAL_ID)   
+        enemy.entity_text.destroy()
+
+        //turn off physics
+        enemy.setVelocity(0)
+        enemy.body.enable = false
+
+        //get info from players current quest, check verb
+        //if verb is kill then check type
+        let alias = scene.p1.questStatus
+        if(alias.finished === false){
+            if(alias.currentQuest.verb === 'kill' && alias.currentQuest.type == enemy.entity_type){
+                if(alias.currentQuest.ammount > alias.currentQuest.actual){
+                    alias.currentQuest.actual += 1
+                }
+            }
+        }
+
+        let newSpawn = enemy.spawnOrigin
+        let tmpType = enemy.entity_type
+        scene.time.delayedCall(15000, () => {
+            enemy.destroy()
+            scene.enemies.push(new Enemy(scene, newSpawn[0], newSpawn[1], 'enemy-1', 0, tmpType, 10, [newSpawn[0], newSpawn[1]]))
+        }) // remove enemy from scene after appropritte time to loot
+    }
+
 }

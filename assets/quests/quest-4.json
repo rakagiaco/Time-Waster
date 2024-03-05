@@ -1,6 +1,16 @@
 {   
-    "quest_number": 4,
     "name" : "The Frozen Heart of the Nepian King",
     "description" : "INSERT DESCRIPTION",
-    "requirements" : "INSERT REQUIREMENTS"
+    "requirements" : "INSERT REQUIREMENTS",
+    "completiontext" : "Traveler! Welcome back! Have you collected what is required?",
+    "questdata" : {
+        "questnumber": 4,
+        "verb" : "kill",
+        "type" : "Nepian Scout",
+        "ammount" : 10,
+        "requiredquests" : {
+            "num" : 1,
+            "names" : ["quest-1"]
+        }
+    }
 }

@@ -11,38 +11,61 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         //physical properties
         this.VELOCITY = 100
         this.setCollideWorldBounds(true)
+        this.setScale(2.5)   
+        this.setInteractive()
 
         //nonphysical
         this.parentScene = scene
         this.entity_type = _name
+
+        //health
         this.isAlive = true
         this.HIT_POINTS = _hitPoints
+        
+
+        //timing, reset
         this.INTERVAL_ID = undefined
         this.reset_e = true
         this.canMove = true
-        this.entity_text = scene.add.text(this.x, this.y, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0)
-        this.setScale(2.5)    
+        this.entity_text = scene.add.text(this.x, this.y, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0) //nameplate 
+
+
+        //damage dealing properties
+        this.lightAttack_dmg = undefined
+        this.heavyAttack_dmg = undefined
+
+        //wtf is this cj...
         this.audioContext = []
 
-        scene.physics.add.collider(this, scene.enemies, ()=>{
+
+        //everything collifes with enemies
+        scene.physics.add.collider(this, scene.enemies, (object, enemy)=>{
             //console.log(`collision between ${this.entity_type} and an enemy`)
-            this.handleCollision()
+            this.handleCollision(enemy)
         })
+
+
+
+        this.on('pointerdown', ()=>{
+            console.log(`entity-click ${this.entity_type}`)
+            this.handleClick()
+        })  
     }
 
 
-    init(){}
-    preload(){}
-    create(){}
+    //derived classes override this
+    handleCollision(){}
+    handleClick(){}
 
     update(){
     }
 
-    //derived classes override this
-    handleCollision(){}
-
     getPosition(){
         return [this.x, this.y]
+    }
+
+    getVelocity(){
+        return [this.body.velocity.x, this.body.velocity.y]
     }
 
     updateNamePlate(){
