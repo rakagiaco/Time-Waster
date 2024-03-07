@@ -5,12 +5,8 @@
     "completiontext" : "Traveler! Welcome back! Have you collected what is required?",
     "questdata" : {
         "questnumber": 3,
-        "verb" : "kill",
-        "type" : "Nepian Scout",
-        "ammount" : 10,
-        "requiredquests" : {
-            "num" : 1,
-            "names" : ["quest-1"]
-        }
+        "verb" : "collect",
+        "type" : "Greater Nepias Blood",
+        "ammount" : 10
     }
 }

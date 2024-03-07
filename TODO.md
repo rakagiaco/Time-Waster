@@ -1,13 +1,14 @@
 # Main Stuff
-- load all assets
-- add all characters
 
-- art
-- collideable terrain
-- anims
-    -player npc enemy
-        -attack
-        -walk
 
--quest state 
--main player quest state
+- YOU NEED TO DO ITEMS 
+
+
+- playtest a bunch
+    - might be bugs in the enemy interval clearing still
+
+- implement full quest chain progressoin
+    - completion logic for each quest
+
+
+- refactor the code base its actually foul

@@ -17,9 +17,10 @@ class Player extends Entity{
        
         //quest tracker > could easily be expanded to hold multiple at once
         this.questStatus = {
-            'number' : 0,
+            number : 0,
             finished: true,
-            currentQuest: undefined // this holds quest obj
+            currentQuest: undefined, // this holds quest obj
+            completedQuests: []
         }
 
 
@@ -115,7 +116,7 @@ class Player extends Entity{
             }
         }
     }
-w
+
     handleClick(){
         console.log(this.questStatus)
     }
@@ -145,13 +146,13 @@ w
             this.pkg.attack_type = 'light'
             this.pkg.isAttacking = true
             this.pkg.dmg = Math.round(Math.random() * 15) + 10
-            // console.log(this.pkg.dmg)
+            console.log(this.pkg.dmg)
    
         } else if (keyAttackHeavy.isDown){
             this.pkg.attack_type = 'heavy'
             this.pkg.isAttacking = true
             this.pkg.dmg = Math.round(Math.random() *30) + 20  
-            // console.log(this.pkg.dmg)
+            console.log(this.pkg.dmg)
         } else {
             this.pkg.attack_type = undefined
             this.pkg.isAttacking = false
@@ -162,21 +163,13 @@ w
     displayCurrentQuests(){
         if(this.questStatus.number !== 0 && this.questStatus.finished === false){
             this.questTrackerTxtTitle.setAlpha(1)
+
             let alias = this.questStatus.currentQuest
             this.questTrackerTxtBody.text = alias.verb + ' ' +  alias.ammount + ' ' +  alias.type + ' ' + alias.actual + '/' + alias.ammount
             this.questTrackerTxtBody.setAlpha(1)
-
-            /*  let returnObj = {
-        "questnumber" : jsonData.questdata.questnumber,
-        "verb" : jsonData.questdata.verb,
-        "type" : jsonData.questdata.type,
-        "ammount" : jsonData.questdata.ammount,
-        "actual" : 0,
-        "requiredquests" : {
-            "num" : jsonData.questdata.requiredquests.num,
-            "names" : jsonData.questdata.requiredquests.names
-        }
-    }*/
+        } else {
+            this.questTrackerTxtTitle.setAlpha(0)
+            this.questTrackerTxtBody.setAlpha(0)
         }
     }
 }

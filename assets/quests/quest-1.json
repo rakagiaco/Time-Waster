@@ -8,10 +8,6 @@
         "questnumber": 1,
         "verb" : "kill",
         "type" : "Nepian Scout",
-        "ammount" : 10,
-        "requiredquests" : {
-            "num" : 0,
-            "names" : ["none"]
-        }
+        "ammount" : 1
     }
 }

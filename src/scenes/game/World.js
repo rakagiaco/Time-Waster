@@ -28,27 +28,36 @@ class World extends Phaser.Scene{
 
         //encapsulate quests 
         this.quests = []
-        for(let i = 0; i < 5; i++){
+        for(let i = 0; i < ammountOfQuests; i++){
             this.quests.push(this.cache.json.get(`quest-${i + 1}`)) 
         }
 
-        let x = CreateQuestObject(this.quests[0])
-
-        console.log(x)
 
         //spawn sprites
         this.watersprite = this.physics.add.sprite(1000,200, 'water-pond', 0).setScale(5).setImmovable(true)
         this.watersprite.anims.play('water-moving', true)
 
-       // this.mountains = this.physics.add.sprite(3500, 1250, 'mountains', 0).setScale(3).setRotation(2)
 
         //spawn entities
         this.enemies = [] // physics group overrites properties
         objlayer.objects.forEach(element => {
-            if(element.name === 'enemy_spawn')
-            this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 10, [element.x, element.y]))
-        });
+            if(element.name === 'enemy_spawn'){
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 10, [element.x, element.y]))
+            }else if (element.name === 'tree_1'){
+                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
+            } else if (element.name === 'tree_2'){
+                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
+            } else if (element.name === 'tree_3'){
+                this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setScale(2.5).setImmovable(true).anims.play('tree-3-anim')
+            } else if (element.name === 'bush_1'){
+                this.physics.add.sprite(element.x,element.y, 'bush-1', 0).setImmovable(true).anims.play('bush-1-anim')
+            } 
+        })
+
+        //lopad order is important
         this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
+
+        //this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
         
         this.physics.add.overlap(this.p1, this.watersprite, ()=>{
@@ -57,7 +66,6 @@ class World extends Phaser.Scene{
                 this.p1.animsFSM.transition('swim')
             }
         })
-
 
         //debug co
         /*************************************** */
@@ -90,10 +98,7 @@ function CreateQuestObject(jsonData){
         "type" : jsonData.questdata.type,
         "ammount" : jsonData.questdata.ammount,
         "actual" : 0,
-        "requiredquests" : {
-            "num" : jsonData.questdata.requiredquests.num,
-            "names" : jsonData.questdata.requiredquests.names
-        }
+
     }
 
     return returnObj

@@ -41,8 +41,21 @@ class Enemy extends Entity{
     }
 
     handleClick(){
-        console.log('enemy click')
+        if(this.FSM.state === 'dead'){
+            console.log('dead click')
+        }
     }
+
+    // reset(){
+    //     console.log('here')
+    //     this.body.enable = true
+    //     this.isAlive = true
+    //     this.x = this.spawnOrigin.x
+    //     this.y = this.spawnOrigin.y
+    //     this.entity_text.setAlpha(1)
+    //     this.setAlpha(1)
+    //     this.FSM.transition('idle')
+    // }
 }
 
 //-------------------------------------------------------------------------------
@@ -167,7 +180,7 @@ class combatEnemyState extends State{
     }
 
     execute(scene, enemy){
-        enemy.setVelocity(0)
+        //enemy.setVelocity(0)
     }
 }
 
@@ -179,7 +192,7 @@ class deadEnemyState extends State{
         //die
         enemy.isAlive = false
         clearInterval(enemy.INTERVAL_ID)   
-        enemy.entity_text.destroy()
+        enemy.entity_text.setAlpha(0)
 
         //turn off physics
         enemy.setVelocity(0)
@@ -196,12 +209,27 @@ class deadEnemyState extends State{
             }
         }
 
-        let newSpawn = enemy.spawnOrigin
-        let tmpType = enemy.entity_type
-        scene.time.delayedCall(15000, () => {
-            enemy.destroy()
-            scene.enemies.push(new Enemy(scene, newSpawn[0], newSpawn[1], 'enemy-1', 0, tmpType, 10, [newSpawn[0], newSpawn[1]]))
+      
+        scene.time.delayedCall(5000, () => {
+            scene.tweens.add({
+                targets: enemy,
+                alpha: { from: 1, to: 0 },
+                duration: 2000,
+                onComplete: () =>{
+                    scene.time.delayedCall(5000, ()=>{    
+                        scene.tweens.add({
+                            targets: [enemy, enemy.entity_text],
+                            alpha: { from: 0, to: 1 },
+                            duration: 2000,
+                        })
+                        enemy.x = enemy.spawnOrigin[0]
+                        enemy.y = enemy.spawnOrigin[1]
+                        enemy.body.enable = true
+                        enemy.isAlive = true
+                        enemy.FSM.transition('idle')  
+                    })
+                }
+            })
         }) // remove enemy from scene after appropritte time to loot
     }
-
 }

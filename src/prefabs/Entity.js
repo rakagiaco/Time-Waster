@@ -34,10 +34,6 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.lightAttack_dmg = undefined
         this.heavyAttack_dmg = undefined
 
-        //wtf is this cj...
-        this.audioContext = []
-
-
         //everything collifes with enemies
         scene.physics.add.collider(this, scene.enemies, (object, enemy)=>{
             //console.log(`collision between ${this.entity_type} and an enemy`)

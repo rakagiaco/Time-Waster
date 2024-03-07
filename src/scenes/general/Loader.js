@@ -16,8 +16,13 @@ class Loader extends Phaser.Scene{
         this.load.tilemapTiledJSON('tilemapJSON', '/tilesets/main-tileset-1.json')
 
         //load animated sprites
-        this.load.spritesheet('water-pond', '/spritesheets/water-anims.png', {frameWidth: 32, frameHeight: 32},)
-        
+        this.load.spritesheet('water-pond', '/spritesheets/water-anims.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('tree-1', '/spritesheets/tree-1.png', {frameWidth: 64, frameHeight: 64})
+        this.load.spritesheet('tree-2', '/spritesheets/tree-2.png', {frameWidth: 64, frameHeight: 64})
+        this.load.spritesheet('tree-2-second', '/spritesheets/tree-2-second.png', {frameWidth: 128, frameHeight: 128})
+        this.load.spritesheet('tree-3', '/spritesheets/tree-3.png', {frameWidth: 64, frameHeight: 64})
+        this.load.spritesheet('bush-1', '/spritesheets/bush-1.png', {frameWidth: 16, frameHeight: 16})
+        this.load.spritesheet('quest-icon', '/spritesheets/quest-icon.png', {frameWidth: 16, frameHeight: 16})
 
 
         //load images (tmp)
@@ -59,6 +64,155 @@ class Loader extends Phaser.Scene{
             key: 'water-moving',
             frames: this.anims.generateFrameNumbers('water-pond', {start: 0, end: 5}),
             frameRate: 4,
+            repeat: -1
+        })
+
+        this.anims.create({
+            key: 'tree-1-anim0',
+            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
+            frameRate: 3,
+            repeat: -1,
+            repeatDelay: 2500
+        })
+
+        this.anims.create({
+            key: 'tree-1-anim1',
+            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
+            frameRate: 3,
+            repeat: -1,
+            repeatDelay: 3500
+        })
+
+        this.anims.create({
+            key: 'tree-1-anim2',
+            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
+            frameRate: 3,
+            repeat: -1,
+            repeatDelay: 4500
+        })
+
+        
+        this.anims.create({
+            key: 'tree-1-anim3',
+            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
+            frameRate: 3,
+            repeat: -1,
+            repeatDelay: 5500
+        })
+
+        
+        this.anims.create({
+            key: 'tree-1-anim4',
+            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
+            frameRate: 3,
+            repeat: -1,
+            repeatDelay: 6500
+        })
+
+        
+        this.anims.create({
+            key: 'tree-1-anim5',
+            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
+            frameRate: 3,
+            repeat: -1,
+            repeatDelay: 7500
+        })
+
+
+        //tree2 - anim 1
+        this.anims.create({
+            key: 'tree-2-anim0',
+            frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 2500
+        })
+
+           
+        this.anims.create({
+            key: 'tree-2-anim1',
+            frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 3500
+        })
+
+           
+        this.anims.create({
+            key: 'tree-2-anim2',
+            frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 4500
+        })
+
+           
+        this.anims.create({
+            key: 'tree-2-anim3',
+            frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 5500
+        })
+
+        
+        this.anims.create({
+            key: 'tree-2-anim4',
+            frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 2500
+        })
+
+          
+        this.anims.create({
+            key: 'tree-2-anim5',
+            frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 3500
+        })
+
+          
+        this.anims.create({
+            key: 'tree-2-anim6',
+            frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 4500
+        })
+
+          
+        this.anims.create({
+            key: 'tree-2-anim7',
+            frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
+            frameRate: 6,
+            repeat: -1,
+            repeatDelay: 5506
+        })
+
+
+        this.anims.create({
+            key: 'tree-3-anim',
+            frames: this.anims.generateFrameNumbers('tree-3',{start: 0, end: 7}),
+            frameRate: 0.5,
+            repeat: -1,
+            repeatDelay: 10000
+        })
+
+        this.anims.create({
+            key: 'bush-1-anim',
+            frames: this.anims.generateFrameNumbers('bush-1',{start: 0, end: 4}),
+            frameRate: 5,
+            repeat: -1
+        })
+
+
+        //quest icon
+        this.anims.create({
+            key: 'quest-icon',
+            frames: this.anims.generateFrameNumbers('quest-icon', {start: 0, end: 3}),
+            frameRate: 5,
             repeat: -1
         })
         
