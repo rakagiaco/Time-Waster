@@ -32,6 +32,8 @@ class Loader extends Phaser.Scene{
         this.load.image('npc-2', '/img/npc-1.png')
         this.load.image('player', '/img/player.png')
         this.load.image('mountains', '/img/mountains.png')
+        this.load.image('mysterious herb', '/img/mysterious-herb.png')
+        this.load.image('lesser nepian blood', '/img/nepian-blood.png')
 
         //load quests
         this.load.json('quest-1', '/quests/quest-1.json')
@@ -43,6 +45,11 @@ class Loader extends Phaser.Scene{
         //load audio
         this.load.audio('in-water', '/audio/in-water.mp3')
         this.load.audio('walking', '/audio/walking-dirt.mp3')
+        this.load.audio('attack-light', '/audio/attack-light.mp3')
+        this.load.audio('attack-light-hit', '/audio/attack-light-hit.mp3')
+        this.load.audio('attack-heavy', '/audio/attack-heavy.mp3')
+        this.load.audio('attack-heavy-hit', '/audio/attack-heavy-hit.mp3')
+        this.load.audio('collect-herb', '/audio/collect-herb.mp3')
     }   
 
     create(){
@@ -219,6 +226,6 @@ class Loader extends Phaser.Scene{
         
         
         
-    this.scene.start('worldScene')
+        this.scene.start('worldScene')
     }
 }

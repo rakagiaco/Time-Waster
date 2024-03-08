@@ -6,7 +6,7 @@
     "questdata" : {
         "questnumber": 3,
         "verb" : "collect",
-        "type" : "Greater Nepias Blood",
-        "ammount" : 10
+        "type" : "lesser nepian blood",
+        "ammount" : 1
     }
 }

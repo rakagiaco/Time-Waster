@@ -9,7 +9,7 @@ class Ally extends Entity{
 
 
         this.icon_sprite = undefined
-     
+        this.detectionDistance = 50
     }
 
 
@@ -24,7 +24,7 @@ class Ally extends Entity{
     //this function derived
 
     handleClick(){
-
+        if(listen(this.parentScene, this ))
         if(this.FSM.state !== 'interacting'){
             this.icon_sprite === undefined ? undefined : this.icon_sprite.destroy()
             this.parentScene.p1.animsFSM.transition('interacting')
@@ -36,33 +36,29 @@ class Ally extends Entity{
 
 class idleAllyState extends State{
     enter(scene, ally){
-
         if(scene.p1.questStatus.finished === true && scene.p1.questStatus.number < ammountOfQuests){
             ally.icon_sprite = scene.add.sprite(ally.x -2, ally.y-22,'quest-icon', 0).play('quest-icon')
         }
-
-        //play some anim
-        //waiting for click
     }
 }
 
 class interactionAllyState extends State{
     enter(scene, ally){
-        this.createPopupWindow(scene)
-        //maybe open dialogue window
-    }
-
-    execute(scene, ally){
-        /*we want to show certain quests to the player based on what state 
-        the game is in*/
+        if(!scene.p1.windowOpen){
+            this.createPopupWindow(scene)
+        } else {
+            this.stateMachine.transition('idle')
+        } 
     }
 
     createPopupWindow(scene){
         
+        scene.p1.windowOpen = true
+
         let closeBTN, acceptBTN, avaQ, questTxt
         var count = 0
 
-        let lastquest = scene.p1.questStatus
+        let playercurrentquest = scene.p1.questStatus
 
         // Create a rectangle to act as the background of the popup
         const window = scene.add.graphics();
@@ -78,6 +74,7 @@ class interactionAllyState extends State{
             acceptBTN.destroy()
             avaQ.destroy()
             questTxt.destroy()
+            scene.p1.windowOpen = false
             scene.p1.animsFSM.transition('idle')
             this.stateMachine.transition('idle')
         })
@@ -93,9 +90,9 @@ class interactionAllyState extends State{
         scene.quests.forEach(element => {
 
 
-            if(element.questdata.questnumber == lastquest.number + 1){
+            if(element.questdata.questnumber == playercurrentquest.number + 1){
 
-                if(lastquest.finished === true){
+                if(playercurrentquest.finished === true){
                     questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/4, 
                     element.name , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }})
                     questTxt.setInteractive().setOrigin(0)
@@ -110,16 +107,16 @@ class interactionAllyState extends State{
                     })
 
                     acceptBTN.on('pointerdown', () => {
-                        if(lastquest.finished === true){
-                            lastquest.finished = false
-                            lastquest.currentQuest = CreateQuestObject(element)
-                            lastquest.number = element.questdata.questnumber
+                        if(playercurrentquest.finished === true){
+                            playercurrentquest.finished = false
+                            playercurrentquest.currentQuest = CreateQuestObject(element)
                         }  
                         window.destroy()
                         closeBTN.destroy()
                         avaQ.destroy()
                         questTxt.destroy()
                         acceptBTN.destroy()
+                        scene.p1.windowOpen = false
                         scene.p1.animsFSM.transition('idle')
                         this.stateMachine.transition('idle')
                     })
@@ -130,17 +127,19 @@ class interactionAllyState extends State{
                     element.completiontext , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }})
 
                     let completeBTN
-                    if(lastquest.currentQuest.actual === lastquest.currentQuest.ammount){
+                    if(playercurrentquest.currentQuest.actual === playercurrentquest.currentQuest.ammount){
                         completeBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/2)), scene.cameras.main.scrollY + scene.cameras.main.height/2, 
                         'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive()
                         completeBTN.on('pointerdown', ()=>{
-                            lastquest.finished = true   
+                            playercurrentquest.number = element.questdata.questnumber
+                            playercurrentquest.finished = true   
                             avaQ.destroy()
                             window.destroy()
                             closeBTN.destroy()
                             acceptBTN.destroy()
                             completeBTN.destroy()
                             questTxt.destroy()
+                            scene.p1.windowOpen = false
                             scene.p1.animsFSM.transition('idle')
                             this.stateMachine.transition('idle')
                         })
@@ -149,8 +148,6 @@ class interactionAllyState extends State{
                 }
             }
         })
-
-
     }
 }
 

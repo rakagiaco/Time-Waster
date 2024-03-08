@@ -1,5 +1,5 @@
 class Enemy extends Entity{
-    constructor(scene, x, y, texture, frames, _name='NPC-enemy', _hitPoints, _origin=[]){
+    constructor(scene, x, y, texture, frames, _name='NPC-enemy', _hitPoints, _origin=[], _attackPower){
         super(scene, x, y, texture, frames, _name, _hitPoints)
         
         
@@ -17,7 +17,14 @@ class Enemy extends Entity{
         this.detectionDistance = 200
         this.setOrigin(0)
         this.entity_text.setAlpha(1)
+        this.loot_table = []
+        this.looted = false
+        this.isAttacking = false
 
+        //overwritted
+        this.attackPower = _attackPower
+        this.lightAttack_dmg= Phaser.Math.Between(_attackPower, _attackPower + _attackPower/2)
+        this.heavyAttack_dmg = Phaser.Math.Between( _attackPower + _attackPower/2, _attackPower * 2)
 
         //physical
         super.VELOCITY = 50
@@ -37,12 +44,23 @@ class Enemy extends Entity{
 
     //collision handler
     handleCollision(){
-        console.log('enemy collide')
     }
 
     handleClick(){
         if(this.FSM.state === 'dead'){
-            console.log('dead click')
+           //console.log('dead click')
+            //roll for loot
+            let drops = Math.round(Math.random())
+            console.log(drops)
+
+            let x = undefined
+            drops === 0 ? undefined : x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0)
+        
+            x === undefined ? undefined:  //does x exist
+            this.parentScene.p1.windowOpen ? undefined: //is there a window open
+            this.looted === false? createLootInterfaceWindow(x, this.parentScene): undefined //has this entity been looted
+
+            this.looted = true
         }
     }
 
@@ -130,19 +148,19 @@ function pursuit(scene, enemy){
     enemy.setVelocity(enemy.VELOCITY * vector.x, enemy.VELOCITY * vector.y)
 }
 
-//player detection
-function listen(scene, enemy){
-    let x = scene.p1.getPosition()
-    let x1 = x[0]
-    let y1 = x[1]
+// //player detection
+// function listen(scene, listener){
+//     let x = scene.p1.getPosition()
+//     let x1 = x[0]
+//     let y1 = x[1]
 
-    //true if player is in range (150 px)
-    if(x1 > (enemy.x-enemy.detectionDistance) && x1 < (enemy.x+enemy.detectionDistance) && y1 > (enemy.y-enemy.detectionDistance) && y1 < (enemy.y+enemy.detectionDistance)){
-        return true
-    } else {
-        return false
-    }
-}
+//     //true if player is in range (150 px)
+//     if(x1 > (listener.x-listener.detectionDistance) && x1 < (listener.x+listener.detectionDistance) && y1 > (listener.y-listener.detectionDistance) && y1 < (listener.y+listener.detectionDistance)){
+//         return true
+//     } else {
+//         return false
+//     }
+// }
 
 //---------------------------------------------------------------------
 //STATES
@@ -156,7 +174,7 @@ class idleEnemyState extends State{
         if(listen(scene, enemy)){ //player is in range
             this.stateMachine.transition('pursuit')
         }
-        if(enemy.y < 900){ //maybe use config here for better properties
+        if(enemy.y < 900 && enemy.x < 1000){ //maybe use config here for better properties
             resetPosition(enemy, scene)
         }
     }
@@ -164,6 +182,7 @@ class idleEnemyState extends State{
 
 class pursuitEnemyState extends State{
     enter(scene, enemy){
+        console.log('in enemy: pursuit')
         clearInterval(enemy.INTERVAL_ID)
     }
 
@@ -177,17 +196,35 @@ class pursuitEnemyState extends State{
 
 class combatEnemyState extends State{
     enter(scene, enemy){
+        console.log('in enemy: combat')
+        enemy.setVelocity(0)
+
+        if(!enemy.isAttacking){
+            enemy.isAttacking = true
+
+            enemy.lightAttack_dmg= Phaser.Math.Between(enemy.attackPower, enemy.attackPower + enemy.attackPower/2)
+            enemy.heavyAttack_dmg = Phaser.Math.Between( enemy.attackPower + enemy.attackPower/2, enemy.attackPower * 2)
+
+            let x = Math.round(Math.random())
+            x === 0 ? scene.p1.HIT_POINTS -= enemy.lightAttack_dmg : scene.p1.HIT_POINTS -= enemy.heavyAttack_dmg
+            
+            console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
+            scene.time.delayedCall(1000, ()=>{
+                enemy.isAttacking = false
+                enemy.FSM.transition('pursuit')
+            })
+        }
     }
 
     execute(scene, enemy){
-        //enemy.setVelocity(0)
+        enemy.setVelocity(0)
     }
 }
 
 
 class deadEnemyState extends State{
     enter(scene, enemy){
-        console.log('enemy dying')
+        console.log('in enemy: dying')
 
         //die
         enemy.isAlive = false
@@ -226,6 +263,7 @@ class deadEnemyState extends State{
                         enemy.y = enemy.spawnOrigin[1]
                         enemy.body.enable = true
                         enemy.isAlive = true
+                        enemy.looted = false
                         enemy.FSM.transition('idle')  
                     })
                 }

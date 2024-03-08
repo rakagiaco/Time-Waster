@@ -1,13 +1,16 @@
 class Player extends Entity{
-    constructor(scene, x, y, texture, frames, _name='player', _hitPoints){
+    constructor(scene, x, y, texture, frames, _name='player', _hitPoints=100){
         super(scene, x, y, texture, frames, _name, _hitPoints)
 
-        /* this.FSM = new StateMachine('vanilla', {
-            vanilla: new mainState(),
-        }, [scene, this])   */
+        
+
+        //walking noise
+        this.walk_noise = scene.sound.add('walking', {rate: 1.5})
 
         //properties
-        
+        this.windowOpen = false //tracks how many interaction windows are on player screen
+        this.setOrigin(0.5,0.5)
+
         //visual quest text:
         let padding = 10
         this.questTrackerTxtTitle = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 150, "Current Quest: ", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
@@ -56,12 +59,11 @@ class Player extends Entity{
     update(){
         this.displayCurrentQuests()
         this.animsFSM.step()
-       // console.log(this.y)
-       //console.log(this.questStatus.currentQuest)
     }
 
     handleCollision(collided){
 
+        collided.FSM.transition('combat')
 
         //get current x and y of collided
        let x =[collided.body.velocity.x, collided.body.velocity.y]
@@ -73,19 +75,14 @@ class Player extends Entity{
        x[0] > 0 ? attackVector.x = -1 : attackVector.x = 1
        x[1] > 0 ? attackVector.y = -1 : attackVector.y = 1
 
-        //console.log(attackVector)
+    
 
-        if(!this.pkg.attackCooldown && this.pkg.isAttacking && this.animsFSM.state === 'attack'){
-
-            //attack cooldown timer so we cant spam
-            this.pkg.attackCooldown = true
-            // this.scene.time.delayedCall(1000, ()=>{this.pkg.attackCooldown = false})
-
-            //tell the enemy its in combat
-            collided.FSM.transition('combat')
+        if(this.pkg.isAttacking && this.animsFSM.state === 'attack'){
+ 
             switch(this.pkg.attack_type){
                 case 'light':
-                    // console.log('player used light attack on enemy')
+                    console.log('player used light attack on enemy')
+                    this.parentScene.sound.play('attack-light-hit')
                     if(collided.HIT_POINTS <= this.pkg.dmg){ //enemy will survive this hit
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
@@ -93,23 +90,23 @@ class Player extends Entity{
                         collided.HIT_POINTS -= this.pkg.dmg
                         attackVelocity = 500
                         collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity)
-                        this.scene.time.delayedCall(50, ()=> {collided.FSM.transition('pursuit')})
+                        this.scene.time.delayedCall(150, ()=> {collided.FSM.transition('pursuit')})
                     }
-                    console.log(collided.HIT_POINTS)
-                    this.scene.time.delayedCall(1000, ()=>{this.pkg.attackCooldown = false})
+                    //console.log(collided.HIT_POINTS)
                     break
                 case 'heavy':
+                    this.parentScene.sound.play('attack-heavy-hit', {volume: 0.05})
                     // console.log('player used heavy attack on enemy')
                     if(collided.HIT_POINTS <= this.pkg.dmg){
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
                     } else {
+                        collided.HIT_POINTS -= this.pkg.dmg
                         attackVelocity = 1000
                         collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity)
-                        this.scene.time.delayedCall(50, ()=> {collided.FSM.transition('pursuit')})
+                        this.scene.time.delayedCall(250, ()=> {collided.FSM.transition('pursuit')})
                     }
-                    console.log(collided.HIT_POINTS)
-                    this.scene.time.delayedCall(1500, ()=>{this.pkg.attackCooldown = false})
+                  //console.log(collided.HIT_POINTS)
                     break
                 default:
                     break
@@ -146,13 +143,14 @@ class Player extends Entity{
             this.pkg.attack_type = 'light'
             this.pkg.isAttacking = true
             this.pkg.dmg = Math.round(Math.random() * 15) + 10
-            console.log(this.pkg.dmg)
+            console.log('Light attack -> ' + this.pkg.dmg)
    
         } else if (keyAttackHeavy.isDown){
             this.pkg.attack_type = 'heavy'
             this.pkg.isAttacking = true
             this.pkg.dmg = Math.round(Math.random() *30) + 20  
-            console.log(this.pkg.dmg)
+            console.log('Heavy attack ->' + this.pkg.dmg)
+   
         } else {
             this.pkg.attack_type = undefined
             this.pkg.isAttacking = false
@@ -161,7 +159,7 @@ class Player extends Entity{
     }
 
     displayCurrentQuests(){
-        if(this.questStatus.number !== 0 && this.questStatus.finished === false){
+        if(this.questStatus.finished === false){
             this.questTrackerTxtTitle.setAlpha(1)
 
             let alias = this.questStatus.currentQuest
@@ -177,14 +175,15 @@ class Player extends Entity{
 
 class idlePlayerState extends State{
     enter(scene, player){
-        //console.log('in player: idle')
+        console.log('in player: idle')
         player.setVelocity(0)
     }
 
     execute(scene, player){
-        player.listenForCombatInput()
-
-        if(player.pkg.isAttacking){
+        if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
+            player.listenForCombatInput()
+        } else if(player.pkg.isAttacking) {
+            player.walk_noise.stop()
             this.stateMachine.transition('attack')
         }
 
@@ -199,22 +198,38 @@ class idlePlayerState extends State{
 
 class movingState extends State{
     enter(scene,player){
-        // console.log('in player: moving')
-        // scene.sound.play('walking', {rate: 2})
+        console.log('in player: moving')
+        if(!player.walk_noise.isPlaying){
+            player.walk_noise.play()
+        }
+         
+        
     }
 
     execute(scene, player){
 
-        player.listenForCombatInput()
 
-        if(player.pkg.isAttacking){
-
+        if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
+            player.listenForCombatInput()
+        } else if(player.pkg.isAttacking) {
+            player.walk_noise.stop()
             this.stateMachine.transition('attack')
         }
 
 
+        // if(!player.pkg.isAttacking){        
+        //     player.listenForCombatInput()
+        // }
+
+        // if(player.pkg.isAttacking){
+        //     player.walk_noise.stop()
+        //     console.log('here')
+        //     this.stateMachine.transition('attack')
+        // }
+
+
         if(!(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown)) {
-            scene.sound.stopAll()
+            player.walk_noise.stop()
             this.stateMachine.transition('idle')
         }else{
             player.handleMovement()
@@ -224,6 +239,9 @@ class movingState extends State{
 
 class interactionPlayerState extends State{
     enter(scene, player){
+        if(player.walk_noise.isPlaying){
+            player.walk_noise.stop()
+        }
         console.log('in player: interaction')
         player.setVelocity(0)
     }
@@ -250,8 +268,38 @@ class inWaterPlayerState extends State{
 
 class attackPlayerState extends State{
     enter(scene, player){
+        console.log('in player: attack')
+        player.setVelocity(0)
+       
 
-        scene.time.delayedCall(50, () =>{ this.stateMachine.transition('idle')})
+        switch(player.pkg.attack_type){
+            case 'light':
+                scene.sound.play('attack-light') 
+                scene.time.delayedCall(1000, () =>{ 
+                    player.pkg.attackCooldown = false
+                })
+                break
+            case 'heavy':
+                scene.sound.play('attack-heavy')
+                scene.time.delayedCall(1500, () =>{ 
+                    player.pkg.attackCooldown = false
+                })
+                break
+            default:
+                break
+        }
+
+        scene.time.delayedCall(50, () =>{ 
+            player.pkg.isAttacking = false
+            player.pkg.attackCooldown = true
+
+            this.stateMachine.transition('idle')
+        })
+      
+    }   
+
+    execute(scene, player){
+        player.setVelocity(0)
     }
 
 }

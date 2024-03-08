@@ -39,23 +39,30 @@ class World extends Phaser.Scene{
 
 
         //spawn entities
-        this.enemies = [] // physics group overrites properties
+        this.enemies = [] 
+        this.items = []
         objlayer.objects.forEach(element => {
             if(element.name === 'enemy_spawn'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 10, [element.x, element.y]))
-            }else if (element.name === 'tree_1'){
-                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
-            } else if (element.name === 'tree_2'){
-                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
-            } else if (element.name === 'tree_3'){
-                this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setScale(2.5).setImmovable(true).anims.play('tree-3-anim')
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 50, [element.x, element.y], 10))
+            } else if(element.name === 'enemy_spawn_2'){
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2', 0, 'Greater Nepian Scout', 10, [element.x, element.y], 20))
             } else if (element.name === 'bush_1'){
-                this.physics.add.sprite(element.x,element.y, 'bush-1', 0).setImmovable(true).anims.play('bush-1-anim')
+               this.items.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).anims.play('bush-1-anim'))
             } 
         })
 
         //lopad order is important
         this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
+
+        objlayer.objects.forEach(element => {
+            if (element.name === 'tree_1'){
+                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
+            } else if (element.name === 'tree_2'){
+            this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
+            } else if (element.name === 'tree_3'){
+                this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setScale(2.5).setImmovable(true).anims.play('tree-3-anim')
+            }
+        })
 
         //this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
@@ -69,7 +76,7 @@ class World extends Phaser.Scene{
 
         //debug co
         /*************************************** */
-        this.p1.VELOCITY = 1000
+        //this.p1.VELOCITY = 1000
         let debugToggle = this.input.keyboard.addKey('F')
         this.physics.world.drawDebug = false
         debugToggle.on('down', ()=> {
