@@ -9,7 +9,7 @@ class Item extends Phaser.Physics.Arcade.Sprite{
         this.item_type = _itype
         this._isCollectable = _isCollectable
         this.fromEntity = _fromEntity
-        this.detectionDistance = 50
+        this.detectionDistance = 75
         this.soundEffect = _soundQ
 
         if(!this.fromEntity){

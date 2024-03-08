@@ -26,6 +26,9 @@ class World extends Phaser.Scene{
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
         this.physics.world.setBounds(0,0, map.widthInPixels, map.heightInPixels)
 
+        //cursor
+        this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')
+
         //encapsulate quests 
         this.quests = []
         for(let i = 0; i < ammountOfQuests; i++){
@@ -47,7 +50,7 @@ class World extends Phaser.Scene{
             } else if(element.name === 'enemy_spawn_2'){
                 this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2', 0, 'Greater Nepian Scout', 10, [element.x, element.y], 20))
             } else if (element.name === 'bush_1'){
-               this.items.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).anims.play('bush-1-anim'))
+               this.items.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(25).anims.play('bush-1-anim'))
             } 
         })
 
@@ -58,9 +61,20 @@ class World extends Phaser.Scene{
             if (element.name === 'tree_1'){
                 this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
             } else if (element.name === 'tree_2'){
-            this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
+                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
             } else if (element.name === 'tree_3'){
-                this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setScale(2.5).setImmovable(true).anims.play('tree-3-anim')
+                let x = this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setScale(2.5).setImmovable(true).setInteractive()
+
+                x.on('pointerdown', ()=>{
+                    if(listen(this, x)){
+                        x.anims.play('tree-3-anim')
+                        this.time.delayedCall(2000,()=>{
+                            let y = new Item(this, x.x, x.y, 'fruit', 0, 'fruit', true, true).setAlpha(0)
+                            this.p1.windowOpen ? undefined : createLootInterfaceWindow(y, this)
+                        })
+                        x.input.enabled = false
+                    }
+                })
             }
         })
 

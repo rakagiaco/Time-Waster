@@ -17,11 +17,12 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         //nonphysical
         this.parentScene = scene
         this.entity_type = _name
+        this.detectionDistance = 100
 
         //health
         this.isAlive = true
         this.HIT_POINTS = _hitPoints
-        
+        this.HIT_POINTS_log = _hitPoints //this way we can reset it
 
         //timing, reset
         this.INTERVAL_ID = undefined
@@ -35,7 +36,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.heavyAttack_dmg = undefined
 
         //everything collifes with enemies
-        scene.physics.add.collider(this, scene.enemies, (object, enemy)=>{
+        scene.physics.add.overlap(this, scene.enemies, (object, enemy)=>{
             //console.log(`collision between ${this.entity_type} and an enemy`)
             this.handleCollision(enemy)
         })

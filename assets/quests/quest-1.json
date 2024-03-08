@@ -8,6 +8,6 @@
         "questnumber": 1,
         "verb" : "collect",
         "type" : "mysterious herb",
-        "ammount" : 1
+        "ammount" : 10
     }
 }

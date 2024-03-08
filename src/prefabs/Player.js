@@ -4,11 +4,16 @@ class Player extends Entity{
 
         
 
+      
+
+    //properties---------------------------------
+        
+        //tracks if player has a window open
+        this.windowOpen = false 
+
         //walking noise
         this.walk_noise = scene.sound.add('walking', {rate: 1.5})
 
-        //properties
-        this.windowOpen = false //tracks how many interaction windows are on player screen
         this.setOrigin(0.5,0.5)
 
         //visual quest text:
@@ -16,16 +21,13 @@ class Player extends Entity{
         this.questTrackerTxtTitle = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 150, "Current Quest: ", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
         this.questTrackerTxtBody = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 100, "nil", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
        
-       
-       
-        //quest tracker > could easily be expanded to hold multiple at once
+        //quest tracker 
         this.questStatus = {
             number : 0,
             finished: true,
             currentQuest: undefined, // this holds quest obj
-            completedQuests: []
+            completedQuests: [] // unused as of right now...
         }
-
 
         //combat listener obj
         this.pkg = {
@@ -63,10 +65,12 @@ class Player extends Entity{
 
     handleCollision(collided){
 
+        //collides with enemy, put it in combat might need if here
         collided.FSM.transition('combat')
 
         //get current x and y of collided
        let x =[collided.body.velocity.x, collided.body.velocity.y]
+
        //properties to define the attack 
        let attackVector = new Phaser.Math.Vector2(0)
        let attackVelocity = 0
@@ -76,37 +80,46 @@ class Player extends Entity{
        x[1] > 0 ? attackVector.y = -1 : attackVector.y = 1
 
     
-
         if(this.pkg.isAttacking && this.animsFSM.state === 'attack'){
- 
             switch(this.pkg.attack_type){
                 case 'light':
-                    console.log('player used light attack on enemy')
-                    this.parentScene.sound.play('attack-light-hit')
-                    if(collided.HIT_POINTS <= this.pkg.dmg){ //enemy will survive this hit
+                    // console.log('player used light attack on enemy')
+
+                    //ensure no sound overlap
+                    if(this.parentScene.sound.sounds.length === 2){
+                        this.parentScene.sound.play('attack-light-hit', {volume: 0.05})
+                    }
+
+                    if(collided.HIT_POINTS <= this.pkg.dmg){ //enemy will die here
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
-                    } else {
-                        collided.HIT_POINTS -= this.pkg.dmg
-                        attackVelocity = 500
-                        collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity)
-                        this.scene.time.delayedCall(150, ()=> {collided.FSM.transition('pursuit')})
+                    } else { // lives
+                        collided.HIT_POINTS -= this.pkg.dmg //take damage
+                        attackVelocity = 250 //knockback
+                        collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity) //apply knockback
+                        this.scene.time.delayedCall(250, () => {
+                            collided.FSM.transition('pursuit')
+                        })
                     }
                     //console.log(collided.HIT_POINTS)
                     break
                 case 'heavy':
-                    this.parentScene.sound.play('attack-heavy-hit', {volume: 0.05})
+                    if(this.parentScene.sound.sounds.length === 2){
+                        this.parentScene.sound.play('attack-heavy-hit', {volume: 0.05})
+                    }
                     // console.log('player used heavy attack on enemy')
                     if(collided.HIT_POINTS <= this.pkg.dmg){
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
                     } else {
                         collided.HIT_POINTS -= this.pkg.dmg
-                        attackVelocity = 1000
+                        attackVelocity = 500
                         collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity)
-                        this.scene.time.delayedCall(250, ()=> {collided.FSM.transition('pursuit')})
+                        this.scene.time.delayedCall(350, ()=> {
+                            collided.FSM.transition('pursuit')
+                        })
                     }
-                  //console.log(collided.HIT_POINTS)
+                    //console.log(collided.HIT_POINTS)
                     break
                 default:
                     break
@@ -274,14 +287,14 @@ class attackPlayerState extends State{
 
         switch(player.pkg.attack_type){
             case 'light':
-                scene.sound.play('attack-light') 
-                scene.time.delayedCall(1000, () =>{ 
+                scene.sound.play('attack-light', {volume: 0.05}) 
+                scene.time.delayedCall(1500, () =>{ 
                     player.pkg.attackCooldown = false
                 })
                 break
             case 'heavy':
-                scene.sound.play('attack-heavy')
-                scene.time.delayedCall(1500, () =>{ 
+                scene.sound.play('attack-heavy', {volume: 0.05})
+                scene.time.delayedCall(3000, () =>{ 
                     player.pkg.attackCooldown = false
                 })
                 break
@@ -289,7 +302,7 @@ class attackPlayerState extends State{
                 break
         }
 
-        scene.time.delayedCall(50, () =>{ 
+        scene.time.delayedCall(25, () =>{ 
             player.pkg.isAttacking = false
             player.pkg.attackCooldown = true
 

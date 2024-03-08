@@ -9,7 +9,6 @@ class Ally extends Entity{
 
 
         this.icon_sprite = undefined
-        this.detectionDistance = 50
     }
 
 

@@ -48,7 +48,8 @@ class Enemy extends Entity{
 
     handleClick(){
         if(this.FSM.state === 'dead'){
-           //console.log('dead click')
+            
+           console.log('dead click')
             //roll for loot
             let drops = Math.round(Math.random())
             console.log(drops)
@@ -209,15 +210,20 @@ class combatEnemyState extends State{
             x === 0 ? scene.p1.HIT_POINTS -= enemy.lightAttack_dmg : scene.p1.HIT_POINTS -= enemy.heavyAttack_dmg
             
             console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
+
             scene.time.delayedCall(1000, ()=>{
-                enemy.isAttacking = false
-                enemy.FSM.transition('pursuit')
+                if(!(enemy.FSM.state === 'dead')){
+                    enemy.isAttacking = false
+                    enemy.FSM.transition('pursuit') 
+                }
             })
         }
     }
 
     execute(scene, enemy){
-        enemy.setVelocity(0)
+        if(!listen(scene, enemy)){
+            enemy.FSM.transition('idle')
+        }
     }
 }
 
@@ -264,6 +270,7 @@ class deadEnemyState extends State{
                         enemy.body.enable = true
                         enemy.isAlive = true
                         enemy.looted = false
+                        enemy.HIT_POINTS = enemy.HIT_POINTS_log
                         enemy.FSM.transition('idle')  
                     })
                 }

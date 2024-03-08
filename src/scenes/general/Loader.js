@@ -34,7 +34,10 @@ class Loader extends Phaser.Scene{
         this.load.image('mountains', '/img/mountains.png')
         this.load.image('mysterious herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
+        this.load.image('fruit', '/img/fruit.png')
+        this.load.image('cursor', '/img/cursor.png')
 
+        
         //load quests
         this.load.json('quest-1', '/quests/quest-1.json')
         this.load.json('quest-2', '/quests/quest-2.json')
@@ -202,9 +205,8 @@ class Loader extends Phaser.Scene{
         this.anims.create({
             key: 'tree-3-anim',
             frames: this.anims.generateFrameNumbers('tree-3',{start: 0, end: 7}),
-            frameRate: 0.5,
-            repeat: -1,
-            repeatDelay: 10000
+            frameRate: 4,
+            repeat: false,
         })
 
         this.anims.create({
