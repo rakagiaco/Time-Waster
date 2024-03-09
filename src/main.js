@@ -10,6 +10,7 @@ let config = {
         pixelArt: true
     },
     scale: {
+        mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH
     },
     physics: {
@@ -22,7 +23,7 @@ let config = {
             }
         }
     },
-    scene: [Loader, World]
+    scene: [Loader, Menu, World]
 }
 
 let game = new Phaser.Game(config)

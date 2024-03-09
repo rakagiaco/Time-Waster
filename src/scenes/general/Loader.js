@@ -36,6 +36,8 @@ class Loader extends Phaser.Scene{
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
         this.load.image('fruit', '/img/fruit.png')
         this.load.image('cursor', '/img/cursor.png')
+        this.load.image('fullscreen' , '/img/fullscreen.png')
+        this.load.image('start-button', '/img/start-button-1.png')
 
         
         //load quests
@@ -228,6 +230,6 @@ class Loader extends Phaser.Scene{
         
         
         
-        this.scene.start('worldScene')
+        this.scene.start('menuScene')
     }
 }

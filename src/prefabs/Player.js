@@ -12,7 +12,7 @@ class Player extends Entity{
         this.windowOpen = false 
 
         //walking noise
-        this.walk_noise = scene.sound.add('walking', {rate: 1.5})
+        this.walk_noise = scene.sound.add('walking', {rate: 1.5, repeat: -1})
 
         this.setOrigin(0.5,0.5)
 

@@ -29,6 +29,14 @@ class World extends Phaser.Scene{
         //cursor
         this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')
 
+        // //fullscreen button credit Nathan Altice
+        // // add fullscreen button
+        // this.fullscreenBtn = this.add.sprite(game.config.width - 15, game.config.height - 15, 'fullscreen').setScale(2).setScrollFactor(0)
+        // this.fullscreenBtn.setOrigin(1)
+        // this.fullscreenBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        //     this.scale.toggleFullscreen()
+        // })
+
         //encapsulate quests 
         this.quests = []
         for(let i = 0; i < ammountOfQuests; i++){
@@ -88,6 +96,16 @@ class World extends Phaser.Scene{
             }
         })
 
+
+
+           //fullscreen button credit Nathan Altice
+        // add fullscreen button
+        this.fullscreenBtn = this.add.sprite(game.config.width - 15, game.config.height - 15, 'fullscreen').setScale(2).setScrollFactor(0)
+        this.fullscreenBtn.setOrigin(1)
+        this.fullscreenBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+            this.scale.toggleFullscreen()
+        })
+
         //debug co
         /*************************************** */
         //this.p1.VELOCITY = 1000
@@ -106,7 +124,6 @@ class World extends Phaser.Scene{
     }
 
     update(){
-       
     }
     
 }
