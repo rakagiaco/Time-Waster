@@ -1,0 +1,86 @@
+class Inventory{
+    constructor(){
+        console.log('in constructor... inv')
+        this.inventory = new Map()
+
+        this.active = []
+    }
+
+
+    get(item){
+        if(this.inventory.has(item))
+            return this.inventory.get(item)
+        else{
+            return false
+        }
+    }
+
+    add(item, ammount){
+        if(!this.inventory.has(item)){
+            this.inventory.set(item, ammount)
+            return true
+        } else {
+            let x = this.inventory.get(item)
+            this.inventory.set(item, x+ammount)
+        }
+        return false
+    }
+
+    remove(item, ammount){
+        if(this.inventory.has(item)){
+            if(this.get(item) === ammount){
+                this.inventory.delete(item)
+            }else if (this.get(item) >= ammount){
+                this.inventory.set(item, this.get(item) - ammount)
+            }
+            return true
+        }
+        return false
+    }
+
+    openInventoryWindow(scene, player){
+        const window = scene.add.graphics()
+        window.fillStyle(0x000000, 1) // Color and alpha (transparency)
+
+        let windowX = scene.cameras.main.scrollX + scene.cameras.main.width/2 - 225
+        let windowY = scene.cameras.main.scrollY + scene.cameras.main.height/2 - 225
+        window.fillRect(windowX , windowY, 450, 450)
+
+
+        let closeBTN, winname
+        closeBTN = scene.add.text(windowX, windowY, "exit", {fill: '#FFFFFF', fontSize: 15})
+        closeBTN.setInteractive()   
+        closeBTN.on('pointerdown', () => {
+            this.active.forEach(element =>{element.destroy()})
+            window.destroy()
+            closeBTN.destroy()
+            winname.destroy()
+            scene.p1.windowOpen = false
+            scene.p1.animsFSM.transition('idle')
+        })
+
+        
+        
+        winname = scene.add.text(windowX + 225, windowY+ 12.5, "Inventory", {fill: '#FFFFFF'}).setOrigin(0.5, 0)
+    
+
+        let counter = 0 //if 5 then increase y pos
+        let beginX = windowX + 64
+        let beginY = windowY + 64
+
+        for(const [key, value] of this.inventory){
+           this.active.push(scene.add.image(beginX, beginY, key))
+           this.active.push( scene.add.text(beginX, beginY-32, value, {fill: '#FFFFFF', fontSize: 15}))
+           this.active.push( scene.add.text(beginX-15, beginY+32, key, {fill: '#FFFFFF', fontSize: 10}))
+            if(counter === 2){
+                counter = 0
+                beginY += 128
+                beginX = windowX + 64
+            } else{
+                counter++
+                beginX += 128
+            }
+        }
+    }
+    
+}

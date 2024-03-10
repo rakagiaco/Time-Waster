@@ -1,5 +1,5 @@
 class Enemy extends Entity{
-    constructor(scene, x, y, texture, frames, _name='NPC-enemy', _hitPoints, _origin=[], _attackPower){
+    constructor(scene, x, y, texture, frames, _name='NPC-enemy', _hitPoints, _origin=[], _attackPower, _detectionDist=150){
         super(scene, x, y, texture, frames, _name, _hitPoints)
         
         
@@ -8,13 +8,15 @@ class Enemy extends Entity{
             idle: new idleEnemyState(),
             pursuit: new pursuitEnemyState(),
             combat: new combatEnemyState(),
-            dead: new deadEnemyState()
+            dead: new deadEnemyState(),
+            reset: new resetEnemyState(),
+            ignore: new ignoreEnemyState()
         }, [scene, this])
 
         
         //nonphysical
         this.spawnOrigin = _origin
-        this.detectionDistance = 200
+        this.detectionDistance = _detectionDist
         this.setOrigin(0)
         this.entity_text.setAlpha(1)
         this.loot_table = []
@@ -28,6 +30,14 @@ class Enemy extends Entity{
 
         //physical
         super.VELOCITY = 50
+
+
+        //   //everything collifes with enemies
+        // scene.physics.add.overlap(this, scene.p1, ()=> {
+            
+        //     this.FSM.transition('combat')
+        // })
+
     }
 
     init(){
@@ -36,6 +46,7 @@ class Enemy extends Entity{
 
     update(){
         if(this.isAlive){
+            super.updateHealthBar()
             super.update()
             super.updateNamePlate()
             this.FSM.step()
@@ -44,9 +55,19 @@ class Enemy extends Entity{
 
     //collision handler
     handleCollision(){
+        if(this.FSM.state !== 'combat' && this.FSM.state !== 'ignore'){
+            this.FSM.transition('combat')
+            return
+        }
     }
+ 
 
     handleClick(){
+        console.log(this.FSM.state)
+        if(!listen(this.parentScene, this)){
+            return
+        }
+
         if(this.FSM.state === 'dead'){
             
            console.log('dead click')
@@ -113,16 +134,17 @@ function updateMovement(enemy, scene){
     }   
 }
 
-//seems like this kind of works
-function resetPosition(enemy, scene){
-    clearInterval(enemy.INTERVAL_ID)
-    enemy.setVelocity(0)
-    enemy.setVelocityY(enemy.VELOCITY)  
-    if(enemy.y >= 899){
-        scene.time.delayedCall(5000, ()=>{enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
-        })
-    }
-}
+// //seems like this kind of works
+// function resetPosition(enemy, scene){
+//     console.log('in enemy reset')
+//     clearInterval(enemy.INTERVAL_ID)
+//     enemy.setVelocity(0)
+//     enemy.setVelocityY(enemy.VELOCITY)  
+//     if(enemy.y >= 899){
+//         scene.time.delayedCall(5000, ()=>{enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
+//         })
+//     }
+// }
 
 
 //player aggression
@@ -168,23 +190,27 @@ function pursuit(scene, enemy){
 
 class idleEnemyState extends State{
     enter(scene, enemy){
+        console.log('enemy idle')
+        clearInterval(enemy.INTERVAL_ID)
         enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
+        enemy.entity_text.setColor('#FFFFFF')
     }
 
     execute(scene, enemy){
         if(listen(scene, enemy)){ //player is in range
             this.stateMachine.transition('pursuit')
-        }
-        if(enemy.y < 900 && enemy.x < 1000){ //maybe use config here for better properties
-            resetPosition(enemy, scene)
+        } else if(enemy.y < 900 && enemy.x < 1000){ //maybe use config here for better properties
+            this.stateMachine.transition('reset')
         }
     }
 }
 
 class pursuitEnemyState extends State{
+
     enter(scene, enemy){
         console.log('in enemy: pursuit')
         clearInterval(enemy.INTERVAL_ID)
+        enemy.entity_text.setColor('#FF0000')
     }
 
     execute(scene, enemy){
@@ -197,10 +223,29 @@ class pursuitEnemyState extends State{
 
 class combatEnemyState extends State{
     enter(scene, enemy){
+        if(scene.p1.HIT_POINTS <=0){
+            this.stateMachine.transition('ignore')
+            return
+        }
         console.log('in enemy: combat')
+        clearInterval(enemy.INTERVAL_ID) 
         enemy.setVelocity(0)
 
         if(!enemy.isAttacking){
+
+            if(scene.sound.sounds.length < 4){
+                switch(enemy.entity_type){
+                    case 'Nepian Scout':
+                        scene.sound.play('enemy-1-hit', {volume: 0.05})
+                        break
+                    case 'Nepian Observer':
+                        scene.sound.play('enemy-2-hit', {volume: 0.05})
+                        break
+                    default:
+                        break
+                }
+            }
+
             enemy.isAttacking = true
 
             enemy.lightAttack_dmg= Phaser.Math.Between(enemy.attackPower, enemy.attackPower + enemy.attackPower/2)
@@ -210,8 +255,10 @@ class combatEnemyState extends State{
             x === 0 ? scene.p1.HIT_POINTS -= enemy.lightAttack_dmg : scene.p1.HIT_POINTS -= enemy.heavyAttack_dmg
             
             console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
+            let attackText = scene.add.text(scene.p1.x + Phaser.Math.Between(-50, 50), scene.p1.y + Phaser.Math.Between(-10,-60), x === 0 ? '-'+enemy.lightAttack_dmg : '-'+enemy.heavyAttack_dmg, {fill: '#FF0000'}).setScale(2).setOrigin(0)
+            scene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
-            scene.time.delayedCall(1000, ()=>{
+            scene.time.delayedCall(2000, ()=>{
                 if(!(enemy.FSM.state === 'dead')){
                     enemy.isAttacking = false
                     enemy.FSM.transition('pursuit') 
@@ -222,6 +269,7 @@ class combatEnemyState extends State{
 
     execute(scene, enemy){
         if(!listen(scene, enemy)){
+            console.log('here')
             enemy.FSM.transition('idle')
         }
     }
@@ -230,6 +278,8 @@ class combatEnemyState extends State{
 
 class deadEnemyState extends State{
     enter(scene, enemy){
+
+        enemy.HEALTH_BAR.clear()
         console.log('in enemy: dying')
 
         //die
@@ -270,6 +320,7 @@ class deadEnemyState extends State{
                         enemy.body.enable = true
                         enemy.isAlive = true
                         enemy.looted = false
+                        enemy.isAttacking = false
                         enemy.HIT_POINTS = enemy.HIT_POINTS_log
                         enemy.FSM.transition('idle')  
                     })
@@ -278,3 +329,30 @@ class deadEnemyState extends State{
         }) // remove enemy from scene after appropritte time to loot
     }
 }
+
+class resetEnemyState extends State{
+    enter(scene, enemy){
+        console.log('in enemy reset')
+        clearInterval(enemy.INTERVAL_ID)
+        enemy.setVelocity(0)
+        enemy.setVelocityY(enemy.VELOCITY)  
+    }
+
+
+    execute(scene, enemy){
+        if(enemy.y >= 899){
+            scene.time.delayedCall(5000, ()=>{this.stateMachine.transition('idle')})
+        }
+    }
+}
+
+
+class ignoreEnemyState extends State{
+    enter(scene, enemy){
+        console.log('enemy ignore')
+        clearInterval(enemy.INTERVAL_ID)
+        enemy.setVelocity(0)
+        scene.time.delayedCall(5000, ()=> {this.stateMachine.transition('idle')})
+    }
+}
+

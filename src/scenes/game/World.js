@@ -54,16 +54,16 @@ class World extends Phaser.Scene{
         this.items = []
         objlayer.objects.forEach(element => {
             if(element.name === 'enemy_spawn'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1', 0, 'Nepian Scout', 50, [element.x, element.y], 10))
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y],10).setScale(1.25).anims.play('enemy-idle-anim'))
             } else if(element.name === 'enemy_spawn_2'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2', 0, 'Greater Nepian Scout', 10, [element.x, element.y], 20))
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 25, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
             } else if (element.name === 'bush_1'){
                this.items.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(25).anims.play('bush-1-anim'))
             } 
         })
 
         //lopad order is important
-        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
+        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 500)
 
         objlayer.objects.forEach(element => {
             if (element.name === 'tree_1'){
@@ -126,18 +126,4 @@ class World extends Phaser.Scene{
     update(){
     }
     
-}
-
-
-function CreateQuestObject(jsonData){
-    let returnObj = {
-        "questnumber" : jsonData.questdata.questnumber,
-        "verb" : jsonData.questdata.verb,
-        "type" : jsonData.questdata.type,
-        "ammount" : jsonData.questdata.ammount,
-        "actual" : 0,
-
-    }
-
-    return returnObj
 }

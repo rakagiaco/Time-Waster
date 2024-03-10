@@ -7,8 +7,8 @@ class Ally extends Entity{
             interacting: new interactionAllyState() // we want to be able to pass the players state in as an argement and do something based on the state
         }, [scene, this])
 
-
         this.icon_sprite = undefined
+        this.HEALTH_BAR.setAlpha(0)
     }
 
 
@@ -108,7 +108,7 @@ class interactionAllyState extends State{
                     acceptBTN.on('pointerdown', () => {
                         if(playercurrentquest.finished === true){
                             playercurrentquest.finished = false
-                            playercurrentquest.currentQuest = CreateQuestObject(element)
+                            playercurrentquest.currentQuest = CreateQuestObject(element, scene.p1)
                         }  
                         window.destroy()
                         closeBTN.destroy()
@@ -130,6 +130,9 @@ class interactionAllyState extends State{
                         completeBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/2)), scene.cameras.main.scrollY + scene.cameras.main.height/2, 
                         'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive()
                         completeBTN.on('pointerdown', ()=>{
+                            if(playercurrentquest.currentQuest.verb != 'kill'){
+                                scene.p1.p1Inventory.remove(playercurrentquest.currentQuest.type, playercurrentquest.currentQuest.actual)
+                            }
                             playercurrentquest.number = element.questdata.questnumber
                             playercurrentquest.finished = true   
                             avaQ.destroy()

@@ -8,13 +8,16 @@ class Player extends Entity{
 
     //properties---------------------------------
         
+        //inventory
+        this.p1Inventory = new Inventory()
+
         //tracks if player has a window open
         this.windowOpen = false 
 
         //walking noise
         this.walk_noise = scene.sound.add('walking', {rate: 1.5, repeat: -1})
 
-        this.setOrigin(0.5,0.5)
+        this.setOrigin(0)
 
         //visual quest text:
         let padding = 10
@@ -46,7 +49,8 @@ class Player extends Entity{
             moving: new movingState(),
             interacting: new interactionPlayerState(),
             swim: new inWaterPlayerState(),
-            attack: new attackPlayerState()
+            attack: new attackPlayerState(),
+            dead: new deadPlayerState()
         }, [scene, this])
 
         //input
@@ -56,17 +60,24 @@ class Player extends Entity{
         keyRight = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         keyAttackLight = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE)
         keyAttackHeavy = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO)
+        keyInventory = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB)
     }
 
     update(){
-        this.displayCurrentQuests()
-        this.animsFSM.step()
+        if(this.HIT_POINTS <= 0 && this.animsFSM.state !== 'dead'){
+            this.animsFSM.transition('dead')
+        }
+        if(this.isAlive){
+            super.updateHealthBar()
+            this.displayCurrentQuests()
+            this.animsFSM.step()
+        } 
     }
 
     handleCollision(collided){
 
-        //collides with enemy, put it in combat might need if here
-        collided.FSM.transition('combat')
+        // //collides with enemy, put it in combat might need if here
+        // collided.FSM.transition('combat')
 
         //get current x and y of collided
        let x =[collided.body.velocity.x, collided.body.velocity.y]
@@ -74,6 +85,7 @@ class Player extends Entity{
        //properties to define the attack 
        let attackVector = new Phaser.Math.Vector2(0)
        let attackVelocity = 0
+       let attackText
     
        //set a knockback direction
        x[0] > 0 ? attackVector.x = -1 : attackVector.x = 1
@@ -84,9 +96,11 @@ class Player extends Entity{
             switch(this.pkg.attack_type){
                 case 'light':
                     // console.log('player used light attack on enemy')
+                    attackText = this.parentScene.add.text(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60),this.pkg.dmg, {fill: '#0000FF'}).setScale(2).setOrigin(0)
+                    this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
                     //ensure no sound overlap
-                    if(this.parentScene.sound.sounds.length === 2){
+                    if(this.parentScene.sound.sounds.length < 6){
                         this.parentScene.sound.play('attack-light-hit', {volume: 0.05})
                     }
 
@@ -104,7 +118,13 @@ class Player extends Entity{
                     //console.log(collided.HIT_POINTS)
                     break
                 case 'heavy':
-                    if(this.parentScene.sound.sounds.length === 2){
+
+                    attackText = this.parentScene.add.text(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), x === 0 ? this.pkg.dmg : this.pkg.dmg, {fill: '#0000FF'}).setScale(2).setOrigin(0)
+                    this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
+    
+
+                    //sound overlap
+                    if(this.parentScene.sound.sounds.length < 6){
                         this.parentScene.sound.play('attack-heavy-hit', {volume: 0.05})
                     }
                     // console.log('player used heavy attack on enemy')
@@ -128,7 +148,7 @@ class Player extends Entity{
     }
 
     handleClick(){
-        console.log(this.questStatus)
+        console.log(this.p1Inventory)
     }
 
     handleMovement(){        
@@ -173,11 +193,11 @@ class Player extends Entity{
 
     displayCurrentQuests(){
         if(this.questStatus.finished === false){
-            this.questTrackerTxtTitle.setAlpha(1)
+            this.questTrackerTxtTitle.setAlpha(1).setDepth(1)
 
             let alias = this.questStatus.currentQuest
             this.questTrackerTxtBody.text = alias.verb + ' ' +  alias.ammount + ' ' +  alias.type + ' ' + alias.actual + '/' + alias.ammount
-            this.questTrackerTxtBody.setAlpha(1)
+            this.questTrackerTxtBody.setAlpha(1).setDepth(1)
         } else {
             this.questTrackerTxtTitle.setAlpha(0)
             this.questTrackerTxtBody.setAlpha(0)
@@ -193,6 +213,8 @@ class idlePlayerState extends State{
     }
 
     execute(scene, player){
+
+        //attacking logic
         if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
@@ -200,11 +222,17 @@ class idlePlayerState extends State{
             this.stateMachine.transition('attack')
         }
 
+        //movment logic
         if(player.canMove){
             if(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown){
                 this.stateMachine.transition('moving')
-                return
             }
+        }
+
+        if(keyInventory.isDown){
+            player.windowOpen = true
+            player.p1Inventory.openInventoryWindow(scene, player)
+            this.stateMachine.transition('interacting')
         }
     }
 }
@@ -315,4 +343,36 @@ class attackPlayerState extends State{
         player.setVelocity(0)
     }
 
+}
+
+
+class deadPlayerState extends State{
+    enter(scene, player){
+        player.walk_noise.stop()
+        console.log('dead')
+        player.isAlive = false
+        player.setVelocity(0)
+        player.HEALTH_BAR.clear()
+            scene.tweens.add({
+                targets: player,
+                alpha: { from: 1, to: 0 },
+                duration: 2000,
+                onComplete: () =>{
+                    player.x = 200
+                    player.y = 200
+                    scene.time.delayedCall(500, ()=>{
+                        scene.tweens.add({
+                            targets: player,
+                            alpha: { from: 0, to: 1 },
+                            duration: 3000,
+                            onComplete: () =>{
+                                player.isAlive = true
+                                player.HIT_POINTS = player.HIT_POINTS_log
+                                player.animsFSM.transition('idle') 
+                            }
+                        })
+                    })              
+                }
+            })
+    }
 }

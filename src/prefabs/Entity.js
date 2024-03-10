@@ -17,18 +17,22 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         //nonphysical
         this.parentScene = scene
         this.entity_type = _name
-        this.detectionDistance = 100
+        this.detectionDistance = 150
 
         //health
         this.isAlive = true
         this.HIT_POINTS = _hitPoints
         this.HIT_POINTS_log = _hitPoints //this way we can reset it
+        //healthbar
+        this.HEALTH_BAR = scene.add.graphics().setAlpha(1)
+        this.HEALTH_BAR.width = 50
+        this.updateHealthBar()
 
         //timing, reset
         this.INTERVAL_ID = undefined
         this.reset_e = true
         this.canMove = true
-        this.entity_text = scene.add.text(this.x, this.y, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0) //nameplate 
+        this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0) //nameplate 
 
 
         //damage dealing properties
@@ -37,8 +41,12 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
 
         //everything collifes with enemies
         scene.physics.add.overlap(this, scene.enemies, (object, enemy)=>{
-            //console.log(`collision between ${this.entity_type} and an enemy`)
-            this.handleCollision(enemy)
+           // console.log(`collision between ${this.entity_type} and ${enemy.entity_type}`)
+            if(this.entity_type === 'p1'){
+                enemy.handleCollision()
+                this.handleCollision(enemy)
+            }
+            
         })
 
 
@@ -54,8 +62,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
     handleCollision(){}
     handleClick(){}
 
-    update(){
-    }
+    update(){}
 
     getPosition(){
         return [this.x, this.y]
@@ -67,6 +74,21 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
 
     updateNamePlate(){
         this.entity_text.x = this.x
-        this.entity_text.y = this.y
+        this.entity_text.y = this.y - 30
+    }
+
+    updateHealthBar(){
+        let currentHealthPercent = this.HIT_POINTS / this.HIT_POINTS_log
+        this.HEALTH_BAR.clear()
+        if(currentHealthPercent < 0.3){
+            this.HEALTH_BAR.fillStyle(0xFF0000)
+        }else if(currentHealthPercent < 0.5 && currentHealthPercent > 0.3){
+            this.HEALTH_BAR.fillStyle(0xFFFF00)
+
+        }else{
+            this.HEALTH_BAR.fillStyle(0x00FF00)
+        }
+
+        this.HEALTH_BAR.fillRect(this.x, this.y - 15, this.HEALTH_BAR.width * currentHealthPercent, 5)
     }
 }

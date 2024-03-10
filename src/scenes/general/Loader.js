@@ -23,6 +23,8 @@ class Loader extends Phaser.Scene{
         this.load.spritesheet('tree-3', '/spritesheets/tree-3.png', {frameWidth: 64, frameHeight: 64})
         this.load.spritesheet('bush-1', '/spritesheets/bush-1.png', {frameWidth: 16, frameHeight: 16})
         this.load.spritesheet('quest-icon', '/spritesheets/quest-icon.png', {frameWidth: 16, frameHeight: 16})
+        this.load.spritesheet('enemy-1-anim', '/spritesheets/enemy-1.png', {frameWidth: 32, frameHeight: 50})
+        this.load.spritesheet('enemy-2-anim', '/spritesheets/enemy-2.png', {frameWidth: 32, frameHeight: 50})
 
 
         //load images (tmp)
@@ -55,6 +57,8 @@ class Loader extends Phaser.Scene{
         this.load.audio('attack-heavy', '/audio/attack-heavy.mp3')
         this.load.audio('attack-heavy-hit', '/audio/attack-heavy-hit.mp3')
         this.load.audio('collect-herb', '/audio/collect-herb.mp3')
+        this.load.audio('enemy-1-hit', '/audio/enemy-hit.mp3')
+        this.load.audio('enemy-2-hit', '/audio/enemy-hit-2.mp3')
     }   
 
     create(){
@@ -72,6 +76,24 @@ class Loader extends Phaser.Scene{
         })
         */
         
+        //enemy anum
+
+        this.anims.create({
+            key: 'enemy-idle-anim',
+            frames: this.anims.generateFrameNumbers('enemy-1-anim', {start: 0, end: 7}),
+            frameRate: 10,
+            repeat: -1
+        })
+
+        
+        this.anims.create({
+            key: 'enemy2-idle-anim',
+            frames: this.anims.generateFrameNumbers('enemy-2-anim', {start: 0, end: 6}),
+            frameRate: 10,
+            repeat: -1
+        })
+
+
         this.anims.create({
             key: 'water-moving',
             frames: this.anims.generateFrameNumbers('water-pond', {start: 0, end: 5}),
