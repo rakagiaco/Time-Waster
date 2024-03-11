@@ -80,9 +80,8 @@ class Player extends Entity{
 
     handleCollision(collided){
 
-    
         //properties to define the attack 
-        let attackVector = determineKnockbackDirection(this.parentScene, this, collided)
+        let attackVector = determineKnockbackDirection(collided,this)
         let attackVelocity = 0
         let attackText
     
@@ -126,7 +125,7 @@ class Player extends Entity{
                         collided.FSM.transition('dead')
                     } else {
                         collided.HIT_POINTS -= this.pkg.dmg
-                        attackVelocity = 500
+                        attackVelocity = 375
                         collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity)
                         this.scene.time.delayedCall(350, ()=> {
                             collided.FSM.transition('pursuit')
@@ -141,7 +140,7 @@ class Player extends Entity{
     }
 
     handleClick(){
-       // console.log(this.p1Inventory)
+       console.log(this.questStatus)
     }
 
     handleMovement(){        
@@ -278,7 +277,6 @@ class inWaterPlayerState extends State{
     }
 
 }
-
 
 class attackPlayerState extends State{
     enter(scene, player){

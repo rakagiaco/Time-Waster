@@ -1,0 +1,12 @@
+{   
+    "name" : "Reclaiming the Valley III",
+    "description": "unknown",
+    "requirements" : "Xavius Silverleaf wants you to collect 1000 Frozen Hearts",
+    "completiontext" : "I expect this will take you some time...",
+    "questdata" : {
+        "questnumber": 7,
+        "verb" : "collect",
+        "type" : "Frozen Heart",
+        "ammount" : 1
+    }
+}

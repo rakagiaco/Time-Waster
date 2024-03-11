@@ -36,6 +36,7 @@ class idleAllyState extends State{
 
 class interactionAllyState extends State{
     enter(scene, ally){
+        console.log('interaction')
         if(!scene.p1.windowOpen){
             this.createPopupWindow(scene)
         } else {
@@ -47,7 +48,7 @@ class interactionAllyState extends State{
         
         scene.p1.windowOpen = true
 
-        let closeBTN, acceptBTN, avaQ, questTxt
+        let closeBTN, acceptBTN, avaQ, questTxt, completeBTN
         var count = 0
 
         let playercurrentquest = scene.p1.questStatus
@@ -63,9 +64,19 @@ class interactionAllyState extends State{
             toggleCursor(scene)
             window.destroy()
             closeBTN.destroy()
-            acceptBTN.destroy()
-            avaQ.destroy()
-            questTxt.destroy()
+            if(acceptBTN!== undefined){
+                acceptBTN.destroy()
+            }
+            if(avaQ!== undefined){
+                avaQ.destroy()
+            }
+            if(questTxt!== undefined){
+                questTxt.destroy()
+            }
+            
+            if(completeBTN !== undefined){
+                completeBTN.destroy()
+            }
             scene.p1.windowOpen = false
             scene.p1.animsFSM.transition('idle')
             this.stateMachine.transition('idle')
@@ -99,7 +110,11 @@ class interactionAllyState extends State{
                         if(playercurrentquest.finished === true){
                             playercurrentquest.finished = false
                             playercurrentquest.currentQuest = CreateQuestObject(element, scene.p1)
-                        }  
+                        } 
+
+                        //save quest status
+                        Window & typeof globalThis.localStorage.setItem('existing_quest', JSON.stringify(playercurrentquest))
+
                         window.destroy()
                         closeBTN.destroy()
                         avaQ.destroy()
@@ -115,14 +130,16 @@ class interactionAllyState extends State{
                     questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/4, 
                     element.completiontext , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setDepth(2)
 
-                    let completeBTN
                     if(playercurrentquest.currentQuest.actual === playercurrentquest.currentQuest.ammount){
                         completeBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/2)), scene.cameras.main.scrollY + scene.cameras.main.height/2, 
                         'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive().setDepth(2)
                         completeBTN.on('pointerdown', ()=>{
                             toggleCursor(scene)
-                            
-                            Window & typeof globalThis.localStorage.setItem('questProgress', playercurrentquest.currentQuest.questnumber)
+
+                            playercurrentquest.number = element.questdata.questnumber
+                            playercurrentquest.finished = true 
+
+                            Window & typeof globalThis.localStorage.setItem('existing_quest', JSON.stringify(playercurrentquest))
                               
                             if(playercurrentquest.currentQuest.verb != 'kill'){
                                 scene.p1.p1Inventory.remove(playercurrentquest.currentQuest.type, playercurrentquest.currentQuest.actual)
@@ -130,8 +147,6 @@ class interactionAllyState extends State{
                             const parse = JSON.stringify(Array.from(scene.p1.p1Inventory.inventory.entries()))
                             Window & typeof globalThis.localStorage.setItem('existing_inv', parse)
 
-                            playercurrentquest.number = element.questdata.questnumber
-                            playercurrentquest.finished = true   
                             avaQ.destroy()
                             window.destroy()
                             closeBTN.destroy()

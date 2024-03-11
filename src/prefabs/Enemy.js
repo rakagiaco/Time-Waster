@@ -66,8 +66,9 @@ class Enemy extends Entity{
                 x = new Item(this.parentScene, this.x, this.y, 'Frozen Heart', 0, 'Frozen Heart', true, true).setAlpha(0)
             }else if(this.entity_type === 'Nepian Observer'){
                 //roll for loot
-                let drops = Math.round(Math.random())
-                drops === 0 ? undefined : x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0)
+                let drops = Math.random()
+                console.log(drops)
+                drops >= 65 ? undefined : x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0)
             }
         
             x === undefined ? undefined:  //does x exist
@@ -201,9 +202,9 @@ class combatEnemyState extends State{
             }
 
             if(enemy.isBoss){
-                let switchtomechanic = Math.round(Math.random())
+                let switchtomechanic = Math.random()
                 console.log(switchtomechanic)
-                if(switchtomechanic === 1){
+                if(switchtomechanic <= 0.75){
                     let y = mechanics[Phaser.Math.Between(0,2)]
                     y(enemy, scene.p1, scene)
                 }

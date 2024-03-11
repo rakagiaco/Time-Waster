@@ -57,6 +57,8 @@ class Loader extends Phaser.Scene{
         this.load.json('quest-3', '/quests/quest-3.json')
         this.load.json('quest-4', '/quests/quest-4.json')
         this.load.json('quest-5', '/quests/quest-5.json')
+        this.load.json('quest-6', '/quests/quest-6.json')
+        this.load.json('quest-7', '/quests/quest-7.json')
 
         //load audio
         this.load.audio('in-water', '/audio/in-water.mp3')
@@ -73,20 +75,19 @@ class Loader extends Phaser.Scene{
         if(window.localStorage.getItem('existing_quest') != null) {
             this.quest = window.localStorage.getItem('existing_quest')
             this.quest = JSON.parse(this.quest)
-            console.log(this.quest)   
+           // console.log(this.quest)   
         }
 
         if(window.localStorage.getItem('existing_inv') != null) {
             this.existing_inv = window.localStorage.getItem('existing_inv')
             const parse = JSON.parse(this.existing_inv)
             this.existing_inv = new Map(parse)
-            console.log(this.existing_inv)
+           // console.log(this.existing_inv)
         }
-
-
     }   
 
     create(){
+
         //refrence template
         /* this.anims.create({
             key: 'running_vanilla',
@@ -256,7 +257,6 @@ class Loader extends Phaser.Scene{
             frameRate: 5,
             repeat: -1
         })
-
 
         //boss mechanics
         this.anims.create({
