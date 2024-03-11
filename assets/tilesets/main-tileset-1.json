@@ -337,8 +337,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":3463.75757575758,
-                 "y":3591.75757575758
+                 "x":3509.21212121213,
+                 "y":3625.09090909091
                 }, 
                 {
                  "height":0,
@@ -349,8 +349,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":4384,
-                 "y":3248
+                 "x":4438.54545454545,
+                 "y":3226.78787878788
                 }, 
                 {
                  "height":0,
@@ -361,8 +361,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":3288.60606060606,
-                 "y":3090.78787878788
+                 "x":3355.27272727273,
+                 "y":3108.9696969697
                 }, 
                 {
                  "height":0,
@@ -373,8 +373,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":4312,
-                 "y":3616
+                 "x":4357.45454545455,
+                 "y":3612.9696969697
                 }, 
                 {
                  "height":0,
@@ -385,8 +385,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":3832.84848484848,
-                 "y":3752.9696969697
+                 "x":3881.33333333333,
+                 "y":3804.48484848485
                 }, 
                 {
                  "height":0,
@@ -541,8 +541,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":396,
-                 "y":2089.33333333333
+                 "x":632.363636363636,
+                 "y":2001.45454545454
                 }, 
                 {
                  "height":0,
@@ -553,8 +553,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1072,
-                 "y":1560
+                 "x":1038.66666666667,
+                 "y":1617.57575757576
                 }, 
                 {
                  "height":0,
@@ -577,8 +577,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":800,
-                 "y":2400
+                 "x":896.969696969697,
+                 "y":2381.81818181818
                 }, 
                 {
                  "height":0,
@@ -589,8 +589,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":844,
-                 "y":1821.33333333333
+                 "x":519.757575757576,
+                 "y":1597.09090909091
                 }, 
                 {
                  "height":0,
@@ -601,80 +601,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1408,
-                 "y":2138
-                }, 
-                {
-                 "height":0,
-                 "id":984,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":601.148514851485,
-                 "y":2000.93069306931
-                }, 
-                {
-                 "height":0,
-                 "id":986,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":700.475247524752,
-                 "y":2021.24752475248
-                }, 
-                {
-                 "height":0,
-                 "id":987,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":629.366336633663,
-                 "y":2098
-                }, 
-                {
-                 "height":0,
-                 "id":988,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":561.643564356436,
-                 "y":2079.94059405941
-                }, 
-                {
-                 "height":0,
-                 "id":989,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":692.574257425743,
-                 "y":2060.75247524752
-                }, 
-                {
-                 "height":0,
-                 "id":990,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":624.851485148515,
-                 "y":2041.56435643564
+                 "x":335.272727272727,
+                 "y":2371.33333333333
                 }, 
                 {
                  "height":0,
@@ -685,8 +613,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":790.298,
-                 "y":1883.37
+                 "x":678.176787878788,
+                 "y":1798.52151515152
                 }, 
                 {
                  "height":0,
@@ -697,44 +625,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":889.624,
-                 "y":1903.69
-                }, 
-                {
-                 "height":0,
-                 "id":993,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":818.515,
-                 "y":1980.44
-                }, 
-                {
-                 "height":0,
-                 "id":994,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":750.793,
-                 "y":1962.38
-                }, 
-                {
-                 "height":0,
-                 "id":995,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":881.723,
-                 "y":1943.19
+                 "x":1032.04824242424,
+                 "y":1979.44757575758
                 }, 
                 {
                  "height":0,
@@ -745,32 +637,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":814,
-                 "y":1924
-                }, 
-                {
-                 "height":0,
-                 "id":997,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":744.298,
-                 "y":2021.37
-                }, 
-                {
-                 "height":0,
-                 "id":998,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":843.624,
-                 "y":2041.69
+                 "x":929.151515151515,
+                 "y":2127.0303030303
                 }, 
                 {
                  "height":0,
@@ -781,68 +649,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":628.515,
-                 "y":2162.44
-                }, 
-                {
-                 "height":0,
-                 "id":1000,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":704.793,
-                 "y":2100.38
-                }, 
-                {
-                 "height":0,
-                 "id":1001,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":835.723,
-                 "y":2081.19
-                }, 
-                {
-                 "height":0,
-                 "id":1002,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":768,
-                 "y":2062
-                }, 
-                {
-                 "height":0,
-                 "id":1003,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":784.298,
-                 "y":2035.37
-                }, 
-                {
-                 "height":0,
-                 "id":1004,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":883.624,
-                 "y":2055.69
+                 "x":746.696818181818,
+                 "y":1923.04606060606
                 }, 
                 {
                  "height":0,
@@ -853,8 +661,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":668.515,
-                 "y":2176.44
+                 "x":729.121060606061,
+                 "y":2115.83393939394
                 }, 
                 {
                  "height":0,
@@ -865,44 +673,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":600.793,
-                 "y":2158.38
-                }, 
-                {
-                 "height":0,
-                 "id":1007,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":875.723,
-                 "y":2095.19
-                }, 
-                {
-                 "height":0,
-                 "id":1008,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":808,
-                 "y":2076
-                }, 
-                {
-                 "height":0,
-                 "id":1009,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":388.298,
-                 "y":2385.37
+                 "x":546.247545454546,
+                 "y":2200.80424242424
                 }, 
                 {
                  "height":0,
@@ -913,32 +685,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":487.624,
-                 "y":2405.69
-                }, 
-                {
-                 "height":0,
-                 "id":1011,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":416.515,
-                 "y":2482.44
-                }, 
-                {
-                 "height":0,
-                 "id":1012,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":348.793,
-                 "y":2464.38
+                 "x":360.351272727273,
+                 "y":2763.26575757576
                 }, 
                 {
                  "height":0,
@@ -949,128 +697,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":479.723,
-                 "y":2445.19
-                }, 
-                {
-                 "height":0,
-                 "id":1014,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":412,
-                 "y":2426
-                }, 
-                {
-                 "height":0,
-                 "id":1015,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":164.298,
-                 "y":2409.37
-                }, 
-                {
-                 "height":0,
-                 "id":1016,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":263.624,
-                 "y":2429.69
-                }, 
-                {
-                 "height":0,
-                 "id":1017,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":192.515,
-                 "y":2506.44
-                }, 
-                {
-                 "height":0,
-                 "id":1018,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":124.793,
-                 "y":2488.38
-                }, 
-                {
-                 "height":0,
-                 "id":1019,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":255.723,
-                 "y":2469.19
-                }, 
-                {
-                 "height":0,
-                 "id":1020,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":188,
-                 "y":2450
-                }, 
-                {
-                 "height":0,
-                 "id":1021,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":258.298,
-                 "y":2549.37
-                }, 
-                {
-                 "height":0,
-                 "id":1022,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":357.624,
-                 "y":2569.69
-                }, 
-                {
-                 "height":0,
-                 "id":1023,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":286.515,
-                 "y":2646.44
+                 "x":200.935121212121,
+                 "y":2439.12939393939
                 }, 
                 {
                  "height":0,
@@ -1086,102 +714,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":1025,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":349.723,
-                 "y":2609.19
-                }, 
-                {
-                 "height":0,
-                 "id":1026,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":282,
-                 "y":2590
-                }, 
-                {
-                 "height":0,
-                 "id":1027,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":378.298,
-                 "y":2517.37
-                }, 
-                {
-                 "height":0,
-                 "id":1028,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":477.624,
-                 "y":2537.69
-                }, 
-                {
-                 "height":0,
-                 "id":1029,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":406.515,
-                 "y":2614.44
-                }, 
-                {
-                 "height":0,
-                 "id":1030,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":338.793,
-                 "y":2596.38
-                }, 
-                {
-                 "height":0,
-                 "id":1031,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":469.723,
-                 "y":2577.19
-                }, 
-                {
-                 "height":0,
-                 "id":1032,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":402,
-                 "y":2558
-                }, 
-                {
-                 "height":0,
                  "id":1033,
                  "name":"bush_1",
                  "point":true,
@@ -1189,104 +721,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":994.298,
-                 "y":2479.37
-                }, 
-                {
-                 "height":0,
-                 "id":1034,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1093.624,
-                 "y":2499.69
-                }, 
-                {
-                 "height":0,
-                 "id":1035,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1022.515,
-                 "y":2576.44
-                }, 
-                {
-                 "height":0,
-                 "id":1036,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":954.793,
-                 "y":2558.38
-                }, 
-                {
-                 "height":0,
-                 "id":1037,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1085.723,
-                 "y":2539.19
-                }, 
-                {
-                 "height":0,
-                 "id":1038,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1018,
-                 "y":2520
-                }, 
-                {
-                 "height":0,
-                 "id":1039,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":898.298,
-                 "y":2579.37
-                }, 
-                {
-                 "height":0,
-                 "id":1040,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":997.624,
-                 "y":2599.69
-                }, 
-                {
-                 "height":0,
-                 "id":1041,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":994.515,
-                 "y":2674.44
+                 "x":1039.75254545455,
+                 "y":2315.73363636364
                 }, 
                 {
                  "height":0,
@@ -1297,56 +733,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":858.793,
-                 "y":2658.38
-                }, 
-                {
-                 "height":0,
-                 "id":1043,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":989.723,
-                 "y":2639.19
-                }, 
-                {
-                 "height":0,
-                 "id":1044,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":922,
-                 "y":2620
-                }, 
-                {
-                 "height":0,
-                 "id":1045,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":910.298,
-                 "y":2629.37
-                }, 
-                {
-                 "height":0,
-                 "id":1046,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1009.624,
-                 "y":2649.69
+                 "x":243.641484848485,
+                 "y":2918.98606060606
                 }, 
                 {
                  "height":0,
@@ -1357,8 +745,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":938.515,
-                 "y":2726.44
+                 "x":1265.78772727273,
+                 "y":2980.98545454545
                 }, 
                 {
                  "height":0,
@@ -1369,44 +757,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":870.793,
-                 "y":2708.38
-                }, 
-                {
-                 "height":0,
-                 "id":1049,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1001.723,
-                 "y":2689.19
-                }, 
-                {
-                 "height":0,
-                 "id":1050,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":934,
-                 "y":2670
-                }, 
-                {
-                 "height":0,
-                 "id":1051,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1058.298,
-                 "y":2571.37
+                 "x":913.217242424242,
+                 "y":2572.01636363636
                 }, 
                 {
                  "height":0,
@@ -1417,32 +769,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1157.624,
-                 "y":2591.69
-                }, 
-                {
-                 "height":0,
-                 "id":1053,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1086.515,
-                 "y":2668.44
-                }, 
-                {
-                 "height":0,
-                 "id":1054,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1018.793,
-                 "y":2650.38
+                 "x":1266.71490909091,
+                 "y":2746.23545454545
                 }, 
                 {
                  "height":0,
@@ -1453,44 +781,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1149.723,
-                 "y":2631.19
-                }, 
-                {
-                 "height":0,
-                 "id":1056,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1082,
-                 "y":2612
-                }, 
-                {
-                 "height":0,
-                 "id":1057,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1004.298,
-                 "y":2663.37
-                }, 
-                {
-                 "height":0,
-                 "id":1058,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1103.624,
-                 "y":2683.69
+                 "x":1228.51087878788,
+                 "y":2425.12939393939
                 }, 
                 {
                  "height":0,
@@ -1501,8 +793,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1032.515,
-                 "y":2760.44
+                 "x":920.393787878788,
+                 "y":2721.04606060606
                 }, 
                 {
                  "height":0,
@@ -1513,8 +805,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":964.793,
-                 "y":2742.38
+                 "x":722.368757575758,
+                 "y":2772.68303030303
                 }, 
                 {
                  "height":0,
@@ -1525,8 +817,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1095.723,
-                 "y":2723.19
+                 "x":1207.84421212121,
+                 "y":2683.79606060606
                 }, 
                 {
                  "height":0,
@@ -1542,42 +834,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":1086,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":983.149,
-                 "y":2152.93
-                }, 
-                {
-                 "height":0,
-                 "id":1087,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1082.475,
-                 "y":2173.25
-                }, 
-                {
-                 "height":0,
-                 "id":1088,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1011.366,
-                 "y":2250
-                }, 
-                {
-                 "height":0,
                  "id":1089,
                  "name":"bush_1",
                  "point":true,
@@ -1585,116 +841,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":943.644,
-                 "y":2231.94
-                }, 
-                {
-                 "height":0,
-                 "id":1090,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1074.574,
-                 "y":2212.75
-                }, 
-                {
-                 "height":0,
-                 "id":1091,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1006.851,
-                 "y":2193.56
-                }, 
-                {
-                 "height":0,
-                 "id":1092,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1271.624,
-                 "y":2055.69
-                }, 
-                {
-                 "height":0,
-                 "id":1093,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1200.515,
-                 "y":2132.44
-                }, 
-                {
-                 "height":0,
-                 "id":1094,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1132.793,
-                 "y":2114.38
-                }, 
-                {
-                 "height":0,
-                 "id":1095,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1263.723,
-                 "y":2095.19
-                }, 
-                {
-                 "height":0,
-                 "id":1096,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1196,
-                 "y":2076
-                }, 
-                {
-                 "height":0,
-                 "id":1097,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1126.298,
-                 "y":2173.37
-                }, 
-                {
-                 "height":0,
-                 "id":1098,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1225.624,
-                 "y":2193.69
+                 "x":973.94703030303,
+                 "y":2183.45515151515
                 }, 
                 {
                  "height":0,
@@ -1705,68 +853,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1010.515,
-                 "y":2314.44
-                }, 
-                {
-                 "height":0,
-                 "id":1100,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1086.793,
-                 "y":2252.38
-                }, 
-                {
-                 "height":0,
-                 "id":1101,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1217.723,
-                 "y":2233.19
-                }, 
-                {
-                 "height":0,
-                 "id":1102,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1150,
-                 "y":2214
-                }, 
-                {
-                 "height":0,
-                 "id":1103,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1166.298,
-                 "y":2187.37
-                }, 
-                {
-                 "height":0,
-                 "id":1104,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1265.624,
-                 "y":2207.69
+                 "x":1149.90893939394,
+                 "y":2296.25818181818
                 }, 
                 {
                  "height":0,
@@ -1777,8 +865,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1050.515,
-                 "y":2328.44
+                 "x":1126.27257575758,
+                 "y":2543.59151515152
                 }, 
                 {
                  "height":0,
@@ -1789,68 +877,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":982.793,
-                 "y":2310.38
-                }, 
-                {
-                 "height":0,
-                 "id":1107,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1257.723,
-                 "y":2247.19
-                }, 
-                {
-                 "height":0,
-                 "id":1108,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":1190,
-                 "y":2228
-                }, 
-                {
-                 "height":0,
-                 "id":1109,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":89.1489999999999,
-                 "y":1910.93
-                }, 
-                {
-                 "height":0,
-                 "id":1110,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":188.475,
-                 "y":1931.25
-                }, 
-                {
-                 "height":0,
-                 "id":1111,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":117.366,
-                 "y":2008
+                 "x":1316.12633333333,
+                 "y":2149.77393939394
                 }, 
                 {
                  "height":0,
@@ -1866,30 +894,6 @@
                 }, 
                 {
                  "height":0,
-                 "id":1113,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":180.574,
-                 "y":1970.75
-                }, 
-                {
-                 "height":0,
-                 "id":1114,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":112.851,
-                 "y":1951.56
-                }, 
-                {
-                 "height":0,
                  "id":1115,
                  "name":"bush_1",
                  "point":true,
@@ -1897,32 +901,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":377.624,
-                 "y":1813.69
-                }, 
-                {
-                 "height":0,
-                 "id":1116,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":306.515,
-                 "y":1890.44
-                }, 
-                {
-                 "height":0,
-                 "id":1117,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":238.793,
-                 "y":1872.38
+                 "x":489.745212121212,
+                 "y":1774.29606060606
                 }, 
                 {
                  "height":0,
@@ -1933,44 +913,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":369.723,
-                 "y":1853.19
-                }, 
-                {
-                 "height":0,
-                 "id":1119,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":302,
-                 "y":1834
-                }, 
-                {
-                 "height":0,
-                 "id":1120,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":232.298,
-                 "y":1931.37
-                }, 
-                {
-                 "height":0,
-                 "id":1121,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":331.624,
-                 "y":1951.69
+                 "x":387.904818181818,
+                 "y":1701.67484848485
                 }, 
                 {
                  "height":0,
@@ -1981,56 +925,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":116.515,
-                 "y":2072.44
-                }, 
-                {
-                 "height":0,
-                 "id":1123,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":192.793,
-                 "y":2010.38
-                }, 
-                {
-                 "height":0,
-                 "id":1124,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":323.723,
-                 "y":1991.19
-                }, 
-                {
-                 "height":0,
-                 "id":1125,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":256,
-                 "y":1972
-                }, 
-                {
-                 "height":0,
-                 "id":1126,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":272.298,
-                 "y":1945.37
+                 "x":137.727121212121,
+                 "y":2096.68242424242
                 }, 
                 {
                  "height":0,
@@ -2041,8 +937,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":371.624,
-                 "y":1965.69
+                 "x":283.745212121212,
+                 "y":1492.96272727273
                 }, 
                 {
                  "height":0,
@@ -2053,8 +949,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":156.515,
-                 "y":2086.44
+                 "x":177.727121212121,
+                 "y":1850.07636363636
                 }, 
                 {
                  "height":0,
@@ -2065,32 +961,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":88.7930000000001,
-                 "y":2068.38
-                }, 
-                {
-                 "height":0,
-                 "id":1130,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":363.723,
-                 "y":2005.19
-                }, 
-                {
-                 "height":0,
-                 "id":1131,
-                 "name":"bush_1",
-                 "point":true,
-                 "rotation":0,
-                 "type":"",
-                 "visible":true,
-                 "width":0,
-                 "x":296,
-                 "y":1986
+                 "x":94.8536060606062,
+                 "y":1532.01636363636
                 }, 
                 {
                  "height":0,
@@ -2101,8 +973,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1114,
-                 "y":995.333333333333
+                 "x":759.454545454545,
+                 "y":949.878787878788
                 }, 
                 {
                  "height":0,
@@ -2149,8 +1021,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":594.793,
-                 "y":1356.38
+                 "x":567.520272727273,
+                 "y":1456.38
                 }, 
                 {
                  "height":0,
@@ -2485,8 +1357,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":240,
-                 "y":2138
+                 "x":415.757575757576,
+                 "y":2016.78787878788
                 }, 
                 {
                  "height":0,
@@ -2497,8 +1369,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":334,
-                 "y":2224
+                 "x":440.060606060606,
+                 "y":2184.60606060606
                 }, 
                 {
                  "height":0,
@@ -2521,8 +1393,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":466,
-                 "y":2250
+                 "x":517.515151515152,
+                 "y":2353.0303030303
                 }, 
                 {
                  "height":0,
@@ -2533,8 +1405,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":642,
-                 "y":2462
+                 "x":805.636363636364,
+                 "y":2349.87878787879
                 }, 
                 {
                  "height":0,
@@ -2629,8 +1501,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":1160,
-                 "y":2688
+                 "x":1517.57575757576,
+                 "y":2566.78787878788
                 }, 
                 {
                  "height":0,
@@ -2689,8 +1561,8 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":646,
-                 "y":2588
+                 "x":539.939393939394,
+                 "y":2809.21212121212
                 }, 
                 {
                  "height":0,
@@ -3025,8 +1897,20 @@
                  "type":"",
                  "visible":true,
                  "width":0,
-                 "x":836,
-                 "y":992
+                 "x":369.333333333333,
+                 "y":964.727272727273
+                }, 
+                {
+                 "height":0,
+                 "id":1329,
+                 "name":"boss_spawn",
+                 "point":true,
+                 "rotation":0,
+                 "type":"",
+                 "visible":true,
+                 "width":0,
+                 "x":3962.24242424242,
+                 "y":3337.87878787879
                 }],
          "opacity":1,
          "type":"objectgroup",
@@ -3035,7 +1919,7 @@
          "y":0
         }],
  "nextlayerid":4,
- "nextobjectid":1329,
+ "nextobjectid":1331,
  "orientation":"orthogonal",
  "renderorder":"right-down",
  "tiledversion":"1.10.2",

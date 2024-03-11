@@ -1,13 +1,15 @@
 class Loader extends Phaser.Scene{
     constructor(){
         super('Loader')
+
     }
 
     init(){
+        this.quest = undefined
+        this.existing_inv = undefined
     }
 
     preload(){
-
         //path
         this.load.path = './assets'
 
@@ -25,7 +27,7 @@ class Loader extends Phaser.Scene{
         this.load.spritesheet('quest-icon', '/spritesheets/quest-icon.png', {frameWidth: 16, frameHeight: 16})
         this.load.spritesheet('enemy-1-anim', '/spritesheets/enemy-1.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('enemy-2-anim', '/spritesheets/enemy-2.png', {frameWidth: 32, frameHeight: 50})
-
+        this.load.spritesheet('boss-aoe', '/spritesheets/damage-aoe-boss.png', {frameWidth: 32, frameHeight: 32})
 
         //load images (tmp)
         this.load.image('enemy-1', '/img/enemy-1.png')
@@ -38,10 +40,17 @@ class Loader extends Phaser.Scene{
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
         this.load.image('fruit', '/img/fruit.png')
         this.load.image('cursor', '/img/cursor.png')
+        this.load.image('cursor-2', '/img/cursor-2.png')
         this.load.image('fullscreen' , '/img/fullscreen.png')
-        this.load.image('start-button', '/img/start-button-1.png')
+        this.load.image('damage-cone', '/img/damage-cone.png')// remove
+        this.load.image('rect', '/img/rect.png')
+        this.load.image('new-game-button', '/img/new-game-button.png')
+        this.load.image('new-game-button-hover', '/img/new-game-button-hover.png')
+        this.load.image('continue-game-button', '/img/continue-game-button.png')
+        this.load.image('continue-game-button-hover', '/img/continue-game-button-hover.png')
+        this.load.image('Frozen Heart', '/img/frozen-heart.png')
+        this.load.image('save', '/img/save.png')
 
-        
         //load quests
         this.load.json('quest-1', '/quests/quest-1.json')
         this.load.json('quest-2', '/quests/quest-2.json')
@@ -59,11 +68,26 @@ class Loader extends Phaser.Scene{
         this.load.audio('collect-herb', '/audio/collect-herb.mp3')
         this.load.audio('enemy-1-hit', '/audio/enemy-hit.mp3')
         this.load.audio('enemy-2-hit', '/audio/enemy-hit-2.mp3')
+
+
+        if(window.localStorage.getItem('existing_quest') != null) {
+            this.quest = window.localStorage.getItem('existing_quest')
+            this.quest = JSON.parse(this.quest)
+            console.log(this.quest)   
+        }
+
+        if(window.localStorage.getItem('existing_inv') != null) {
+            this.existing_inv = window.localStorage.getItem('existing_inv')
+            const parse = JSON.parse(this.existing_inv)
+            this.existing_inv = new Map(parse)
+            console.log(this.existing_inv)
+        }
+
+
     }   
 
     create(){
-        
-
+        //refrence template
         /* this.anims.create({
             key: 'running_vanilla',
             frames: this.anims.generateFrameNames('player', {
@@ -76,23 +100,20 @@ class Loader extends Phaser.Scene{
         })
         */
         
-        //enemy anum
-
+        //enemy anims
         this.anims.create({
             key: 'enemy-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-1-anim', {start: 0, end: 7}),
             frameRate: 10,
             repeat: -1
         })
-
-        
+  
         this.anims.create({
             key: 'enemy2-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-2-anim', {start: 0, end: 6}),
             frameRate: 10,
             repeat: -1
         })
-
 
         this.anims.create({
             key: 'water-moving',
@@ -125,7 +146,6 @@ class Loader extends Phaser.Scene{
             repeatDelay: 4500
         })
 
-        
         this.anims.create({
             key: 'tree-1-anim3',
             frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
@@ -134,7 +154,6 @@ class Loader extends Phaser.Scene{
             repeatDelay: 5500
         })
 
-        
         this.anims.create({
             key: 'tree-1-anim4',
             frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
@@ -143,7 +162,6 @@ class Loader extends Phaser.Scene{
             repeatDelay: 6500
         })
 
-        
         this.anims.create({
             key: 'tree-1-anim5',
             frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
@@ -151,7 +169,6 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 7500
         })
-
 
         //tree2 - anim 1
         this.anims.create({
@@ -161,8 +178,7 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 2500
         })
-
-           
+  
         this.anims.create({
             key: 'tree-2-anim1',
             frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
@@ -170,8 +186,7 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 3500
         })
-
-           
+ 
         this.anims.create({
             key: 'tree-2-anim2',
             frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
@@ -179,8 +194,7 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 4500
         })
-
-           
+   
         this.anims.create({
             key: 'tree-2-anim3',
             frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
@@ -188,8 +202,7 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 5500
         })
-
-        
+ 
         this.anims.create({
             key: 'tree-2-anim4',
             frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
@@ -198,7 +211,6 @@ class Loader extends Phaser.Scene{
             repeatDelay: 2500
         })
 
-          
         this.anims.create({
             key: 'tree-2-anim5',
             frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
@@ -206,8 +218,7 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 3500
         })
-
-          
+ 
         this.anims.create({
             key: 'tree-2-anim6',
             frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
@@ -215,8 +226,7 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 4500
         })
-
-          
+ 
         this.anims.create({
             key: 'tree-2-anim7',
             frames: this.anims.generateFrameNumbers('tree-2-second',{start: 0, end: 18}),
@@ -224,7 +234,6 @@ class Loader extends Phaser.Scene{
             repeat: -1,
             repeatDelay: 5506
         })
-
 
         this.anims.create({
             key: 'tree-3-anim',
@@ -240,7 +249,6 @@ class Loader extends Phaser.Scene{
             repeat: -1
         })
 
-
         //quest icon
         this.anims.create({
             key: 'quest-icon',
@@ -248,10 +256,16 @@ class Loader extends Phaser.Scene{
             frameRate: 5,
             repeat: -1
         })
+
+
+        //boss mechanics
+        this.anims.create({
+            key: 'boss-aoe-anim',
+            frames: this.anims.generateFrameNumbers('boss-aoe', {start: 0, end: 15}),
+            frameRate: 8,
+            repeat: 1
+        })
         
-        
-        
-        
-        this.scene.start('menuScene')
+        this.scene.start('menuScene', {qobj: this.quest, inv: this.existing_inv})
     }
 }

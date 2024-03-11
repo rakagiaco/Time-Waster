@@ -17,6 +17,7 @@ class Item extends Phaser.Physics.Arcade.Sprite{
             this.on('pointerdown', ()=>{
                 if(listen(scene, this)){
                     console.log(`item click, ${this.item_type}`)
+                    toggleCursor(scene)
                     if(!scene.p1.windowOpen){
                         createLootInterfaceWindow(this, scene)
                     }   

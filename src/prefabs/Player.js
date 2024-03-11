@@ -1,15 +1,14 @@
 class Player extends Entity{
-    constructor(scene, x, y, texture, frames, _name='player', _hitPoints=100){
+    constructor(scene, x, y, texture, frames, _name='player', _hitPoints=100, qobj=undefined, inv=undefined){
         super(scene, x, y, texture, frames, _name, _hitPoints)
 
-        
+        //camera
+        scene.cameras.main.startFollow(this, true, 0.25,0.25)
 
-      
-
-    //properties---------------------------------
+    /****properties**********/
         
         //inventory
-        this.p1Inventory = new Inventory()
+        this.p1Inventory = new Inventory(inv)
 
         //tracks if player has a window open
         this.windowOpen = false 
@@ -17,20 +16,20 @@ class Player extends Entity{
         //walking noise
         this.walk_noise = scene.sound.add('walking', {rate: 1.5, repeat: -1})
 
-        this.setOrigin(0)
-
         //visual quest text:
         let padding = 10
         this.questTrackerTxtTitle = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 150, "Current Quest: ", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
         this.questTrackerTxtBody = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 100, "nil", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
        
         //quest tracker 
+        qobj === undefined ?
         this.questStatus = {
             number : 0,
             finished: true,
             currentQuest: undefined, // this holds quest obj
             completedQuests: [] // unused as of right now...
-        }
+        } :
+        this.questStatus = qobj
 
         //combat listener obj
         this.pkg = {
@@ -39,9 +38,6 @@ class Player extends Entity{
             attackCooldown : false,
             dmg : 0,
         }
-
-        //camera
-        scene.cameras.main.startFollow(this, true, 0.25,0.25)
 
         //state machines
         this.animsFSM = new StateMachine('idle', {
@@ -52,6 +48,14 @@ class Player extends Entity{
             attack: new attackPlayerState(),
             dead: new deadPlayerState()
         }, [scene, this])
+
+        //swimming!
+        scene.physics.add.overlap(this, scene.watersprite, ()=>{
+            if(this.animsFSM.state !== 'swim'){
+                scene.sound.stopAll()
+                this.animsFSM.transition('swim')
+            }
+        })
 
         //input
         keyUp = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
@@ -76,21 +80,11 @@ class Player extends Entity{
 
     handleCollision(collided){
 
-        // //collides with enemy, put it in combat might need if here
-        // collided.FSM.transition('combat')
-
-        //get current x and y of collided
-       let x =[collided.body.velocity.x, collided.body.velocity.y]
-
-       //properties to define the attack 
-       let attackVector = new Phaser.Math.Vector2(0)
-       let attackVelocity = 0
-       let attackText
     
-       //set a knockback direction
-       x[0] > 0 ? attackVector.x = -1 : attackVector.x = 1
-       x[1] > 0 ? attackVector.y = -1 : attackVector.y = 1
-
+        //properties to define the attack 
+        let attackVector = determineKnockbackDirection(this.parentScene, this, collided)
+        let attackVelocity = 0
+        let attackText
     
         if(this.pkg.isAttacking && this.animsFSM.state === 'attack'){
             switch(this.pkg.attack_type){
@@ -118,16 +112,15 @@ class Player extends Entity{
                     //console.log(collided.HIT_POINTS)
                     break
                 case 'heavy':
-
-                    attackText = this.parentScene.add.text(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), x === 0 ? this.pkg.dmg : this.pkg.dmg, {fill: '#0000FF'}).setScale(2).setOrigin(0)
+                    // console.log('player used heavy attack on enemy')
+                    attackText = this.parentScene.add.text(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), this.pkg.dmg, {fill: '#0000FF'}).setScale(2).setOrigin(0)
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
     
-
                     //sound overlap
                     if(this.parentScene.sound.sounds.length < 6){
                         this.parentScene.sound.play('attack-heavy-hit', {volume: 0.05})
                     }
-                    // console.log('player used heavy attack on enemy')
+
                     if(collided.HIT_POINTS <= this.pkg.dmg){
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
@@ -148,11 +141,10 @@ class Player extends Entity{
     }
 
     handleClick(){
-        console.log(this.p1Inventory)
+       // console.log(this.p1Inventory)
     }
 
     handleMovement(){        
-        // handle movement
         let moveDirection = new Phaser.Math.Vector2(0, 0)
         if(keyUp.isDown){
             moveDirection.y = -1
@@ -164,10 +156,7 @@ class Player extends Entity{
         }else if(keyRight.isDown){
             moveDirection.x = 1
         }
-
-        // normalize movement vector, update position, and play proper animation
         moveDirection.normalize()
-     
         this.setVelocity(this.VELOCITY * moveDirection.x, this.VELOCITY * moveDirection.y)
     }
     
@@ -176,14 +165,12 @@ class Player extends Entity{
             this.pkg.attack_type = 'light'
             this.pkg.isAttacking = true
             this.pkg.dmg = Math.round(Math.random() * 15) + 10
-            console.log('Light attack -> ' + this.pkg.dmg)
-   
+            //console.log('Light attack -> ' + this.pkg.dmg)
         } else if (keyAttackHeavy.isDown){
             this.pkg.attack_type = 'heavy'
             this.pkg.isAttacking = true
             this.pkg.dmg = Math.round(Math.random() *30) + 20  
-            console.log('Heavy attack ->' + this.pkg.dmg)
-   
+            //console.log('Heavy attack ->' + this.pkg.dmg)
         } else {
             this.pkg.attack_type = undefined
             this.pkg.isAttacking = false
@@ -193,11 +180,10 @@ class Player extends Entity{
 
     displayCurrentQuests(){
         if(this.questStatus.finished === false){
-            this.questTrackerTxtTitle.setAlpha(1).setDepth(1)
-
+            this.questTrackerTxtTitle.setAlpha(1).setDepth(3)
             let alias = this.questStatus.currentQuest
             this.questTrackerTxtBody.text = alias.verb + ' ' +  alias.ammount + ' ' +  alias.type + ' ' + alias.actual + '/' + alias.ammount
-            this.questTrackerTxtBody.setAlpha(1).setDepth(1)
+            this.questTrackerTxtBody.setAlpha(1).setDepth(3)
         } else {
             this.questTrackerTxtTitle.setAlpha(0)
             this.questTrackerTxtBody.setAlpha(0)
@@ -249,25 +235,12 @@ class movingState extends State{
 
     execute(scene, player){
 
-
         if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
             player.walk_noise.stop()
             this.stateMachine.transition('attack')
         }
-
-
-        // if(!player.pkg.isAttacking){        
-        //     player.listenForCombatInput()
-        // }
-
-        // if(player.pkg.isAttacking){
-        //     player.walk_noise.stop()
-        //     console.log('here')
-        //     this.stateMachine.transition('attack')
-        // }
-
 
         if(!(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown)) {
             player.walk_noise.stop()
@@ -312,7 +285,6 @@ class attackPlayerState extends State{
         console.log('in player: attack')
         player.setVelocity(0)
        
-
         switch(player.pkg.attack_type){
             case 'light':
                 scene.sound.play('attack-light', {volume: 0.05}) 
@@ -333,18 +305,14 @@ class attackPlayerState extends State{
         scene.time.delayedCall(25, () =>{ 
             player.pkg.isAttacking = false
             player.pkg.attackCooldown = true
-
             this.stateMachine.transition('idle')
         })
-      
     }   
 
     execute(scene, player){
         player.setVelocity(0)
     }
-
 }
-
 
 class deadPlayerState extends State{
     enter(scene, player){
@@ -353,26 +321,26 @@ class deadPlayerState extends State{
         player.isAlive = false
         player.setVelocity(0)
         player.HEALTH_BAR.clear()
-            scene.tweens.add({
-                targets: player,
-                alpha: { from: 1, to: 0 },
-                duration: 2000,
-                onComplete: () =>{
-                    player.x = 200
-                    player.y = 200
-                    scene.time.delayedCall(500, ()=>{
-                        scene.tweens.add({
-                            targets: player,
-                            alpha: { from: 0, to: 1 },
-                            duration: 3000,
-                            onComplete: () =>{
-                                player.isAlive = true
-                                player.HIT_POINTS = player.HIT_POINTS_log
-                                player.animsFSM.transition('idle') 
-                            }
-                        })
-                    })              
-                }
-            })
+        scene.tweens.add({
+            targets: player,
+            alpha: { from: 1, to: 0 },
+            duration: 2000,
+            onComplete: () =>{
+                player.x = 200
+                player.y = 200
+                scene.time.delayedCall(500, ()=>{
+                    scene.tweens.add({
+                        targets: player,
+                        alpha: { from: 0, to: 1 },
+                        duration: 3000,
+                        onComplete: () =>{
+                            player.isAlive = true
+                            player.HIT_POINTS = player.HIT_POINTS_log
+                            player.animsFSM.transition('idle') 
+                        }
+                    })
+                })              
+            }
+        })
     }
 }

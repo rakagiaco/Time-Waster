@@ -1,5 +1,5 @@
 class Enemy extends Entity{
-    constructor(scene, x, y, texture, frames, _name='NPC-enemy', _hitPoints, _origin=[], _attackPower, _detectionDist=150){
+    constructor(scene, x, y, texture, frames, _name='NPC-enemy', _hitPoints, _origin=[], _attackPower, _detectionDist=150, _isBoss=false){
         super(scene, x, y, texture, frames, _name, _hitPoints)
         
         
@@ -15,6 +15,7 @@ class Enemy extends Entity{
 
         
         //nonphysical
+        this.isBoss = _isBoss
         this.spawnOrigin = _origin
         this.detectionDistance = _detectionDist
         this.setOrigin(0)
@@ -26,23 +27,13 @@ class Enemy extends Entity{
         //overwritted
         this.attackPower = _attackPower
         this.lightAttack_dmg= Phaser.Math.Between(_attackPower, _attackPower + _attackPower/2)
-        this.heavyAttack_dmg = Phaser.Math.Between( _attackPower + _attackPower/2, _attackPower * 2)
+        this.heavyAttack_dmg = Phaser.Math.Between( _attackPower + _attackPower/2, _attackPower * 1.5)
 
         //physical
         super.VELOCITY = 50
-
-
-        //   //everything collifes with enemies
-        // scene.physics.add.overlap(this, scene.p1, ()=> {
-            
-        //     this.FSM.transition('combat')
-        // })
-
     }
 
-    init(){
-      
-    }
+    init(){}
 
     update(){
         if(this.isAlive){
@@ -61,7 +52,6 @@ class Enemy extends Entity{
         }
     }
  
-
     handleClick(){
         console.log(this.FSM.state)
         if(!listen(this.parentScene, this)){
@@ -69,14 +59,16 @@ class Enemy extends Entity{
         }
 
         if(this.FSM.state === 'dead'){
-            
-           console.log('dead click')
-            //roll for loot
-            let drops = Math.round(Math.random())
-            console.log(drops)
-
+            console.log('dead click')
+        
             let x = undefined
-            drops === 0 ? undefined : x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0)
+            if(this.entity_type === 'Electro Lord Kealthis'){ //the boss
+                x = new Item(this.parentScene, this.x, this.y, 'Frozen Heart', 0, 'Frozen Heart', true, true).setAlpha(0)
+            }else if(this.entity_type === 'Nepian Observer'){
+                //roll for loot
+                let drops = Math.round(Math.random())
+                drops === 0 ? undefined : x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0)
+            }
         
             x === undefined ? undefined:  //does x exist
             this.parentScene.p1.windowOpen ? undefined: //is there a window open
@@ -85,17 +77,6 @@ class Enemy extends Entity{
             this.looted = true
         }
     }
-
-    // reset(){
-    //     console.log('here')
-    //     this.body.enable = true
-    //     this.isAlive = true
-    //     this.x = this.spawnOrigin.x
-    //     this.y = this.spawnOrigin.y
-    //     this.entity_text.setAlpha(1)
-    //     this.setAlpha(1)
-    //     this.FSM.transition('idle')
-    // }
 }
 
 //-------------------------------------------------------------------------------
@@ -134,19 +115,6 @@ function updateMovement(enemy, scene){
     }   
 }
 
-// //seems like this kind of works
-// function resetPosition(enemy, scene){
-//     console.log('in enemy reset')
-//     clearInterval(enemy.INTERVAL_ID)
-//     enemy.setVelocity(0)
-//     enemy.setVelocityY(enemy.VELOCITY)  
-//     if(enemy.y >= 899){
-//         scene.time.delayedCall(5000, ()=>{enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
-//         })
-//     }
-// }
-
-
 //player aggression
 function pursuit(scene, enemy){
     let x = scene.p1.getPosition()
@@ -171,22 +139,7 @@ function pursuit(scene, enemy){
     enemy.setVelocity(enemy.VELOCITY * vector.x, enemy.VELOCITY * vector.y)
 }
 
-// //player detection
-// function listen(scene, listener){
-//     let x = scene.p1.getPosition()
-//     let x1 = x[0]
-//     let y1 = x[1]
-
-//     //true if player is in range (150 px)
-//     if(x1 > (listener.x-listener.detectionDistance) && x1 < (listener.x+listener.detectionDistance) && y1 > (listener.y-listener.detectionDistance) && y1 < (listener.y+listener.detectionDistance)){
-//         return true
-//     } else {
-//         return false
-//     }
-// }
-
-//---------------------------------------------------------------------
-//STATES
+/******************STATES****************/
 
 class idleEnemyState extends State{
     enter(scene, enemy){
@@ -233,6 +186,7 @@ class combatEnemyState extends State{
 
         if(!enemy.isAttacking){
 
+            //sound
             if(scene.sound.sounds.length < 4){
                 switch(enemy.entity_type){
                     case 'Nepian Scout':
@@ -243,6 +197,15 @@ class combatEnemyState extends State{
                         break
                     default:
                         break
+                }
+            }
+
+            if(enemy.isBoss){
+                let switchtomechanic = Math.round(Math.random())
+                console.log(switchtomechanic)
+                if(switchtomechanic === 1){
+                    let y = mechanics[Phaser.Math.Between(0,2)]
+                    y(enemy, scene.p1, scene)
                 }
             }
 

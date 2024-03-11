@@ -11,17 +11,11 @@ class Ally extends Entity{
         this.HEALTH_BAR.setAlpha(0)
     }
 
-
     update(){
         this.FSM.step()
     }
 
-    handleCollision(){
-
-    }
-
-    //this function derived
-
+    handleCollision(){}
     handleClick(){
         if(listen(this.parentScene, this ))
         if(this.FSM.state !== 'interacting'){
@@ -32,11 +26,10 @@ class Ally extends Entity{
     }
 }
 
-
 class idleAllyState extends State{
     enter(scene, ally){
         if(scene.p1.questStatus.finished === true && scene.p1.questStatus.number < ammountOfQuests){
-            ally.icon_sprite = scene.add.sprite(ally.x -2, ally.y-22,'quest-icon', 0).play('quest-icon')
+            ally.icon_sprite = scene.add.sprite(ally.x+18, ally.y-2,'quest-icon', 0).play('quest-icon')
         }
     }
 }
@@ -60,14 +53,14 @@ class interactionAllyState extends State{
         let playercurrentquest = scene.p1.questStatus
 
         // Create a rectangle to act as the background of the popup
-        const window = scene.add.graphics();
-        window.fillStyle(0x000000, 0.75); // Color and alpha (transparency)
+        const window = scene.add.graphics().setDepth(2)
+        window.fillStyle(0x000000, 0.75) // Color and alpha (transparency)
         window.fillRect(scene.cameras.main.scrollX + scene.cameras.main.width/4 , scene.cameras.main.scrollY + scene.cameras.main.height/8, 500, 600)
 
-
         closeBTN = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width/4, scene.cameras.main.scrollY + scene.cameras.main.height/8, "exit", {fill: '#FFFFFF'})
-        closeBTN.setInteractive()
+        closeBTN.setInteractive().setDepth(2)
         closeBTN.on('pointerdown', () => {
+            toggleCursor(scene)
             window.destroy()
             closeBTN.destroy()
             acceptBTN.destroy()
@@ -79,33 +72,30 @@ class interactionAllyState extends State{
         })
 
         acceptBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)*3), scene.cameras.main.scrollY + scene.cameras.main.height/8, "accept", {fill: '#FFFFFF'})
-        acceptBTN.setOrigin(1,0).setAlpha(0)
+        acceptBTN.setOrigin(1,0).setAlpha(0).setDepth(2)
         
         //available quests
         avaQ = scene.add.text(scene.cameras.main.scrollX + (scene.cameras.main.width/2), scene.cameras.main.scrollY + scene.cameras.main.height/6, "Quests", {fill: '#FFFFFF'}).setOrigin(0.5)
-        avaQ.setOrigin(0.5)
-
+        avaQ.setOrigin(0.5).setDepth(2)
 
         scene.quests.forEach(element => {
-
-
             if(element.questdata.questnumber == playercurrentquest.number + 1){
-
                 if(playercurrentquest.finished === true){
                     questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/4, 
                     element.name , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }})
-                    questTxt.setInteractive().setOrigin(0)
+                    questTxt.setInteractive().setOrigin(0).setDepth(2)
 
                 
                     questTxt.on('pointerdown', () => {
                         if (count === 0){ questTxt.text =  element.description} else {
                             questTxt.text = element.requirements
-                            acceptBTN.setInteractive().setAlpha(1)
+                            acceptBTN.setInteractive().setAlpha(1).setDepth(2)
                         }
                         count += 1
                     })
 
                     acceptBTN.on('pointerdown', () => {
+                        toggleCursor(scene)
                         if(playercurrentquest.finished === true){
                             playercurrentquest.finished = false
                             playercurrentquest.currentQuest = CreateQuestObject(element, scene.p1)
@@ -123,16 +113,23 @@ class interactionAllyState extends State{
 
                 } else {
                     questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/4, 
-                    element.completiontext , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }})
+                    element.completiontext , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setDepth(2)
 
                     let completeBTN
                     if(playercurrentquest.currentQuest.actual === playercurrentquest.currentQuest.ammount){
                         completeBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/2)), scene.cameras.main.scrollY + scene.cameras.main.height/2, 
-                        'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive()
+                        'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive().setDepth(2)
                         completeBTN.on('pointerdown', ()=>{
+                            toggleCursor(scene)
+                            
+                            Window & typeof globalThis.localStorage.setItem('questProgress', playercurrentquest.currentQuest.questnumber)
+                              
                             if(playercurrentquest.currentQuest.verb != 'kill'){
                                 scene.p1.p1Inventory.remove(playercurrentquest.currentQuest.type, playercurrentquest.currentQuest.actual)
                             }
+                            const parse = JSON.stringify(Array.from(scene.p1.p1Inventory.inventory.entries()))
+                            Window & typeof globalThis.localStorage.setItem('existing_inv', parse)
+
                             playercurrentquest.number = element.questdata.questnumber
                             playercurrentquest.finished = true   
                             avaQ.destroy()
@@ -145,14 +142,9 @@ class interactionAllyState extends State{
                             scene.p1.animsFSM.transition('idle')
                             this.stateMachine.transition('idle')
                         })
-                    }
-                    
+                    }    
                 }
             }
         })
     }
 }
-
-
-
-

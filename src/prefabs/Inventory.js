@@ -1,11 +1,9 @@
 class Inventory{
-    constructor(){
-        console.log('in constructor... inv')
-        this.inventory = new Map()
-
+    constructor(existing_inv){
         this.active = []
+        this.inventory = undefined
+        existing_inv === undefined ? this.inventory = new Map() : this.inventory = new Map(existing_inv)
     }
-
 
     get(item){
         if(this.inventory.has(item))
@@ -39,7 +37,7 @@ class Inventory{
     }
 
     openInventoryWindow(scene, player){
-        const window = scene.add.graphics()
+        const window = scene.add.graphics().setDepth(2)
         window.fillStyle(0x000000, 1) // Color and alpha (transparency)
 
         let windowX = scene.cameras.main.scrollX + scene.cameras.main.width/2 - 225
@@ -49,8 +47,9 @@ class Inventory{
 
         let closeBTN, winname
         closeBTN = scene.add.text(windowX, windowY, "exit", {fill: '#FFFFFF', fontSize: 15})
-        closeBTN.setInteractive()   
+        closeBTN.setInteractive().setDepth(2)   
         closeBTN.on('pointerdown', () => {
+            toggleCursor(scene)
             this.active.forEach(element =>{element.destroy()})
             window.destroy()
             closeBTN.destroy()
@@ -58,20 +57,19 @@ class Inventory{
             scene.p1.windowOpen = false
             scene.p1.animsFSM.transition('idle')
         })
-
-        
-        
-        winname = scene.add.text(windowX + 225, windowY+ 12.5, "Inventory", {fill: '#FFFFFF'}).setOrigin(0.5, 0)
+  
+        winname = scene.add.text(windowX + 225, windowY+ 12.5, "Inventory", {fill: '#FFFFFF'}).setOrigin(0.5, 0).setDepth(2)
     
-
         let counter = 0 //if 5 then increase y pos
         let beginX = windowX + 64
         let beginY = windowY + 64
 
         for(const [key, value] of this.inventory){
-           this.active.push(scene.add.image(beginX, beginY, key))
-           this.active.push( scene.add.text(beginX, beginY-32, value, {fill: '#FFFFFF', fontSize: 15}))
-           this.active.push( scene.add.text(beginX-15, beginY+32, key, {fill: '#FFFFFF', fontSize: 10}))
+           this.active.push(scene.add.image(beginX, beginY, key).setDepth(2).setInteractive().on('pointerdown', ()=>{
+                toggleCursor(scene)
+           }))
+           this.active.push( scene.add.text(beginX, beginY-32, value, {fill: '#FFFFFF', fontSize: 15}).setDepth(2))
+           this.active.push( scene.add.text(beginX-15, beginY+32, key, {fill: '#FFFFFF', fontSize: 10}).setDepth(2))
             if(counter === 2){
                 counter = 0
                 beginY += 128

@@ -3,12 +3,11 @@ class Menu extends Phaser.Scene{
         super('menuScene')
     }
 
-    create(){
-        
+    create(data){
         //title
         this.add.text(game.config.width/2, game.config.height/2 - 25, 'Time Waster',{
-            fontFamily: 'Comic Sans MS',
-            fontSize : '30px',
+            fontFamily: 'Helvetica',
+            fontSize : '40px',
             fontStyle: 'italic',
             color : '#FFFFFF',
             align : 'right', 
@@ -16,12 +15,18 @@ class Menu extends Phaser.Scene{
             fixedWidth : 0,
         }).setOrigin(0.5)
   
-        //buttons
-        this.startButton = this.add.sprite(game.config.width/2, game.config.height/2 + 150, 'start-button').setInteractive()
-        
-        //button logic
-        this.startButton.on('pointerdown', ()=>{
-            this.scene.start('worldScene')
+        //todo CONTINUE ART
+        this.continueButton = this.add.image(game.config.width/2 - 150, game.config.height/2+ 200, 'continue-game-button').setInteractive({ useHandCursor: true }).on('pointerdown', ()=>{
+            this.scene.start('worldScene', data)
         }) 
+
+        //todo NEW GAME ART 
+        this.newGameBtn = this.add.image(game.config.width/2 + 150, game.config.height/2+ 200, 'new-game-button').setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+            window.localStorage.removeItem('existing_inv')
+            window.localStorage.removeItem('existing_quest')
+            data.inv = undefined
+            data.qobj = undefined
+            this.scene.start('worldScene', data)
+        })
     }
 }

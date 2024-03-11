@@ -3,14 +3,15 @@ class World extends Phaser.Scene{
         super('worldScene')
     }
 
-
-    init(){
+    init(data){
+        this.qobj = data.qobj
+        this.inv = data.inv
     }
 
     preload(){}
 
     create(){
-    
+        
         //load map
         const map = this.add.tilemap('tilemapJSON')
         const tileset = map.addTilesetImage('base_tileset', 'base-tileset')
@@ -19,62 +20,53 @@ class World extends Phaser.Scene{
         const npc1Spawn = map.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
         const objlayer = map.getObjectLayer('Player/NPC')
 
-        // const enemySpawn = map.findObject('Player/NPC', obj => obj.name === 'enemy_spawn')
-        
         //camera stuff
-        // this.cameras.main.startFollow(this.player, true, 0.25,0.25)
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
         this.physics.world.setBounds(0,0, map.widthInPixels, map.heightInPixels)
 
         //cursor
         this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')
-
-        // //fullscreen button credit Nathan Altice
-        // // add fullscreen button
-        // this.fullscreenBtn = this.add.sprite(game.config.width - 15, game.config.height - 15, 'fullscreen').setScale(2).setScrollFactor(0)
-        // this.fullscreenBtn.setOrigin(1)
-        // this.fullscreenBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
-        //     this.scale.toggleFullscreen()
+        // this.input.on('pointerdown', ()=>{
+        //     this.input.setDefaultCursor('url(assets/img/cursor-2.png), pointer')
+        //     this.time.delayedCall(250, ()=>{this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')})
         // })
 
-        //encapsulate quests 
+        //containers
+        this.enemies = [] 
+        this.bushes = []
         this.quests = []
+
+        //get all the quest data
         for(let i = 0; i < ammountOfQuests; i++){
             this.quests.push(this.cache.json.get(`quest-${i + 1}`)) 
         }
-
 
         //spawn sprites
         this.watersprite = this.physics.add.sprite(1000,200, 'water-pond', 0).setScale(5).setImmovable(true)
         this.watersprite.anims.play('water-moving', true)
 
-
-        //spawn entities
-        this.enemies = [] 
-        this.items = []
         objlayer.objects.forEach(element => {
+            if(element.name === 'boss_spawn'){
+                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 200, [element.x, element.y], 25, 400, true))
+            }
             if(element.name === 'enemy_spawn'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y],10).setScale(1.25).anims.play('enemy-idle-anim'))
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y], 10).setScale(1.25).anims.play('enemy-idle-anim'))
             } else if(element.name === 'enemy_spawn_2'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 25, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 17.5, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
             } else if (element.name === 'bush_1'){
-               this.items.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(25).anims.play('bush-1-anim'))
+               this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(25).anims.play('bush-1-anim'))
             } 
         })
 
-        //lopad order is important
-        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 500)
-
         objlayer.objects.forEach(element => {
             if (element.name === 'tree_1'){
-                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
+                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setDepth(2).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
             } else if (element.name === 'tree_2'){
-                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
+                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setDepth(2).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
             } else if (element.name === 'tree_3'){
-                let x = this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setScale(2.5).setImmovable(true).setInteractive()
-
-                x.on('pointerdown', ()=>{
+                let x = this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setDepth(2).setScale(2.5).setImmovable(true).setInteractive().on('pointerdown', ()=>{
                     if(listen(this, x)){
+                        toggleCursor(this)
                         x.anims.play('tree-3-anim')
                         this.time.delayedCall(2000,()=>{
                             let y = new Item(this, x.x, x.y, 'fruit', 0, 'fruit', true, true).setAlpha(0)
@@ -85,30 +77,35 @@ class World extends Phaser.Scene{
                 })
             }
         })
-
-        //this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 100)
+ 
+        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 500, this.qobj, this.inv) 
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
-        
-        this.physics.add.overlap(this.p1, this.watersprite, ()=>{
-            if(this.p1.animsFSM.state != 'swim'){
-                this.sound.stopAll()
-                this.p1.animsFSM.transition('swim')
-            }
-        })
 
-
-
-           //fullscreen button credit Nathan Altice
-        // add fullscreen button
-        this.fullscreenBtn = this.add.sprite(game.config.width - 15, game.config.height - 15, 'fullscreen').setScale(2).setScrollFactor(0)
+        //fullscreen button credit Nathan Altice
+        this.fullscreenBtn = this.add.sprite(game.config.width - 25, game.config.height - 15, 'fullscreen').setScale(2).setScrollFactor(0).setDepth(3)
         this.fullscreenBtn.setOrigin(1)
         this.fullscreenBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             this.scale.toggleFullscreen()
         })
 
-        //debug co
-        /*************************************** */
-        //this.p1.VELOCITY = 1000
+        //settings window
+        this.settingsBtn = this.add.sprite(game.config.width - 75, game.config.height - 15, 'save').setScrollFactor(0).setDepth(3)
+        this.settingsBtn.setOrigin(1)
+        this.settingsBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+            const parse_inv = JSON.stringify(Array.from(this.p1.p1Inventory.inventory.entries()))
+            const parse_qst = JSON.stringify(this.p1.questStatus)
+            window.localStorage.setItem('existing_inv', parse_inv)
+            window.localStorage.setItem('existing_quest', parse_qst)
+            // this.enemies.forEach(element => {
+            //     clearInterval(element.INTERVAL_ID)
+            // })
+            // this.scene.start('menuScene')
+        })
+    
+
+        //debug code
+        /***************************************/
+        this.p1.VELOCITY = 1000
         let debugToggle = this.input.keyboard.addKey('F')
         this.physics.world.drawDebug = false
         debugToggle.on('down', ()=> {
@@ -119,11 +116,8 @@ class World extends Phaser.Scene{
                 this.physics.world.drawDebug = true;
             }
         })
-        /******************************************* */
-
+        /********************************************/
     }
 
-    update(){
-    }
-    
+    update(){} 
 }

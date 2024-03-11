@@ -4,8 +4,6 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
 
         scene.add.existing(this)
         scene.physics.add.existing(this)
-
-        //forced update
         scene.events.on('update', this.update, this)
 
         //physical properties
@@ -13,8 +11,11 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.setCollideWorldBounds(true)
         this.setScale(2.5)   
         this.setInteractive()
+        
 
         //nonphysical
+        this.setOrigin(0)
+        this.setDepth(1)
         this.parentScene = scene
         this.entity_type = _name
         this.detectionDistance = 150
@@ -24,7 +25,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.HIT_POINTS = _hitPoints
         this.HIT_POINTS_log = _hitPoints //this way we can reset it
         //healthbar
-        this.HEALTH_BAR = scene.add.graphics().setAlpha(1)
+        this.HEALTH_BAR = scene.add.graphics().setAlpha(1).setDepth(1)
         this.HEALTH_BAR.width = 50
         this.updateHealthBar()
 
@@ -34,14 +35,13 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.canMove = true
         this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0) //nameplate 
 
-
         //damage dealing properties
         this.lightAttack_dmg = undefined
         this.heavyAttack_dmg = undefined
 
-        //everything collifes with enemies
+        //everything collides with enemies
         scene.physics.add.overlap(this, scene.enemies, (object, enemy)=>{
-           // console.log(`collision between ${this.entity_type} and ${enemy.entity_type}`)
+            //console.log(`collision between ${this.entity_type} and ${enemy.entity_type}`)
             if(this.entity_type === 'p1'){
                 enemy.handleCollision()
                 this.handleCollision(enemy)
@@ -49,10 +49,9 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
             
         })
 
-
-
         this.on('pointerdown', ()=>{
             console.log(`entity-click ${this.entity_type}`)
+            toggleCursor(scene)
             this.handleClick()
         })  
     }
