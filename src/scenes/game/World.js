@@ -129,15 +129,16 @@ class World extends Phaser.Scene{
 
         //debug code
         /***************************************/
-        this.p1.VELOCITY = 150
         let debugToggle = this.input.keyboard.addKey('F')
         this.physics.world.drawDebug = false
         debugToggle.on('down', ()=> {
             if(this.physics.world.drawDebug) {
                 this.physics.world.drawDebug = false;
                 this.physics.world.debugGraphic.clear();
+                this.p1.VELOCITY = 100
             }else{
                 this.physics.world.drawDebug = true;
+                this.p1.VELOCITY = 500
             }
         })
         /********************************************/
