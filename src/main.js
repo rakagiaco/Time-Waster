@@ -3,7 +3,8 @@
 'use strict'
 
 let config = {
-    type: Phaser.AUTO,
+    parent: 'gameContainer',
+    type: Phaser.WEBGL,
     width: 1000,
     height: 800,
     render: {

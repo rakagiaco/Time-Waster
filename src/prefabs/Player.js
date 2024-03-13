@@ -1,20 +1,34 @@
 class Player extends Entity{
-    constructor(scene, x, y, texture, frames, _name='player', _hitPoints=100, qobj=undefined, inv=undefined){
+    constructor(scene, x, y, texture, frames, _name='player', _hitPoints=10, qobj=undefined, inv=undefined){
         super(scene, x, y, texture, frames, _name, _hitPoints)
 
         //camera
         scene.cameras.main.startFollow(this, true, 0.25,0.25)
 
     /****properties**********/
-        
+
+        //phaser stuff
+        this.setScale(1.65)
+
         //inventory
         this.p1Inventory = new Inventory(inv)
 
         //tracks if player has a window open
         this.windowOpen = false 
-
+        
+        /**
+         * @param {Array[Phaser.GameObjects]} objs an array of phaser gameobjs in refrence to open window
+         * @param {Inventory.active} array specific to this project, for the inventory manager
+         */
+        this.currentWindow = {
+            objs: undefined,
+            array: undefined
+        }
+    
         //walking noise
-        this.walk_noise = scene.sound.add('walking', {rate: 1.5, repeat: -1})
+        this.walk_noise = scene.sound.add('walking', {rate: 1.5, volume: 0.25})
+        this.attack_noise_light_hit = scene.sound.add('attack-light-hit', {volume: 0.05})
+        this.attack_noise_heavy_hit = scene.sound.add('attack-heavy-hit', {volume: 0.05})
 
         //visual quest text:
         let padding = 10
@@ -50,12 +64,16 @@ class Player extends Entity{
         }, [scene, this])
 
         //swimming!
-        scene.physics.add.overlap(this, scene.watersprite, ()=>{
+        scene.physics.add.overlap(this, scene.ponds, ()=>{
             if(this.animsFSM.state !== 'swim'){
                 scene.sound.stopAll()
                 this.animsFSM.transition('swim')
             }
         })
+
+        scene.physics.add.collider(this, scene.n1, ()=>{
+            console.log('collider')
+        }) 
 
         //input
         keyUp = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
@@ -85,7 +103,7 @@ class Player extends Entity{
         let attackVelocity = 0
         let attackText
     
-        if(this.pkg.isAttacking && this.animsFSM.state === 'attack'){
+        if(this.pkg.isAttacking && this.pkg.attackCooldown === false){
             switch(this.pkg.attack_type){
                 case 'light':
                     // console.log('player used light attack on enemy')
@@ -93,8 +111,10 @@ class Player extends Entity{
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
                     //ensure no sound overlap
-                    if(this.parentScene.sound.sounds.length < 6){
-                        this.parentScene.sound.play('attack-light-hit', {volume: 0.05})
+                    if(this.parentScene.sound.sounds.length < 5){
+                        if(!this.attack_noise_light_hit.isPlaying){
+                            this.attack_noise_light_hit.play()
+                        }
                     }
 
                     if(collided.HIT_POINTS <= this.pkg.dmg){ //enemy will die here
@@ -116,8 +136,10 @@ class Player extends Entity{
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
     
                     //sound overlap
-                    if(this.parentScene.sound.sounds.length < 6){
-                        this.parentScene.sound.play('attack-heavy-hit', {volume: 0.05})
+                    if(this.parentScene.sound.sounds.length < 5){
+                        if(!this.attack_noise_heavy_hit.isPlaying){
+                            this.attack_noise_heavy_hit.play()
+                        }
                     }
 
                     if(collided.HIT_POINTS <= this.pkg.dmg){
@@ -140,19 +162,20 @@ class Player extends Entity{
     }
 
     handleClick(){
-       console.log(this.questStatus)
+
+      
     }
 
-    handleMovement(){        
+    handleMovement(){      
         let moveDirection = new Phaser.Math.Vector2(0, 0)
         if(keyUp.isDown){
             moveDirection.y = -1
-        }else if(keyDown.isDown){
+        } else if (keyDown.isDown){
             moveDirection.y = 1
         }
         if(keyLeft.isDown) {
             moveDirection.x = -1
-        }else if(keyRight.isDown){
+        } else if (keyRight.isDown){
             moveDirection.x = 1
         }
         moveDirection.normalize()
@@ -163,12 +186,12 @@ class Player extends Entity{
         if(keyAttackLight.isDown){
             this.pkg.attack_type = 'light'
             this.pkg.isAttacking = true
-            this.pkg.dmg = Math.round(Math.random() * 15) + 10
+            this.pkg.dmg = Math.round(Math.random() * Phaser.Math.Between(10, 15)) + Phaser.Math.Between(10, 15)
             //console.log('Light attack -> ' + this.pkg.dmg)
         } else if (keyAttackHeavy.isDown){
             this.pkg.attack_type = 'heavy'
             this.pkg.isAttacking = true
-            this.pkg.dmg = Math.round(Math.random() *30) + 20  
+            this.pkg.dmg = Math.round(Math.random() *Phaser.Math.Between(15, 20)) + Phaser.Math.Between(20, 25)  
             //console.log('Heavy attack ->' + this.pkg.dmg)
         } else {
             this.pkg.attack_type = undefined
@@ -193,18 +216,23 @@ class Player extends Entity{
 
 class idlePlayerState extends State{
     enter(scene, player){
+        if(player.walk_noise.isPlaying){
+            player.walk_noise.pause()
+        }
         console.log('in player: idle')
         player.setVelocity(0)
     }
 
     execute(scene, player){
-
         //attacking logic
         if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
-            player.walk_noise.stop()
-            this.stateMachine.transition('attack')
+            //console.log('here')
+            if(player.animsFSM.state !== 'attack'){
+                player.walk_noise.stop() //fix
+                this.stateMachine.transition('attack')
+            }
         }
 
         //movment logic
@@ -233,12 +261,16 @@ class movingState extends State{
     }
 
     execute(scene, player){
-
+        if(!player.anims.isPlaying){
+            player.anims.play('player-walk')
+        }
         if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
-            player.walk_noise.stop()
-            this.stateMachine.transition('attack')
+            if(player.animsFSM.state !== 'attack'){
+                player.walk_noise.stop()
+                this.stateMachine.transition('attack')
+            }
         }
 
         if(!(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown)) {
@@ -252,7 +284,9 @@ class movingState extends State{
 
 class interactionPlayerState extends State{
     enter(scene, player){
+        player.anims.pause()
         if(player.walk_noise.isPlaying){
+
             player.walk_noise.stop()
         }
         console.log('in player: interaction')
@@ -269,7 +303,7 @@ class inWaterPlayerState extends State{
 
     execute(scene, player){
         player.handleMovement()
-        if(!scene.physics.overlap(player, scene.watersprite)){
+        if(!scene.physics.overlap(player, scene.ponds)){
             scene.sound.stopAll()
             player.VELOCITY = player.VELOCITY*2
             this.stateMachine.transition('idle')
@@ -280,18 +314,26 @@ class inWaterPlayerState extends State{
 
 class attackPlayerState extends State{
     enter(scene, player){
+        player.pkg.attackCooldown = true
         console.log('in player: attack')
         player.setVelocity(0)
        
         switch(player.pkg.attack_type){
             case 'light':
-                scene.sound.play('attack-light', {volume: 0.05}) 
+                console.log('here')
+                player.anims.play('player-light-attack')
+                scene.sound.play('attack-light', {volume: 0.05})
+                this.stateMachine.transition('idle')
+                player.pkg.isAttacking = false
                 scene.time.delayedCall(1500, () =>{ 
                     player.pkg.attackCooldown = false
                 })
                 break
             case 'heavy':
+                player.anims.play('player-heavy-attack')
                 scene.sound.play('attack-heavy', {volume: 0.05})
+                player.pkg.isAttacking = false
+                this.stateMachine.transition('idle')
                 scene.time.delayedCall(3000, () =>{ 
                     player.pkg.attackCooldown = false
                 })
@@ -299,23 +341,31 @@ class attackPlayerState extends State{
             default:
                 break
         }
-
-        scene.time.delayedCall(25, () =>{ 
-            player.pkg.isAttacking = false
-            player.pkg.attackCooldown = true
-            this.stateMachine.transition('idle')
-        })
     }   
-
-    execute(scene, player){
-        player.setVelocity(0)
-    }
+    execute(scene, player){}
 }
 
 class deadPlayerState extends State{
     enter(scene, player){
-        player.walk_noise.stop()
-        console.log('dead')
+        console.log('in player: dead')
+        if(player.walk_noise.isPlaying){
+            player.walk_noise.stop()
+        }
+    
+        if(player.currentWindow.objs !== undefined){
+            player.currentWindow.objs.forEach(element => {
+                element.destroy()
+            })
+            player.currentWindow.objs = undefined
+        }
+
+        if(player.currentWindow.array !== undefined){
+            player.currentWindow.array.forEach(element => {
+                element.destroy()
+            })
+            player.currentWindow.array = undefined
+        }
+
         player.isAlive = false
         player.setVelocity(0)
         player.HEALTH_BAR.clear()

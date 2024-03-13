@@ -36,7 +36,7 @@ class idleAllyState extends State{
 
 class interactionAllyState extends State{
     enter(scene, ally){
-        console.log('interaction')
+        console.log('in ally: interaction')
         if(!scene.p1.windowOpen){
             this.createPopupWindow(scene)
         } else {
@@ -98,7 +98,10 @@ class interactionAllyState extends State{
 
                 
                     questTxt.on('pointerdown', () => {
-                        if (count === 0){ questTxt.text =  element.description} else {
+                        toggleCursor(scene)
+                        if (count === 0){ 
+                            questTxt.text =  element.description
+                        } else {
                             questTxt.text = element.requirements
                             acceptBTN.setInteractive().setAlpha(1).setDepth(2)
                         }
@@ -161,5 +164,29 @@ class interactionAllyState extends State{
                 }
             }
         })
+
+        let winAr = [window, closeBTN]
+
+        scene.miniMapCamera.ignore([window, closeBTN])
+        if(acceptBTN!== undefined){
+            scene.miniMapCamera.ignore(acceptBTN)
+            winAr.push(acceptBTN)
+        }
+        if(avaQ!== undefined){
+            scene.miniMapCamera.ignore(avaQ)
+            winAr.push(avaQ)
+        }
+        if(questTxt!== undefined){
+            scene.miniMapCamera.ignore(questTxt)
+            winAr.push(questTxt)
+        }
+        
+        if(completeBTN !== undefined){
+            scene.miniMapCamera.ignore(completeBTN)
+            winAr.push(completeBTN)
+        }
+
+
+        scene.p1.currentWindow.objs = winAr
     }
 }

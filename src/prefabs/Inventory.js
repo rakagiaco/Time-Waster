@@ -79,6 +79,15 @@ class Inventory{
                 beginX += 128
             }
         }
+
+        let winAr = [window, closeBTN, winname, this.active] //const lol
+
+        scene.miniMapCamera.ignore(winAr)
+
+        winAr = [window, closeBTN, winname]
+
+        player.currentWindow.objs = winAr
+        player.currentWindow.array = this.active
     }
     
 }

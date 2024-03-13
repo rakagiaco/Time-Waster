@@ -1,7 +1,6 @@
 class Loader extends Phaser.Scene{
     constructor(){
         super('Loader')
-
     }
 
     init(){
@@ -28,27 +27,26 @@ class Loader extends Phaser.Scene{
         this.load.spritesheet('enemy-1-anim', '/spritesheets/enemy-1.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('enemy-2-anim', '/spritesheets/enemy-2.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('boss-aoe', '/spritesheets/damage-aoe-boss.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('player', '/spritesheets/player.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('player-light-attack-anim', '/spritesheets/player-light-attack-anim.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('player-heavy-attack-anim', '/spritesheets/player-heavy-attack-anim.png', {frameWidth: 32, frameHeight: 32})
 
         //load images (tmp)
+        this.load.image('continue-game-button-hover', '/img/continue-game-button-hover.png')
+        this.load.image('continue-game-button', '/img/continue-game-button.png')
+        this.load.image('cursor-2', '/img/cursor-2.png')
+        this.load.image('cursor', '/img/cursor.png')
         this.load.image('enemy-1', '/img/enemy-1.png')
-        this.load.image('enemy-2', '/img/enemy-2.png')
-        this.load.image('npc-1', '/img/npc-1.png')
-        this.load.image('npc-2', '/img/npc-1.png')
-        this.load.image('player', '/img/player.png')
-        this.load.image('mountains', '/img/mountains.png')
+        this.load.image('Frozen Heart', '/img/frozen-heart.png')
+        this.load.image('fruit', '/img/fruit.png')
+        this.load.image('fullscreen' , '/img/fullscreen.png')
         this.load.image('mysterious herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
-        this.load.image('fruit', '/img/fruit.png')
-        this.load.image('cursor', '/img/cursor.png')
-        this.load.image('cursor-2', '/img/cursor-2.png')
-        this.load.image('fullscreen' , '/img/fullscreen.png')
-        this.load.image('damage-cone', '/img/damage-cone.png')// remove
-        this.load.image('rect', '/img/rect.png')
-        this.load.image('new-game-button', '/img/new-game-button.png')
         this.load.image('new-game-button-hover', '/img/new-game-button-hover.png')
-        this.load.image('continue-game-button', '/img/continue-game-button.png')
-        this.load.image('continue-game-button-hover', '/img/continue-game-button-hover.png')
-        this.load.image('Frozen Heart', '/img/frozen-heart.png')
+        this.load.image('new-game-button', '/img/new-game-button.png')
+        this.load.image('npc-1', '/img/npc-1.png') 
+        this.load.image('rect', '/img/rect.png')
+        this.load.image('save-arrow', '/img/save-arrow.png')
         this.load.image('save', '/img/save.png')
 
         //load quests
@@ -72,6 +70,7 @@ class Loader extends Phaser.Scene{
         this.load.audio('enemy-2-hit', '/audio/enemy-hit-2.mp3')
 
 
+        //load existing gamestates...
         if(window.localStorage.getItem('existing_quest') != null) {
             this.quest = window.localStorage.getItem('existing_quest')
             this.quest = JSON.parse(this.quest)
@@ -88,20 +87,30 @@ class Loader extends Phaser.Scene{
 
     create(){
 
-        //refrence template
-        /* this.anims.create({
-            key: 'running_vanilla',
-            frames: this.anims.generateFrameNames('player', {
-                prefix: 'character-anim-',
-                start: 1,
-                end: 4
-            }),
-            frameRate: 15,
-            repeat: -1
+    //player anims----------------------------
+        this.anims.create({
+            key: 'player-walk',
+            frames: this.anims.generateFrameNumbers('player', {start: 0, end: 1}),
+            frameRate: 5,
+            repeat: false
         })
-        */
+
+        this.anims.create({
+            key: 'player-light-attack',
+            frames: this.anims.generateFrameNumbers('player-light-attack-anim', {start: 0, end: 4}),
+            frameRate: 10,
+            repeat: false
+        })
+
+        this.anims.create({
+            key: 'player-heavy-attack',
+            frames: this.anims.generateFrameNumbers('player-heavy-attack-anim', {start: 0, end: 9}),
+            frameRate: 10,
+            repeat: false
+        })
         
-        //enemy anims
+        
+    //enemy anims----------------------------
         this.anims.create({
             key: 'enemy-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-1-anim', {start: 0, end: 7}),
@@ -113,6 +122,24 @@ class Loader extends Phaser.Scene{
             key: 'enemy2-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-2-anim', {start: 0, end: 6}),
             frameRate: 10,
+            repeat: -1
+        })
+
+        
+        //boss mechanic
+        this.anims.create({
+            key: 'boss-aoe-anim',
+            frames: this.anims.generateFrameNumbers('boss-aoe', {start: 0, end: 15}),
+            frameRate: 8,
+            repeat: 1
+        })
+    
+    //sprite anims----------------------------
+        //quest icon
+        this.anims.create({
+            key: 'quest-icon',
+            frames: this.anims.generateFrameNumbers('quest-icon', {start: 0, end: 3}),
+            frameRate: 5,
             repeat: -1
         })
 
@@ -171,7 +198,6 @@ class Loader extends Phaser.Scene{
             repeatDelay: 7500
         })
 
-        //tree2 - anim 1
         this.anims.create({
             key: 'tree-2-anim0',
             frames: this.anims.generateFrameNumbers('tree-2',{start: 0, end: 6}),
@@ -248,22 +274,6 @@ class Loader extends Phaser.Scene{
             frames: this.anims.generateFrameNumbers('bush-1',{start: 0, end: 4}),
             frameRate: 5,
             repeat: -1
-        })
-
-        //quest icon
-        this.anims.create({
-            key: 'quest-icon',
-            frames: this.anims.generateFrameNumbers('quest-icon', {start: 0, end: 3}),
-            frameRate: 5,
-            repeat: -1
-        })
-
-        //boss mechanics
-        this.anims.create({
-            key: 'boss-aoe-anim',
-            frames: this.anims.generateFrameNumbers('boss-aoe', {start: 0, end: 15}),
-            frameRate: 8,
-            repeat: 1
         })
         
         this.scene.start('menuScene', {qobj: this.quest, inv: this.existing_inv})

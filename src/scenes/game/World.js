@@ -11,7 +11,6 @@ class World extends Phaser.Scene{
     preload(){}
 
     create(){
-        
         //load map
         const map = this.add.tilemap('tilemapJSON')
         const tileset = map.addTilesetImage('base_tileset', 'base-tileset')
@@ -26,13 +25,11 @@ class World extends Phaser.Scene{
 
         //cursor
         this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')
-        // this.input.on('pointerdown', ()=>{
-        //     this.input.setDefaultCursor('url(assets/img/cursor-2.png), pointer')
-        //     this.time.delayedCall(250, ()=>{this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')})
-        // })
 
         //containers
         this.enemies = [] 
+        this.trees = []
+        this.ponds = []
         this.bushes = []
         this.quests = []
 
@@ -41,30 +38,30 @@ class World extends Phaser.Scene{
             this.quests.push(this.cache.json.get(`quest-${i + 1}`)) 
         }
 
-        //spawn sprites
-        this.watersprite = this.physics.add.sprite(1000,200, 'water-pond', 0).setScale(5).setImmovable(true)
-        this.watersprite.anims.play('water-moving', true)
-
+        
+    //spawn entities and items --------------------
         objlayer.objects.forEach(element => {
             if(element.name === 'boss_spawn'){
                 this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 200, [element.x, element.y], 25, 400, true))
-            }
-            if(element.name === 'enemy_spawn'){
+            } else if(element.name === 'enemy_spawn'){
                 this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y], 10).setScale(1.25).anims.play('enemy-idle-anim'))
             } else if(element.name === 'enemy_spawn_2'){
                 this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 17.5, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
             } else if (element.name === 'bush_1'){
-               this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(25).anims.play('bush-1-anim'))
+               this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(35, 30).anims.play('bush-1-anim'))
             } 
         })
-
+    
+    //spawn sprites --------------------
         objlayer.objects.forEach(element => {
-            if (element.name === 'tree_1'){
-                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setDepth(2).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5))
+            if(element.name === 'pond'){
+                this.ponds.push(this.physics.add.sprite(element.x, element.y, 'water-pond', 0).setSize(22, 22).setScale(2.5).setImmovable(true).anims.play('water-moving', true))
+            } else if (element.name === 'tree_1'){
+               this.trees.push( this.physics.add.sprite(element.x,element.y, 'tree-1', 0).setSize(25, 2).setOffset(20,61).setDepth(2).setScale(2.5).setImmovable(true).anims.play('tree-1-anim'+ Phaser.Math.Between(0,5)))
             } else if (element.name === 'tree_2'){
-                this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setDepth(2).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7))
+               this.trees.push( this.physics.add.sprite(element.x,element.y, 'tree-2', 0).setSize(22, 2).setOffset(25,61).setDepth(2).setScale(2.5).setImmovable(true).anims.play('tree-2-anim' + Phaser.Math.Between(0,7)))
             } else if (element.name === 'tree_3'){
-                let x = this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setDepth(2).setScale(2.5).setImmovable(true).setInteractive().on('pointerdown', ()=>{
+                let x = this.physics.add.sprite(element.x,element.y, 'tree-3', 0).setSize(30, 2).setOffset(15,62).setDepth(2).setScale(2.5).setImmovable(true).setInteractive().on('pointerdown', ()=>{
                     if(listen(this, x)){
                         toggleCursor(this)
                         x.anims.play('tree-3-anim')
@@ -75,37 +72,64 @@ class World extends Phaser.Scene{
                         x.input.enabled = false
                     }
                 })
+                this.trees.push(x)
             }
         })
- 
-        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 500, this.qobj, this.inv) 
-        this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50)
+        
+        //create player and ally
+        this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50).setImmovable().setSize(10,10)
+        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 500, this.qobj, this.inv)
 
-        //fullscreen button credit Nathan Altice
-        this.fullscreenBtn = this.add.sprite(game.config.width - 25, game.config.height - 15, 'fullscreen').setScale(2).setScrollFactor(0).setDepth(3)
-        this.fullscreenBtn.setOrigin(1)
+        //fullscreen button, credit Nathan Altice
+        this.fullscreenBtn = this.add.sprite(game.config.width - 25, game.config.height - 25, 'fullscreen').setScale(2).setScrollFactor(0).setDepth(3)
+        this.fullscreenBtn.setOrigin(0.5)
         this.fullscreenBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             this.scale.toggleFullscreen()
         })
 
         //settings window
-        this.settingsBtn = this.add.sprite(game.config.width - 75, game.config.height - 15, 'save').setScrollFactor(0).setDepth(3)
-        this.settingsBtn.setOrigin(1)
+        this.settingsBtn = this.add.image(game.config.width - 75, game.config.height - 20, 'save').setScrollFactor(0).setDepth(3)
+        this.settingsBtn.setOrigin(0.5)
         this.settingsBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             const parse_inv = JSON.stringify(Array.from(this.p1.p1Inventory.inventory.entries()))
             const parse_qst = JSON.stringify(this.p1.questStatus)
             window.localStorage.setItem('existing_inv', parse_inv)
             window.localStorage.setItem('existing_quest', parse_qst)
-            // this.enemies.forEach(element => {
-            //     clearInterval(element.INTERVAL_ID)
-            // })
-            // this.scene.start('menuScene')
+
+            let loadArrow = this.add.image(game.config.width - 75, game.config.height - 50, 'save-arrow').setScrollFactor(0).setDepth(3).setOrigin(0.5)
+            this.tweens.add({
+                targets: loadArrow,
+                angle: {from: 0 , to: 90},
+                repeat: false,
+                duration: 500,
+                onComplete: ()=>{
+                    loadArrow.destroy()
+                }
+            })
+            //TODO: how to go back to menu and then to world without crash...
+                // this.enemies.forEach(element => {
+                //     clearInterval(element.INTERVAL_ID)
+                // })
+                // this.scene.start('menuScene')
         })
-    
+        
+        //minimap, credit Nathan Altice
+        this.miniMapCamera = this.cameras.add(game.config.width - 192, 32, 160, 160).setBounds(0, 0, game.scene.width, game.scene.height).setZoom(0.1)
+        this.miniMapCamera.setBackgroundColor(0x2F3B2D)
+        this.miniMapCamera.startFollow(this.p1, false, 0.4, 0.4)
+        this.miniMapCamera.ignore([this.bushes, bgLayer, this.p1.HEALTH_BAR])
+        this.enemies.forEach(element => {
+            this.miniMapCamera.ignore([element.HEALTH_BAR, element.entity_text])
+        })
+        const mapMask =  this.make.graphics()
+        mapMask.fillStyle(0xffffff)
+        mapMask.fillCircle(game.config.width - 112, 112, 80)
+        const mask = mapMask.createGeometryMask()
+        this.miniMapCamera.setMask(mask)
 
         //debug code
         /***************************************/
-        this.p1.VELOCITY = 1000
+        this.p1.VELOCITY = 150
         let debugToggle = this.input.keyboard.addKey('F')
         this.physics.world.drawDebug = false
         debugToggle.on('down', ()=> {
@@ -118,6 +142,5 @@ class World extends Phaser.Scene{
         })
         /********************************************/
     }
-
     update(){} 
 }
