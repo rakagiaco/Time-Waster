@@ -71,6 +71,7 @@ class Player extends Entity{
             }
         })
 
+        //collide with npc
         scene.physics.add.collider(this, scene.n1, ()=>{
             console.log('collider')
         }) 
@@ -82,7 +83,19 @@ class Player extends Entity{
         keyRight = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         keyAttackLight = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE)
         keyAttackHeavy = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO)
-        keyInventory = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB)
+        keyInventory = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB).on('down', ()=>{ 
+            if(this.p1Inventory.isOpen === false && this.windowOpen === false){
+                this.windowOpen = true
+                this.p1Inventory.openInventoryWindow(scene, this)
+                this.animsFSM.transition('interacting')
+            } else if (this.p1Inventory.isOpen === true){
+                this.checkWindow()
+                this.animsFSM.transition('idle')
+            }
+        })
+        keySprint = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT).on('down', ()=>{
+            this.VELOCITY === 100 ? this.VELOCITY = 250 : this.VELOCITY = 100
+        })
     }
 
     update(){
@@ -92,7 +105,7 @@ class Player extends Entity{
         if(this.isAlive){
             super.updateHealthBar()
             this.displayCurrentQuests()
-            this.animsFSM.step()
+            this.animsFSM.step() 
         } 
     }
 
@@ -161,10 +174,7 @@ class Player extends Entity{
         }
     }
 
-    handleClick(){
-
-      
-    }
+    handleClick(){}
 
     handleMovement(){      
         let moveDirection = new Phaser.Math.Vector2(0, 0)
@@ -211,6 +221,28 @@ class Player extends Entity{
             this.questTrackerTxtBody.setAlpha(0)
         }
     }
+
+    checkWindow(){
+
+        if(this.p1Inventory.isOpen === true){
+            this.p1Inventory.isOpen = false
+        }
+
+        if(this.currentWindow.objs !== undefined){
+            this.windowOpen = false
+            this.currentWindow.objs.forEach(element => {
+                element.destroy()
+            })
+            this.currentWindow.objs = undefined
+        }
+
+        if(this.currentWindow.array !== undefined){
+            this.currentWindow.array.forEach(element => {
+                element.destroy()
+            })
+            this.currentWindow.array = undefined
+        }
+    }
 }
 
 
@@ -241,12 +273,6 @@ class idlePlayerState extends State{
                 this.stateMachine.transition('moving')
             }
         }
-
-        if(keyInventory.isDown){
-            player.windowOpen = true
-            player.p1Inventory.openInventoryWindow(scene, player)
-            this.stateMachine.transition('interacting')
-        }
     }
 }
 
@@ -255,9 +281,7 @@ class movingState extends State{
         console.log('in player: moving')
         if(!player.walk_noise.isPlaying){
             player.walk_noise.play()
-        }
-         
-        
+        }   
     }
 
     execute(scene, player){
@@ -299,13 +323,22 @@ class inWaterPlayerState extends State{
         console.log('in player: water state')
         player.VELOCITY = player.VELOCITY / 2
         scene.sound.play('in-water')
+        player.INTERVAL_ID = setInterval(()=>{
+            if(player.HIT_POINTS < player.HIT_POINTS_log){
+                player.HIT_POINTS += 1
+                let healText = scene.add.text(player.x + Phaser.Math.Between(-50, 50), player.y + Phaser.Math.Between(-10,-60), '+1', {fill: '#00FF00'}).setScale(2).setOrigin(0)
+                scene.time.delayedCall(500, ()=>{ healText.destroy()})
+            }
+        }, 200)
     }
 
     execute(scene, player){
+      
         player.handleMovement()
         if(!scene.physics.overlap(player, scene.ponds)){
             scene.sound.stopAll()
             player.VELOCITY = player.VELOCITY*2
+            clearInterval(player.INTERVAL_ID)
             this.stateMachine.transition('idle')
         }
     }
@@ -351,20 +384,8 @@ class deadPlayerState extends State{
         if(player.walk_noise.isPlaying){
             player.walk_noise.stop()
         }
-    
-        if(player.currentWindow.objs !== undefined){
-            player.currentWindow.objs.forEach(element => {
-                element.destroy()
-            })
-            player.currentWindow.objs = undefined
-        }
-
-        if(player.currentWindow.array !== undefined){
-            player.currentWindow.array.forEach(element => {
-                element.destroy()
-            })
-            player.currentWindow.array = undefined
-        }
+        
+        player.checkWindow()
 
         player.isAlive = false
         player.setVelocity(0)

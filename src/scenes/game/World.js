@@ -48,7 +48,7 @@ class World extends Phaser.Scene{
             } else if(element.name === 'enemy_spawn_2'){
                 this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 17.5, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
             } else if (element.name === 'bush_1'){
-               this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setSize(35, 30).anims.play('bush-1-anim'))
+               this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setScale(2).setSize(35, 30).anims.play('bush-1-anim'))
             } 
         })
     

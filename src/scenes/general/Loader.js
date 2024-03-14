@@ -271,7 +271,7 @@ class Loader extends Phaser.Scene{
 
         this.anims.create({
             key: 'bush-1-anim',
-            frames: this.anims.generateFrameNumbers('bush-1',{start: 0, end: 4}),
+            frames: this.anims.generateFrameNumbers('bush-1',{start: 0, end: 6}),
             frameRate: 5,
             repeat: -1
         })

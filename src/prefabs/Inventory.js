@@ -3,6 +3,7 @@ class Inventory{
         this.active = []
         this.inventory = undefined
         existing_inv === undefined ? this.inventory = new Map() : this.inventory = new Map(existing_inv)
+        this.isOpen = false
     }
 
     get(item){
@@ -37,13 +38,13 @@ class Inventory{
     }
 
     openInventoryWindow(scene, player){
+        this.isOpen = true
         const window = scene.add.graphics().setDepth(2)
         window.fillStyle(0x000000, 1) // Color and alpha (transparency)
 
         let windowX = scene.cameras.main.scrollX + scene.cameras.main.width/2 - 225
         let windowY = scene.cameras.main.scrollY + scene.cameras.main.height/2 - 225
         window.fillRect(windowX , windowY, 450, 450)
-
 
         let closeBTN, winname
         closeBTN = scene.add.text(windowX, windowY, "exit", {fill: '#FFFFFF', fontSize: 15})
@@ -55,6 +56,7 @@ class Inventory{
             closeBTN.destroy()
             winname.destroy()
             scene.p1.windowOpen = false
+            this.windowOpen = false
             scene.p1.animsFSM.transition('idle')
         })
   
