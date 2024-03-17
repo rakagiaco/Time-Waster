@@ -42,12 +42,12 @@ class Inventory{
         const window = scene.add.graphics().setDepth(2)
         window.fillStyle(0x000000, 1) // Color and alpha (transparency)
 
-        let windowX = scene.cameras.main.scrollX + scene.cameras.main.width/2 - 225
-        let windowY = scene.cameras.main.scrollY + scene.cameras.main.height/2 - 225
-        window.fillRect(windowX , windowY, 450, 450)
+        let windowX = scene.cameras.main.scrollX + scene.cameras.main.width/4
+        let windowY = scene.cameras.main.scrollY + scene.cameras.main.height/4
+        window.fillRect(windowX , windowY, 450, 300)
 
         let closeBTN, winname
-        closeBTN = scene.add.text(windowX, windowY, "exit", {fill: '#FFFFFF', fontSize: 15})
+        closeBTN = scene.add.text(windowX + 5, windowY + 5, "exit", {font: '14px Arial', fill: '#FFFFFF', })
         closeBTN.setInteractive().setDepth(2)   
         closeBTN.on('pointerdown', () => {
             toggleCursor(scene)
@@ -60,7 +60,7 @@ class Inventory{
             scene.p1.animsFSM.transition('idle')
         })
   
-        winname = scene.add.text(windowX + 225, windowY+ 12.5, "Inventory", {fill: '#FFFFFF'}).setOrigin(0.5, 0).setDepth(2)
+        winname = scene.add.text(windowX + 225, windowY+ 10, "Inventory", {font: '14px Arial', fill: '#FFFFFF'}).setOrigin(0.5, 0).setDepth(2)
     
         let counter = 0 //if 5 then increase y pos
         let beginX = windowX + 64
@@ -70,8 +70,8 @@ class Inventory{
            this.active.push(scene.add.image(beginX, beginY, key).setDepth(2).setInteractive().on('pointerdown', ()=>{
                 toggleCursor(scene)
            }))
-           this.active.push( scene.add.text(beginX, beginY-32, value, {fill: '#FFFFFF', fontSize: 15}).setDepth(2))
-           this.active.push( scene.add.text(beginX-15, beginY+32, key, {fill: '#FFFFFF', fontSize: 10}).setDepth(2))
+           this.active.push( scene.add.text(beginX, beginY-32, value, {fill: '#FFFFFF', font: '15px Arial'}).setDepth(2))
+           this.active.push( scene.add.text(beginX-15, beginY+32, key, {fill: '#FFFFFF', font: '12x Arial'}).setDepth(2))
             if(counter === 2){
                 counter = 0
                 beginY += 128

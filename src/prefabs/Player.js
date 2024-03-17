@@ -10,6 +10,9 @@ class Player extends Entity{
         //phaser stuff
         this.setScale(1.65)
 
+        //derived
+        this.HEALTH_BAR.setScrollFactor(0).setDepth(3)
+        this.HEALTH_BAR.width = 150
         //inventory
         this.p1Inventory = new Inventory(inv)
 
@@ -28,12 +31,13 @@ class Player extends Entity{
         //walking noise
         this.walk_noise = scene.sound.add('walking', {rate: 1.5, volume: 0.25})
         this.attack_noise_light_hit = scene.sound.add('attack-light-hit', {volume: 0.05})
-        this.attack_noise_heavy_hit = scene.sound.add('attack-heavy-hit', {volume: 0.05})
+        this.attack_noise_heavy_hit = scene.sound.add('attack-heavy-hit', {volume: 0.05, rate: 1.2})
+        this.water_noise = scene.sound.add('in-water', {volume: 0.5})
 
         //visual quest text:
         let padding = 10
-        this.questTrackerTxtTitle = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 150, "Current Quest: ", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
-        this.questTrackerTxtBody = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width - scene.cameras.main.width + padding, scene.cameras.main.scrollY + scene.cameras.main.height - 100, "nil", {fill: '#FFFFFF'}).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
+        this.questTrackerTxtTitle = scene.add.bitmapText(game.config.width/6 + 10,game.config.height - 200, 'lemon-milk', "Current Quest: ", 12).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
+        this.questTrackerTxtBody = scene.add.bitmapText(game.config.width/6 + 15, game.config.height - 170, 'lemon-milk', "nil", 10).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
        
         //quest tracker 
         qobj === undefined ?
@@ -65,7 +69,7 @@ class Player extends Entity{
 
         //swimming!
         scene.physics.add.overlap(this, scene.ponds, ()=>{
-            if(this.animsFSM.state !== 'swim'){
+            if(this.animsFSM.state !== 'swim' && this.animsFSM.state !== 'dead'){
                 scene.sound.stopAll()
                 this.animsFSM.transition('swim')
             }
@@ -84,13 +88,15 @@ class Player extends Entity{
         keyAttackLight = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ONE)
         keyAttackHeavy = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TWO)
         keyInventory = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB).on('down', ()=>{ 
-            if(this.p1Inventory.isOpen === false && this.windowOpen === false){
-                this.windowOpen = true
-                this.p1Inventory.openInventoryWindow(scene, this)
-                this.animsFSM.transition('interacting')
-            } else if (this.p1Inventory.isOpen === true){
-                this.checkWindow()
-                this.animsFSM.transition('idle')
+            if(this.animsFSM.state !== 'swim'){
+                if(this.p1Inventory.isOpen === false && this.windowOpen === false){
+                    this.windowOpen = true
+                    this.p1Inventory.openInventoryWindow(scene, this)
+                    this.animsFSM.transition('interacting')
+                } else if (this.p1Inventory.isOpen === true){
+                    this.checkWindow()
+                    this.animsFSM.transition('idle')
+                }
             }
         })
         keySprint = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT).on('down', ()=>{
@@ -103,7 +109,7 @@ class Player extends Entity{
             this.animsFSM.transition('dead')
         }
         if(this.isAlive){
-            super.updateHealthBar()
+            this.updateHealthBar()
             this.displayCurrentQuests()
             this.animsFSM.step() 
         } 
@@ -124,11 +130,11 @@ class Player extends Entity{
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
                     //ensure no sound overlap
-                    if(this.parentScene.sound.sounds.length < 5){
-                        if(!this.attack_noise_light_hit.isPlaying){
-                            this.attack_noise_light_hit.play()
-                        }
+                    
+                    if(!this.attack_noise_light_hit.isPlaying){
+                        this.attack_noise_light_hit.play()
                     }
+                    
 
                     if(collided.HIT_POINTS <= this.pkg.dmg){ //enemy will die here
                         collided.HIT_POINTS = 0
@@ -149,11 +155,11 @@ class Player extends Entity{
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
     
                     //sound overlap
-                    if(this.parentScene.sound.sounds.length < 5){
-                        if(!this.attack_noise_heavy_hit.isPlaying){
-                            this.attack_noise_heavy_hit.play()
-                        }
+                 
+                    if(!this.attack_noise_heavy_hit.isPlaying){
+                        this.attack_noise_heavy_hit.play()
                     }
+                    
 
                     if(collided.HIT_POINTS <= this.pkg.dmg){
                         collided.HIT_POINTS = 0
@@ -188,6 +194,17 @@ class Player extends Entity{
         } else if (keyRight.isDown){
             moveDirection.x = 1
         }
+
+        if(!this.anims.isPlaying){
+            switch(moveDirection.y){
+                case 1:
+                    this.anims.play('player-walk-down')
+                    break
+                case -1:
+                    this.anims.play('player-walk-up')
+                    break
+            }
+        }
         moveDirection.normalize()
         this.setVelocity(this.VELOCITY * moveDirection.x, this.VELOCITY * moveDirection.y)
     }
@@ -216,6 +233,7 @@ class Player extends Entity{
             let alias = this.questStatus.currentQuest
             this.questTrackerTxtBody.text = alias.verb + ' ' +  alias.ammount + ' ' +  alias.type + ' ' + alias.actual + '/' + alias.ammount
             this.questTrackerTxtBody.setAlpha(1).setDepth(3)
+            this.parentScene.miniMapCamera.ignore([this.questTrackerTxtTitle,this.questTrackerTxtBody])
         } else {
             this.questTrackerTxtTitle.setAlpha(0)
             this.questTrackerTxtBody.setAlpha(0)
@@ -242,6 +260,20 @@ class Player extends Entity{
             })
             this.currentWindow.array = undefined
         }
+    }
+
+    updateHealthBar(){
+        let currentHealthPercent = this.HIT_POINTS / this.HIT_POINTS_log
+        this.HEALTH_BAR.clear()
+        if(currentHealthPercent < 0.3){
+            this.HEALTH_BAR.fillStyle(0xFF0000)
+        }else if(currentHealthPercent < 0.5 && currentHealthPercent > 0.3){
+            this.HEALTH_BAR.fillStyle(0xFFFF00)
+
+        }else{
+            this.HEALTH_BAR.fillStyle(0x00FF00)
+        }
+        this.HEALTH_BAR.fillRect(game.config.width/2 - 50, game.config.height/2 + 165, this.HEALTH_BAR.width * currentHealthPercent, 10)
     }
 }
 
@@ -285,9 +317,6 @@ class movingState extends State{
     }
 
     execute(scene, player){
-        if(!player.anims.isPlaying){
-            player.anims.play('player-walk')
-        }
         if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
@@ -310,7 +339,6 @@ class interactionPlayerState extends State{
     enter(scene, player){
         player.anims.pause()
         if(player.walk_noise.isPlaying){
-
             player.walk_noise.stop()
         }
         console.log('in player: interaction')
@@ -320,9 +348,12 @@ class interactionPlayerState extends State{
 
 class inWaterPlayerState extends State{
     enter(scene, player){
+        if(!player.water_noise.isPlaying){
+            player.water_noise.play()
+        } 
         console.log('in player: water state')
         player.VELOCITY = player.VELOCITY / 2
-        scene.sound.play('in-water')
+       
         player.INTERVAL_ID = setInterval(()=>{
             if(player.HIT_POINTS < player.HIT_POINTS_log){
                 player.HIT_POINTS += 1
@@ -354,20 +385,24 @@ class attackPlayerState extends State{
         switch(player.pkg.attack_type){
             case 'light':
                 console.log('here')
+                scene.p1AttackUi.setTexture('attack-light-cooldown')
                 player.anims.play('player-light-attack')
                 scene.sound.play('attack-light', {volume: 0.05})
                 this.stateMachine.transition('idle')
                 player.pkg.isAttacking = false
-                scene.time.delayedCall(1500, () =>{ 
+                scene.time.delayedCall(1000, () =>{ 
+                    scene.p1AttackUi.setTexture('attack-bar')
                     player.pkg.attackCooldown = false
                 })
                 break
             case 'heavy':
+                scene.p1AttackUi.anims.play('attack-heavy-cooldown-anim')
                 player.anims.play('player-heavy-attack')
                 scene.sound.play('attack-heavy', {volume: 0.05})
                 player.pkg.isAttacking = false
                 this.stateMachine.transition('idle')
                 scene.time.delayedCall(3000, () =>{ 
+                    scene.p1AttackUi.setTexture('attack-bar')
                     player.pkg.attackCooldown = false
                 })
                 break
@@ -381,15 +416,19 @@ class attackPlayerState extends State{
 class deadPlayerState extends State{
     enter(scene, player){
         console.log('in player: dead')
-        if(player.walk_noise.isPlaying){
-            player.walk_noise.stop()
-        }
-        
-        player.checkWindow()
-
+        clearInterval(player.INTERVAL_ID)
         player.isAlive = false
         player.setVelocity(0)
         player.HEALTH_BAR.clear()
+        player.checkWindow()
+
+        if(player.walk_noise.isPlaying){
+            player.walk_noise.stop()
+        }
+        if(player.water_noise.isPlaying){
+            player.water_noise.stop()
+        }
+
         scene.tweens.add({
             targets: player,
             alpha: { from: 1, to: 0 },

@@ -9,6 +9,9 @@ class Ally extends Entity{
 
         this.icon_sprite = undefined
         this.HEALTH_BAR.setAlpha(0)
+
+        this.setScale(1.65)
+        this.setInteractive()
     }
 
     update(){
@@ -17,11 +20,12 @@ class Ally extends Entity{
 
     handleCollision(){}
     handleClick(){
-        if(listen(this.parentScene, this ))
-        if(this.FSM.state !== 'interacting'){
-            this.icon_sprite === undefined ? undefined : this.icon_sprite.destroy()
-            this.parentScene.p1.animsFSM.transition('interacting')
-            this.FSM.transition('interacting')
+        if(listen(this.parentScene, this )){
+            if(this.FSM.state !== 'interacting'){
+                this.icon_sprite === undefined ? undefined : this.icon_sprite.destroy()
+                this.parentScene.p1.animsFSM.transition('interacting')
+                this.FSM.transition('interacting')
+            }
         }
     }
 }
@@ -29,7 +33,7 @@ class Ally extends Entity{
 class idleAllyState extends State{
     enter(scene, ally){
         if(scene.p1.questStatus.finished === true && scene.p1.questStatus.number < ammountOfQuests){
-            ally.icon_sprite = scene.add.sprite(ally.x+18, ally.y-2,'quest-icon', 0).play('quest-icon')
+            ally.icon_sprite = scene.add.sprite(ally.x + 25, ally.y - 15,'quest-icon', 0).play('quest-icon')
         }
     }
 }
@@ -54,12 +58,12 @@ class interactionAllyState extends State{
         let playercurrentquest = scene.p1.questStatus
 
         // Create a rectangle to act as the background of the popup
-        const window = scene.add.graphics().setDepth(2)
-        window.fillStyle(0x000000, 0.75) // Color and alpha (transparency)
-        window.fillRect(scene.cameras.main.scrollX + scene.cameras.main.width/4 , scene.cameras.main.scrollY + scene.cameras.main.height/8, 500, 600)
+        const window = scene.add.graphics().setDepth(3)
+        window.fillStyle(0x000000, 1) // Color and alpha (transparency)
+        window.fillRect(scene.cameras.main.scrollX + scene.cameras.main.width/4 , scene.cameras.main.scrollY + scene.cameras.main.height/4, 450, 400)
 
-        closeBTN = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width/4, scene.cameras.main.scrollY + scene.cameras.main.height/8, "exit", {fill: '#FFFFFF'})
-        closeBTN.setInteractive().setDepth(2)
+        closeBTN = scene.add.text(scene.cameras.main.scrollX + scene.cameras.main.width/4 + 5, scene.cameras.main.scrollY + scene.cameras.main.height/4 + 5, "exit", {font: '14px Arial', fill: '#FFFFFF', })
+        closeBTN.setInteractive().setDepth(3)
         closeBTN.on('pointerdown', () => {
             toggleCursor(scene)
             window.destroy()
@@ -82,19 +86,19 @@ class interactionAllyState extends State{
             this.stateMachine.transition('idle')
         })
 
-        acceptBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)*3), scene.cameras.main.scrollY + scene.cameras.main.height/8, "accept", {fill: '#FFFFFF'})
-        acceptBTN.setOrigin(1,0).setAlpha(0).setDepth(2)
+        acceptBTN = scene.add.text(scene.cameras.main.scrollX + (scene.cameras.main.width/4) + 450 - 10, scene.cameras.main.scrollY + scene.cameras.main.height/4 + 5, "accept", {fill: '#FFFFFF'})
+        acceptBTN.setAlpha(0).setDepth(3).setOrigin(1, 0)
         
         //available quests
-        avaQ = scene.add.text(scene.cameras.main.scrollX + (scene.cameras.main.width/2), scene.cameras.main.scrollY + scene.cameras.main.height/6, "Quests", {fill: '#FFFFFF'}).setOrigin(0.5)
-        avaQ.setOrigin(0.5).setDepth(2)
+        avaQ = scene.add.text(scene.cameras.main.scrollX + (scene.cameras.main.width/4) + 225, scene.cameras.main.scrollY + scene.cameras.main.height/4 + 10, "Quests", {fill: '#FFFFFF'})
+        avaQ.setOrigin(0.5, 0).setDepth(3)
 
         scene.quests.forEach(element => {
             if(element.questdata.questnumber == playercurrentquest.number + 1){
                 if(playercurrentquest.finished === true){
-                    questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/4, 
-                    element.name , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }})
-                    questTxt.setInteractive().setOrigin(0).setDepth(2)
+                    questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + (scene.cameras.main.height/3 - 20), 
+                    element.name , {font: '9px Arial', fill: '#FFFFFF',  wordWrap : { width: 400, useAdvancedWrap: true }})
+                    questTxt.setInteractive().setOrigin(0).setDepth(3)
 
                 
                     questTxt.on('pointerdown', () => {
@@ -103,7 +107,7 @@ class interactionAllyState extends State{
                             questTxt.text =  element.description
                         } else {
                             questTxt.text = element.requirements
-                            acceptBTN.setInteractive().setAlpha(1).setDepth(2)
+                            acceptBTN.setInteractive().setAlpha(1).setDepth(3)
                         }
                         count += 1
                     })
@@ -130,12 +134,12 @@ class interactionAllyState extends State{
             
 
                 } else {
-                    questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/4, 
-                    element.completiontext , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setDepth(2)
+                    questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/3, 
+                    element.completiontext , {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setDepth(3)
 
                     if(playercurrentquest.currentQuest.actual === playercurrentquest.currentQuest.ammount){
-                        completeBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/2)), scene.cameras.main.scrollY + scene.cameras.main.height/2, 
-                        'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive().setDepth(2)
+                        completeBTN = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4) + 225), scene.cameras.main.scrollY + scene.cameras.main.height/2, 
+                        'complete quest', {fontSize: '10px' , fill: '#FFFFFF',  wordWrap : { width: 450, useAdvancedWrap: true }}).setOrigin(0.5).setInteractive().setDepth(3)
                         completeBTN.on('pointerdown', ()=>{
                             toggleCursor(scene)
 
@@ -164,6 +168,7 @@ class interactionAllyState extends State{
                 }
             }
         })
+    
 
         let winAr = [window, closeBTN]
 

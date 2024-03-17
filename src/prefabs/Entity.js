@@ -10,7 +10,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.VELOCITY = 100
         this.setCollideWorldBounds(true)
         this.setScale(2.5)   
-        this.setInteractive()
+        //this.setInteractive()
         
         //nonphysical
         this.setOrigin(0)
@@ -32,7 +32,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.INTERVAL_ID = undefined
         this.reset_e = true
         this.canMove = true
-        this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0) //nameplate 
+        this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0).setDepth(3)//nameplate 
 
         //damage dealing properties
         this.lightAttack_dmg = undefined

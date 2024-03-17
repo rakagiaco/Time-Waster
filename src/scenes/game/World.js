@@ -22,6 +22,7 @@ class World extends Phaser.Scene{
         //camera stuff
         this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels)
         this.physics.world.setBounds(0,0, map.widthInPixels, map.heightInPixels)
+        this.cameras.main.setZoom(1.5)
 
         //cursor
         this.input.setDefaultCursor('url(assets/img/cursor.png), pointer')
@@ -42,7 +43,7 @@ class World extends Phaser.Scene{
     //spawn entities and items --------------------
         objlayer.objects.forEach(element => {
             if(element.name === 'boss_spawn'){
-                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 200, [element.x, element.y], 25, 400, true))
+                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 20, [element.x, element.y], 25, 400, true).anims.play('boss-1-idle-anim'))
             } else if(element.name === 'enemy_spawn'){
                 this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y], 10).setScale(1.25).anims.play('enemy-idle-anim'))
             } else if(element.name === 'enemy_spawn_2'){
@@ -78,17 +79,17 @@ class World extends Phaser.Scene{
         
         //create player and ally
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50).setImmovable().setSize(10,10)
-        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 500, this.qobj, this.inv)
+        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 5000, this.qobj, this.inv)
 
         //fullscreen button, credit Nathan Altice
-        this.fullscreenBtn = this.add.sprite(game.config.width - 25, game.config.height - 25, 'fullscreen').setScale(2).setScrollFactor(0).setDepth(3)
+        this.fullscreenBtn = this.add.sprite(game.config.width - 200,  game.config.height - 165, 'fullscreen').setScale(2).setScrollFactor(0).setDepth(3)
         this.fullscreenBtn.setOrigin(0.5)
         this.fullscreenBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             this.scale.toggleFullscreen()
         })
 
         //settings window
-        this.settingsBtn = this.add.image(game.config.width - 75, game.config.height - 20, 'save').setScrollFactor(0).setDepth(3)
+        this.settingsBtn = this.add.image(game.config.width - 230, game.config.height - 165, 'save').setScrollFactor(0).setDepth(3).setScale(0.75)
         this.settingsBtn.setOrigin(0.5)
         this.settingsBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
             const parse_inv = JSON.stringify(Array.from(this.p1.p1Inventory.inventory.entries()))
@@ -96,7 +97,7 @@ class World extends Phaser.Scene{
             window.localStorage.setItem('existing_inv', parse_inv)
             window.localStorage.setItem('existing_quest', parse_qst)
 
-            let loadArrow = this.add.image(game.config.width - 75, game.config.height - 50, 'save-arrow').setScrollFactor(0).setDepth(3).setOrigin(0.5)
+            let loadArrow = this.add.image(game.config.width - 230, game.config.height - 190, 'save-arrow').setScrollFactor(0).setDepth(3).setOrigin(0.5).setScale(0.75)
             this.tweens.add({
                 targets: loadArrow,
                 angle: {from: 0 , to: 90},
@@ -113,11 +114,17 @@ class World extends Phaser.Scene{
                 // this.scene.start('menuScene')
         })
         
+
+        this.p1AttackUi = this.add.sprite(game.config.width/ 2 + 25, game.config.height / 2 + 200, 'attack-bar').setOrigin(0.5).setScale(3).setScrollFactor(0).setDepth(3).setInteractive().on('pointerover', ()=>{
+
+
+        })
+
         //minimap, credit Nathan Altice
         this.miniMapCamera = this.cameras.add(game.config.width - 192, 32, 160, 160).setBounds(0, 0, game.scene.width, game.scene.height).setZoom(0.1)
         this.miniMapCamera.setBackgroundColor(0x2F3B2D)
         this.miniMapCamera.startFollow(this.p1, false, 0.4, 0.4)
-        this.miniMapCamera.ignore([this.bushes, bgLayer, this.p1.HEALTH_BAR])
+        this.miniMapCamera.ignore([this.bushes, bgLayer, this.p1.HEALTH_BAR, this.p1AttackUi])
         this.enemies.forEach(element => {
             this.miniMapCamera.ignore([element.HEALTH_BAR, element.entity_text])
         })
@@ -126,6 +133,14 @@ class World extends Phaser.Scene{
         mapMask.fillCircle(game.config.width - 112, 112, 80)
         const mask = mapMask.createGeometryMask()
         this.miniMapCamera.setMask(mask)
+        
+
+
+
+
+
+
+
 
         //debug code
         /***************************************/

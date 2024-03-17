@@ -27,9 +27,18 @@ class Loader extends Phaser.Scene{
         this.load.spritesheet('enemy-1-anim', '/spritesheets/enemy-1.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('enemy-2-anim', '/spritesheets/enemy-2.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('boss-aoe', '/spritesheets/damage-aoe-boss.png', {frameWidth: 32, frameHeight: 32})
-        this.load.spritesheet('player', '/spritesheets/player.png', {frameWidth: 32, frameHeight: 32})
-        this.load.spritesheet('player-light-attack-anim', '/spritesheets/player-light-attack-anim.png', {frameWidth: 32, frameHeight: 32})
-        this.load.spritesheet('player-heavy-attack-anim', '/spritesheets/player-heavy-attack-anim.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('player-light-attack-anim', '/spritesheets/player/player-light-attack-anim.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('player-heavy-attack-anim', '/spritesheets/player/player-heavy-attack-anim.png', {frameWidth: 32, frameHeight: 32})
+        this.load.spritesheet('attack-heavy-cooldown', '/spritesheets/player/attack-heavy-cooldown.png', {frameWidth: 47, frameHeight: 16})
+        this.load.spritesheet('enemy-1-death', '/spritesheets/enemy-1-death.png', {frameWidth: 32, frameHeight: 50})
+        this.load.spritesheet('enemy-2-death', '/spritesheets/enemy-2-death.png', {frameWidth: 32, frameHeight: 50})
+        this.load.spritesheet('enemy-2-lootable', '/spritesheets/enemy-2-lootable.png', {frameWidth: 32, frameHeight: 50})
+        this.load.spritesheet('boss-1', '/spritesheets/boss-1.png', {frameWidth: 32, frameHeight: 50})
+        this.load.spritesheet('boss-death', '/spritesheets/boss-death.png', {frameWidth: 32, frameHeight: 50})
+        this.load.spritesheet('boss-lootable', '/spritesheets/boss-lootable.png', {frameWidth: 32, frameHeight: 50})
+
+        //player atlas
+        this.load.atlas('player', '/spritesheets/player/player.png', '/spritesheets/player/player-walk-anims.json')
 
         //load images (tmp)
         this.load.image('continue-game-button-hover', '/img/continue-game-button-hover.png')
@@ -48,6 +57,8 @@ class Loader extends Phaser.Scene{
         this.load.image('rect', '/img/rect.png')
         this.load.image('save-arrow', '/img/save-arrow.png')
         this.load.image('save', '/img/save.png')
+        this.load.image('attack-bar', '/img/attack-bar.png')
+        this.load.image('attack-light-cooldown', '/img/attack-light-cooldown.png')
 
         //load quests
         this.load.json('quest-1', '/quests/quest-1.json')
@@ -69,6 +80,9 @@ class Loader extends Phaser.Scene{
         this.load.audio('enemy-1-hit', '/audio/enemy-hit.mp3')
         this.load.audio('enemy-2-hit', '/audio/enemy-hit-2.mp3')
 
+        //load bitmap font
+        this.load.bitmapFont('lemon-milk', '/font/LemonMilk.png', '/font/LemonMilk.xml')
+
 
         //load existing gamestates...
         if(window.localStorage.getItem('existing_quest') != null) {
@@ -87,11 +101,41 @@ class Loader extends Phaser.Scene{
 
     create(){
 
+
+        /**   //vanilla
+        this.anims.create({
+            key: 'running_vanilla',
+            frames: this.anims.generateFrameNames('player', {
+                prefix: 'character-anim-',
+                start: 1,
+                end: 4
+            }),
+            frameRate: 15,
+            repeat: -1
+        })
+
+        //fire */
+
     //player anims----------------------------
         this.anims.create({
-            key: 'player-walk',
-            frames: this.anims.generateFrameNumbers('player', {start: 0, end: 1}),
-            frameRate: 5,
+            key: 'player-walk-up',
+            frames: this.anims.generateFrameNames('player', {
+                prefix: 'walking-up-',
+                start: 1,
+                end: 2
+            }),
+            frameRate: 10,
+            repeat: false
+        })
+
+        this.anims.create({
+            key: 'player-walk-down',
+            frames: this.anims.generateFrameNames('player', {
+                prefix: 'walking-down-',
+                start: 1,
+                end: 2
+            }),
+            frameRate: 10,
             repeat: false
         })
 
@@ -108,6 +152,13 @@ class Loader extends Phaser.Scene{
             frameRate: 10,
             repeat: false
         })
+
+        this.anims.create({
+            key: 'attack-heavy-cooldown-anim',
+            frames: this.anims.generateFrameNumbers('attack-heavy-cooldown', {start: 0, end: 2}),
+            frameRate: 1,
+            repeat: false
+        })
         
         
     //enemy anims----------------------------
@@ -117,7 +168,14 @@ class Loader extends Phaser.Scene{
             frameRate: 10,
             repeat: -1
         })
-  
+        
+        this.anims.create({
+            key: 'enemy-1-death-anim',
+            frames: this.anims.generateFrameNumbers('enemy-1-death', {start: 0, end: 7}),
+            frameRate: 6,
+            repeat: false,
+        })
+
         this.anims.create({
             key: 'enemy2-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-2-anim', {start: 0, end: 6}),
@@ -125,6 +183,43 @@ class Loader extends Phaser.Scene{
             repeat: -1
         })
 
+        this.anims.create({
+            key: 'enemy-2-death-anim',
+            frames: this.anims.generateFrameNumbers('enemy-2-death', {start: 0, end: 4}),
+            frameRate: 6,
+            repeat: false,
+        })
+
+        this.anims.create({
+            key: 'enemy-2-lootable-anim',
+            frames: this.anims.generateFrameNumbers('enemy-2-lootable', {start: 0, end: 3}),
+            frameRate: 6,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: 'boss-1-idle-anim',
+            frames: this.anims.generateFrameNumbers('boss-1', {start: 0, end: 3}),
+            frameRate: 6,
+            repeat: -1,
+        })
+
+        this.anims.create({
+            key: 'boss-1-death-anim',
+            frames: this.anims.generateFrameNumbers('boss-death', {start: 0, end: 5}),
+            frameRate: 6,
+            repeat: false,
+        })
+        
+        this.anims.create({
+            key: 'boss-1-lootable-anim',
+            frames: this.anims.generateFrameNumbers('boss-lootable', {start: 0, end: 8}),
+            frameRate: 6,
+            repeat: -1,
+        })
+        
+        
+        
         
         //boss mechanic
         this.anims.create({

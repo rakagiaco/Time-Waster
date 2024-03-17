@@ -19,7 +19,7 @@ class Enemy extends Entity{
         this.detectionDistance = _detectionDist
         this.setOrigin(0)
         this.entity_text.setAlpha(1)
-        this.loot_table = []
+        this.is_lootable = false
         this.looted = false
         this.isAttacking = false
 
@@ -57,17 +57,14 @@ class Enemy extends Entity{
             return
         }
 
-        if(this.FSM.state === 'dead'){
+        if(this.FSM.state === 'dead' && this.looted === false){
             //console.log('enemy: dead click')
         
             let x = undefined
             if(this.entity_type === 'Electro Lord Kealthis'){ //the boss
                 x = new Item(this.parentScene, this.x, this.y, 'Frozen Heart', 0, 'Frozen Heart', true, true).setAlpha(0)
-            }else if(this.entity_type === 'Nepian Observer'){
-                //roll for loot
-                let drops = Math.random()
-                //console.log(drops)
-                drops >= 65 ? undefined : x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0)
+            }else if(this.entity_type === 'Nepian Observer' && this.is_lootable){
+                x = new Item(this.parentScene, this.x, this.y, 'lesser nepian blood', 0, 'lesser nepian blood', true, true).setScale(0.5).setAlpha(0) 
             }
         
             x === undefined ? undefined:  //does x exist
@@ -184,6 +181,21 @@ class deadEnemyState extends State{
         enemy.HEALTH_BAR.clear()
         console.log('in enemy: dying')
 
+        switch(enemy.entity_type){
+            case 'Nepian Scout':
+                enemy.anims.play('enemy-1-death-anim')
+                break
+            case 'Nepian Observer':
+                enemy.anims.play('enemy-2-death-anim')
+                break
+            case 'Electro Lord Kealthis':
+                enemy.anims.play('boss-1-death-anim')
+                break
+                         
+            default:
+                break
+        }
+
         //die
         enemy.isAlive = false
         clearInterval(enemy.INTERVAL_ID)   
@@ -204,7 +216,21 @@ class deadEnemyState extends State{
             }
         }
 
-      
+        let drops = Math.random()
+        //console.log(drops)
+        if(drops <= 65){
+            enemy.is_lootable = true
+            
+            scene.time.delayedCall(1250, ()=>{
+                enemy.setInteractive()
+                if(enemy.entity_type === 'Nepian Observer'){
+                    enemy.anims.play('enemy-2-lootable-anim')
+                } else if(enemy.entity_type === 'Electro Lord Kealthis'){
+                    enemy.anims.play('boss-1-lootable-anim')
+                }
+            })
+        }
+            
         scene.time.delayedCall(5000, () => {
             scene.tweens.add({
                 targets: enemy,
@@ -217,6 +243,7 @@ class deadEnemyState extends State{
                             alpha: { from: 0, to: 1 },
                             duration: 2000,
                         })
+                        enemy.disableInteractive()
                         enemy.x = enemy.spawnOrigin[0]
                         enemy.y = enemy.spawnOrigin[1]
                         enemy.body.enable = true
@@ -224,6 +251,18 @@ class deadEnemyState extends State{
                         enemy.looted = false
                         enemy.isAttacking = false
                         enemy.HIT_POINTS = enemy.HIT_POINTS_log
+                        switch(enemy.entity_type){
+                            case 'Nepian Scout':
+                                enemy.anims.play('enemy-idle-anim')
+                                break
+                            case 'Nepian Observer':
+                                enemy.anims.play('enemy2-idle-anim')
+                                break
+                            case 'Electro Lord Kealthis':
+                                enemy.anims.play('boss-1-idle-anim')
+                                break
+                        }
+                
                         enemy.FSM.transition('idle')  
                     })
                 }

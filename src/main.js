@@ -8,7 +8,7 @@ let config = {
     width: 1000,
     height: 800,
     render: {
-        pixelArt: true
+        pixelArt: true,
     },
     scale: {
         mode: Phaser.Scale.FIT,

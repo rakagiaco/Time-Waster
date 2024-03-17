@@ -5,16 +5,9 @@ class Menu extends Phaser.Scene{
 
     create(data){
         //title
-        this.add.text(game.config.width/2, game.config.height/2 - 25, 'Time Waster',{
-            fontFamily: 'Helvetica',
-            fontSize : '40px',
-            fontStyle: 'italic',
-            color : '#FFFFFF',
-            align : 'right', 
-            padding : {top : 5, bottom : 5},
-            fixedWidth : 0,
-        }).setOrigin(0.5)
-  
+        this.add.bitmapText(game.config.width/2, game.config.height/2 - 25, 'lemon-milk', 'Time Waster', 72).setOrigin(0.5)
+        
+        this.cameras.main.setBackgroundColor('0xffffff')
         //todo CONTINUE ART
         this.continueButton = this.add.image(game.config.width/2 - 150, game.config.height/2+ 200, 'continue-game-button').setInteractive({ useHandCursor: true }).on('pointerdown', ()=>{
             this.scene.start('worldScene', data)
