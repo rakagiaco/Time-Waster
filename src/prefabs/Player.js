@@ -13,6 +13,11 @@ class Player extends Entity{
         //derived
         this.HEALTH_BAR.setScrollFactor(0).setDepth(3)
         this.HEALTH_BAR.width = 150
+
+        //sprinting
+        this.isSprinting = false
+        this.stamina = 5
+
         //inventory
         this.p1Inventory = new Inventory(inv)
 
@@ -100,7 +105,33 @@ class Player extends Entity{
             }
         })
         keySprint = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT).on('down', ()=>{
-            this.VELOCITY === 100 ? this.VELOCITY = 250 : this.VELOCITY = 100
+            this.isSprinting = !this.isSprinting
+            
+            if(this.isSprinting){
+                clearInterval(this.INTERVAL_ID)
+                this.VELOCITY = 250
+                this.INTERVAL_ID = setInterval(()=>{
+                    if(this.stamina <= 0){
+                        console.log('stamina empty, sprint done')
+                        this.VELOCITY = 100
+                        clearInterval(this.INTERVAL_ID)
+                    } else{
+                        console.log('stamina --')
+                        this.stamina -= 1
+                    }
+                }, 1000)
+            } else {
+                clearInterval(this.INTERVAL_ID)
+                this.INTERVAL_ID = setInterval(()=>{
+                    if(this.stamina >= 5){
+                        console.log('stamina refil done ')
+                        clearInterval(this.INTERVAL_ID)
+                    }
+                    console.log('stamina refil')
+                    this.stamina += 1
+                }, 1000)
+                this.VELOCITY = 100
+            }
         })
     }
 
