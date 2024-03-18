@@ -6,6 +6,8 @@ class World extends Phaser.Scene{
     init(data){
         this.qobj = data.qobj
         this.inv = data.inv
+        this.helpToggle = false
+        this.helpPage = this.add.image(game.config.width/2, game.config.height/2, 'help-page').setScrollFactor(0).setDepth(3).setOrigin(0.5).setScale(4) .setAlpha(0)
     }
 
     preload(){}
@@ -43,7 +45,7 @@ class World extends Phaser.Scene{
     //spawn entities and items --------------------
         objlayer.objects.forEach(element => {
             if(element.name === 'boss_spawn'){
-                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 20, [element.x, element.y], 25, 400, true).anims.play('boss-1-idle-anim'))
+                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 20, [element.x, element.y], 25, 400, true).setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim'))
             } else if(element.name === 'enemy_spawn'){
                 this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y], 10).setScale(1.25).anims.play('enemy-idle-anim'))
             } else if(element.name === 'enemy_spawn_2'){
@@ -113,9 +115,15 @@ class World extends Phaser.Scene{
                 // })
                 // this.scene.start('menuScene')
         })
+
+        this.helpBtn = this.add.image(game.config.width - 250, game.config.height - 165, 'help-icon').setScrollFactor(0).setDepth(3).setOrigin(0.5).setScale(0.50).setInteractive({useHandCursor: true}).on('pointerdown', ()=>{
+            this.sound.play('help-toggle', {volume: 0.05})
+            this.helpToggle = !this.helpToggle
+            this.helpToggle === true ? this.helpPage.setAlpha(1) : this.helpPage.setAlpha(0)
+        })
         
 
-        this.p1AttackUi = this.add.sprite(game.config.width/ 2 + 25, game.config.height / 2 + 200, 'attack-bar').setOrigin(0.5).setScale(3).setScrollFactor(0).setDepth(3).setInteractive().on('pointerover', ()=>{
+        this.p1AttackUi = this.add.sprite(game.config.width/ 2, game.config.height / 2 + 200, 'attack-bar').setOrigin(0.5).setScale(3).setScrollFactor(0).setDepth(3).setInteractive().on('pointerover', ()=>{
 
 
         })
@@ -124,7 +132,7 @@ class World extends Phaser.Scene{
         this.miniMapCamera = this.cameras.add(game.config.width - 192, 32, 160, 160).setBounds(0, 0, game.scene.width, game.scene.height).setZoom(0.1)
         this.miniMapCamera.setBackgroundColor(0x2F3B2D)
         this.miniMapCamera.startFollow(this.p1, false, 0.4, 0.4)
-        this.miniMapCamera.ignore([this.bushes, bgLayer, this.p1.HEALTH_BAR, this.p1AttackUi])
+        this.miniMapCamera.ignore([this.bushes, bgLayer, this.p1.HEALTH_BAR, this.helpBtn, this.fullscreenBtn, this.settingsBtn, this.helpToggle, this.helpPage, this.p1AttackUi])
         this.enemies.forEach(element => {
             this.miniMapCamera.ignore([element.HEALTH_BAR, element.entity_text])
         })
@@ -153,7 +161,7 @@ class World extends Phaser.Scene{
                 this.p1.VELOCITY = 100
             }else{
                 this.physics.world.drawDebug = true;
-                this.p1.VELOCITY = 500
+                this.p1.VELOCITY = 5000
             }
         })
         /********************************************/

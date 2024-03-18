@@ -24,6 +24,7 @@ class Loader extends Phaser.Scene{
         this.load.spritesheet('tree-3', '/spritesheets/tree-3.png', {frameWidth: 64, frameHeight: 64})
         this.load.spritesheet('bush-1', '/spritesheets/bush-1.png', {frameWidth: 16, frameHeight: 16})
         this.load.spritesheet('quest-icon', '/spritesheets/quest-icon.png', {frameWidth: 16, frameHeight: 16})
+        this.load.spritesheet('quest-complete-icon', '/spritesheets/quest-complete-icon.png', {frameWidth: 16, frameHeight: 16})
         this.load.spritesheet('enemy-1-anim', '/spritesheets/enemy-1.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('enemy-2-anim', '/spritesheets/enemy-2.png', {frameWidth: 32, frameHeight: 50})
         this.load.spritesheet('boss-aoe', '/spritesheets/damage-aoe-boss.png', {frameWidth: 32, frameHeight: 32})
@@ -59,6 +60,8 @@ class Loader extends Phaser.Scene{
         this.load.image('save', '/img/save.png')
         this.load.image('attack-bar', '/img/attack-bar.png')
         this.load.image('attack-light-cooldown', '/img/attack-light-cooldown.png')
+        this.load.image('help-page', '/img/help-page.png')
+        this.load.image('help-icon', '/img/help-icon.png')
 
         //load quests
         this.load.json('quest-1', '/quests/quest-1.json')
@@ -79,10 +82,14 @@ class Loader extends Phaser.Scene{
         this.load.audio('collect-herb', '/audio/collect-herb.mp3')
         this.load.audio('enemy-1-hit', '/audio/enemy-hit.mp3')
         this.load.audio('enemy-2-hit', '/audio/enemy-hit-2.mp3')
+        this.load.audio('help-toggle', '/audio/help-toggle.mp3')
+        this.load.audio('complete-quest', '/audio/complete-quest.mp3')
 
-        //load bitmap font
-        this.load.bitmapFont('lemon-milk', '/font/LemonMilk.png', '/font/LemonMilk.xml')
-
+        this.load.bitmapFont('8-bit', '/font/8-bit.png', '/font/8-bit.xml')
+        this.load.bitmapFont('8-bit-white', '/font/8-bit-white.png', '/font/8-bit-white.xml')
+        this.load.bitmapFont('pixel-red', '/font/pixel-red.png', '/font/pixel-red.xml')
+        this.load.bitmapFont('pixel-yellow', '/font/pixel-yellow.png', '/font/pixel-yellow.xml')
+        this.load.bitmapFont('pixel-green', '/font/pixel-green.png', '/font/pixel-green.xml')
 
         //load existing gamestates...
         if(window.localStorage.getItem('existing_quest') != null) {
@@ -138,6 +145,31 @@ class Loader extends Phaser.Scene{
             frameRate: 10,
             repeat: false
         })
+
+        
+        this.anims.create({
+            key: 'player-walk-left',
+            frames: this.anims.generateFrameNames('player', {
+                prefix: 'walking-left-',
+                start: 1,
+                end: 2
+            }),
+            frameRate: 10,
+            repeat: false
+        })
+
+        
+        this.anims.create({
+            key: 'player-walk-right',
+            frames: this.anims.generateFrameNames('player', {
+                prefix: 'walking-right-',
+                start: 1,
+                end: 2
+            }),
+            frameRate: 10,
+            repeat: false
+        })
+
 
         this.anims.create({
             key: 'player-light-attack',
@@ -234,6 +266,13 @@ class Loader extends Phaser.Scene{
         this.anims.create({
             key: 'quest-icon',
             frames: this.anims.generateFrameNumbers('quest-icon', {start: 0, end: 3}),
+            frameRate: 5,
+            repeat: -1
+        })
+
+        this.anims.create({
+            key: 'quest-complete-icon-anim',
+            frames: this.anims.generateFrameNumbers('quest-complete-icon', {start: 0, end: 6}),
             frameRate: 5,
             repeat: -1
         })

@@ -47,7 +47,7 @@ class Inventory{
         window.fillRect(windowX , windowY, 450, 300)
 
         let closeBTN, winname
-        closeBTN = scene.add.text(windowX + 5, windowY + 5, "exit", {font: '14px Arial', fill: '#FFFFFF', })
+        closeBTN = scene.add.bitmapText(windowX + 5, windowY + 5, '8-bit-white', 'exit', 24)
         closeBTN.setInteractive().setDepth(2)   
         closeBTN.on('pointerdown', () => {
             toggleCursor(scene)
@@ -60,7 +60,7 @@ class Inventory{
             scene.p1.animsFSM.transition('idle')
         })
   
-        winname = scene.add.text(windowX + 225, windowY+ 10, "Inventory", {font: '14px Arial', fill: '#FFFFFF'}).setOrigin(0.5, 0).setDepth(2)
+        winname = scene.add.bitmapText(windowX + 225, windowY+ 10, '8-bit-white', 'Inventory', 24).setOrigin(0.5, 0).setDepth(2)
     
         let counter = 0 //if 5 then increase y pos
         let beginX = windowX + 64
@@ -70,8 +70,8 @@ class Inventory{
            this.active.push(scene.add.image(beginX, beginY, key).setDepth(2).setInteractive().on('pointerdown', ()=>{
                 toggleCursor(scene)
            }))
-           this.active.push( scene.add.text(beginX, beginY-32, value, {fill: '#FFFFFF', font: '15px Arial'}).setDepth(2))
-           this.active.push( scene.add.text(beginX-15, beginY+32, key, {fill: '#FFFFFF', font: '12x Arial'}).setDepth(2))
+           this.active.push( scene.add.bitmapText(beginX, beginY-32, '8-bit-white', value, 16).setDepth(2))
+           this.active.push( scene.add.bitmapText(beginX-15, beginY+32, '8-bit-white', key,13).setDepth(2))
             if(counter === 2){
                 counter = 0
                 beginY += 128

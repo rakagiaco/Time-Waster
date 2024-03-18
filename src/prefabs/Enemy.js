@@ -155,7 +155,7 @@ class combatEnemyState extends State{
             x === 0 ? scene.p1.HIT_POINTS -= enemy.lightAttack_dmg : scene.p1.HIT_POINTS -= enemy.heavyAttack_dmg
             
             console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
-            let attackText = scene.add.text(scene.p1.x + Phaser.Math.Between(-50, 50), scene.p1.y + Phaser.Math.Between(-10,-60), x === 0 ? '-'+enemy.lightAttack_dmg : '-'+enemy.heavyAttack_dmg, {fill: '#FF0000'}).setScale(2).setOrigin(0)
+            let attackText = scene.add.bitmapText(scene.p1.x + Phaser.Math.Between(-30, 30), scene.p1.y + Phaser.Math.Between(-10,-30),'pixel-red', x === 0 ? '-'+enemy.lightAttack_dmg : '-'+enemy.heavyAttack_dmg, 20)
             scene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
             scene.time.delayedCall(2000, ()=>{

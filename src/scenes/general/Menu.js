@@ -5,7 +5,7 @@ class Menu extends Phaser.Scene{
 
     create(data){
         //title
-        this.add.bitmapText(game.config.width/2, game.config.height/2 - 25, 'lemon-milk', 'Time Waster', 72).setOrigin(0.5)
+        this.add.bitmapText(game.config.width/2, game.config.height/2 - 25,'8-bit', 'Time Waster', 96).setOrigin(0.5)
         
         this.cameras.main.setBackgroundColor('0xffffff')
         //todo CONTINUE ART
@@ -19,7 +19,7 @@ class Menu extends Phaser.Scene{
             window.localStorage.removeItem('existing_quest')
             data.inv = undefined
             data.qobj = undefined
-            this.scene.start('worldScene', data)
+            
         })
     }
 }

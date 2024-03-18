@@ -36,8 +36,8 @@ class Player extends Entity{
 
         //visual quest text:
         let padding = 10
-        this.questTrackerTxtTitle = scene.add.bitmapText(game.config.width/6 + 10,game.config.height - 200, 'lemon-milk', "Current Quest: ", 12).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
-        this.questTrackerTxtBody = scene.add.bitmapText(game.config.width/6 + 15, game.config.height - 170, 'lemon-milk', "nil", 10).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
+        this.questTrackerTxtTitle = scene.add.bitmapText(game.config.width/6 + 10,game.config.height - 200,'8-bit-white', "Current Quest: ", 32).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
+        this.questTrackerTxtBody = scene.add.bitmapText(game.config.width/6 + 15, game.config.height - 170, '8-bit-white', "nil", 20).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
        
         //quest tracker 
         qobj === undefined ?
@@ -126,16 +126,14 @@ class Player extends Entity{
             switch(this.pkg.attack_type){
                 case 'light':
                     // console.log('player used light attack on enemy')
-                    attackText = this.parentScene.add.text(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60),this.pkg.dmg, {fill: '#0000FF'}).setScale(2).setOrigin(0)
+                    attackText = this.parentScene.add.bitmapText(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), 'pixel-yellow', this.pkg.dmg, 24)
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
-                    //ensure no sound overlap
-                    
+                    //ensure no sound overlap  
                     if(!this.attack_noise_light_hit.isPlaying){
                         this.attack_noise_light_hit.play()
                     }
                     
-
                     if(collided.HIT_POINTS <= this.pkg.dmg){ //enemy will die here
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
@@ -151,16 +149,14 @@ class Player extends Entity{
                     break
                 case 'heavy':
                     // console.log('player used heavy attack on enemy')
-                    attackText = this.parentScene.add.text(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), this.pkg.dmg, {fill: '#0000FF'}).setScale(2).setOrigin(0)
+                    attackText = this.parentScene.add.bitmapText(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), 'pixel-yellow', this.pkg.dmg, 24)
                     this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
     
                     //sound overlap
-                 
                     if(!this.attack_noise_heavy_hit.isPlaying){
                         this.attack_noise_heavy_hit.play()
                     }
                     
-
                     if(collided.HIT_POINTS <= this.pkg.dmg){
                         collided.HIT_POINTS = 0
                         collided.FSM.transition('dead')
@@ -203,6 +199,17 @@ class Player extends Entity{
                 case -1:
                     this.anims.play('player-walk-up')
                     break
+            }
+
+            if(moveDirection.y === 0){
+                switch(moveDirection.x){
+                    case 1:
+                        this.anims.play('player-walk-right')
+                        break
+                    case -1:
+                        this.anims.play('player-walk-left')
+                        break
+                }
             }
         }
         moveDirection.normalize()
@@ -273,7 +280,7 @@ class Player extends Entity{
         }else{
             this.HEALTH_BAR.fillStyle(0x00FF00)
         }
-        this.HEALTH_BAR.fillRect(game.config.width/2 - 50, game.config.height/2 + 165, this.HEALTH_BAR.width * currentHealthPercent, 10)
+        this.HEALTH_BAR.fillRect(game.config.width/2 - 75, game.config.height/2 + 165, this.HEALTH_BAR.width * currentHealthPercent, 10)
     }
 }
 
@@ -357,7 +364,7 @@ class inWaterPlayerState extends State{
         player.INTERVAL_ID = setInterval(()=>{
             if(player.HIT_POINTS < player.HIT_POINTS_log){
                 player.HIT_POINTS += 1
-                let healText = scene.add.text(player.x + Phaser.Math.Between(-50, 50), player.y + Phaser.Math.Between(-10,-60), '+1', {fill: '#00FF00'}).setScale(2).setOrigin(0)
+                let healText = scene.add.bitmapText(player.x + Phaser.Math.Between(-50, 50), player.y + Phaser.Math.Between(-10,-60), 'pixel-green', '+1', 16).setScale(2).setOrigin(0)
                 scene.time.delayedCall(500, ()=>{ healText.destroy()})
             }
         }, 200)
