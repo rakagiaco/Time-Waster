@@ -16,7 +16,11 @@ class Player extends Entity{
 
         //sprinting
         this.isSprinting = false
+        this.SPRINT_INTERVAL_ID = undefined
+        this.STAMINA_BAR = scene.add.graphics().setScrollFactor(0).setAlpha(1).setDepth(3)
+        this.STAMINA_BAR.width = 150
         this.stamina = 5
+        this.stamina_log = this.stamina
 
         //inventory
         this.p1Inventory = new Inventory(inv)
@@ -25,6 +29,7 @@ class Player extends Entity{
         this.windowOpen = false 
         
         /**
+         * current window -> holds data on game objests that exist if a window is open -> so we can reset windows if we die in wierd situations...
          * @param {Array[Phaser.GameObjects]} objs an array of phaser gameobjs in refrence to open window
          * @param {Inventory.active} array specific to this project, for the inventory manager
          */
@@ -40,9 +45,8 @@ class Player extends Entity{
         this.water_noise = scene.sound.add('in-water', {volume: 0.5})
 
         //visual quest text:
-        let padding = 10
         this.questTrackerTxtTitle = scene.add.bitmapText(game.config.width/6 + 10,game.config.height - 200,'8-bit-white', "Current Quest: ", 32).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
-        this.questTrackerTxtBody = scene.add.bitmapText(game.config.width/6 + 15, game.config.height - 170, '8-bit-white', "nil", 20).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
+        this.questTrackerTxtBody = scene.add.bitmapText(game.config.width/6 + 15, game.config.height - 170, 'pixel-white', "nil", 10).setAlpha(0).setOrigin(0).setScrollFactor(0,0)
        
         //quest tracker 
         qobj === undefined ?
@@ -69,21 +73,20 @@ class Player extends Entity{
             interacting: new interactionPlayerState(),
             swim: new inWaterPlayerState(),
             attack: new attackPlayerState(),
-            dead: new deadPlayerState()
+            dead: new deadPlayerState(),
+            gamePause: new gamePausePlayerState()
         }, [scene, this])
 
         //swimming!
         scene.physics.add.overlap(this, scene.ponds, ()=>{
-            if(this.animsFSM.state !== 'swim' && this.animsFSM.state !== 'dead'){
+            if(this.animsFSM.state !== 'swim' && this.animsFSM.state !== 'dead' && this.animsFSM.state !== 'gamePause'){
                 scene.sound.stopAll()
                 this.animsFSM.transition('swim')
             }
         })
 
         //collide with npc
-        scene.physics.add.collider(this, scene.n1, ()=>{
-            console.log('collider')
-        }) 
+        scene.physics.add.collider(this, scene.n1,undefined,undefined)
 
         //input
         keyUp = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W)
@@ -105,32 +108,34 @@ class Player extends Entity{
             }
         })
         keySprint = scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT).on('down', ()=>{
-            this.isSprinting = !this.isSprinting
-            
-            if(this.isSprinting){
-                clearInterval(this.INTERVAL_ID)
-                this.VELOCITY = 250
-                this.INTERVAL_ID = setInterval(()=>{
-                    if(this.stamina <= 0){
-                        console.log('stamina empty, sprint done')
-                        this.VELOCITY = 100
-                        clearInterval(this.INTERVAL_ID)
-                    } else{
-                        console.log('stamina --')
-                        this.stamina -= 1
-                    }
-                }, 1000)
-            } else {
-                clearInterval(this.INTERVAL_ID)
-                this.INTERVAL_ID = setInterval(()=>{
-                    if(this.stamina >= 5){
-                        console.log('stamina refil done ')
-                        clearInterval(this.INTERVAL_ID)
-                    }
-                    console.log('stamina refil')
-                    this.stamina += 1
-                }, 1000)
-                this.VELOCITY = 100
+            if(this.animsFSM.state !== 'idle' && this.animsFSM.state !== 'swim' && this.animsFSM.state !== 'interacting'){
+                this.isSprinting = !this.isSprinting 
+                if(this.isSprinting){
+                    clearInterval(this.SPRINT_INTERVAL_ID)
+                    this.VELOCITY = 175
+                    this.SPRINT_INTERVAL_ID = setInterval(()=>{
+                        if(this.stamina <= 0){
+                            //console.log('stamina empty, sprint done')
+                            this.VELOCITY = 100
+                            clearInterval(this.SPRINT_INTERVAL_ID)
+                        } else{
+                            //console.log('stamina -- ', this.stamina)
+                            this.stamina -= 0.025
+                        }
+                    }, 50)
+                } else {
+                    clearInterval(this.SPRINT_INTERVAL_ID)
+                    this.SPRINT_INTERVAL_ID = setInterval(()=>{
+                        if(this.stamina >= 5){
+                            //console.log('stamina refil done ')
+                            clearInterval(this.SPRINT_INTERVAL_ID)
+                        }else{
+                            //console.log('stamina refil, ', this.stamina)
+                            this.stamina += 0.025
+                        }
+                    }, 50)
+                    this.VELOCITY = 100
+                }
             }
         })
     }
@@ -141,6 +146,7 @@ class Player extends Entity{
         }
         if(this.isAlive){
             this.updateHealthBar()
+            this.updateStaminaBar()
             this.displayCurrentQuests()
             this.animsFSM.step() 
         } 
@@ -313,24 +319,53 @@ class Player extends Entity{
         }
         this.HEALTH_BAR.fillRect(game.config.width/2 - 75, game.config.height/2 + 165, this.HEALTH_BAR.width * currentHealthPercent, 10)
     }
+
+    updateStaminaBar(){
+        let currentStamPercent = this.stamina / this.stamina_log
+        this.STAMINA_BAR.clear()
+        if(currentStamPercent < 0.3){
+            this.STAMINA_BAR.fillStyle(0xFF0000)
+        }else{
+            this.STAMINA_BAR.fillStyle(0xffcc00)
+        }
+        this.STAMINA_BAR.fillRect(game.config.width/2 - 75, game.config.height/2 + 155, this.STAMINA_BAR.width * currentStamPercent, 5)
+    }
 }
 
 
 class idlePlayerState extends State{
     enter(scene, player){
+
+        if(player.isSprinting){
+            player.isSprinting = false
+            clearInterval(player.SPRINT_INTERVAL_ID)
+            player.VELOCITY = 100
+
+            player.SPRINT_INTERVAL_ID = setInterval(()=>{
+                if(player.stamina >= 5){
+                    //console.log('stamina refil done ')
+                    clearInterval(player.SPRINT_INTERVAL_ID)
+                }else{
+                    //console.log('stamina refil, ', player.stamina)
+                    player.stamina += 0.025
+                }
+            }, 50)
+
+        }
         if(player.walk_noise.isPlaying){
             player.walk_noise.pause()
         }
-        console.log('in player: idle')
+
+        //console.log('in player: idle')
         player.setVelocity(0)
     }
 
     execute(scene, player){
+
         //attacking logic
         if(!player.pkg.isAttacking && player.pkg.attackCooldown === false){    
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
-            //console.log('here')
             if(player.animsFSM.state !== 'attack'){
                 player.walk_noise.stop() //fix
                 this.stateMachine.transition('attack')
@@ -348,7 +383,7 @@ class idlePlayerState extends State{
 
 class movingState extends State{
     enter(scene,player){
-        console.log('in player: moving')
+        //console.log('in player: moving')
         if(!player.walk_noise.isPlaying){
             player.walk_noise.play()
         }   
@@ -375,11 +410,12 @@ class movingState extends State{
 
 class interactionPlayerState extends State{
     enter(scene, player){
+        //('in player: interaction')
         player.anims.pause()
+
         if(player.walk_noise.isPlaying){
             player.walk_noise.stop()
         }
-        console.log('in player: interaction')
         player.setVelocity(0)
     }
 }
@@ -389,13 +425,14 @@ class inWaterPlayerState extends State{
         if(!player.water_noise.isPlaying){
             player.water_noise.play()
         } 
-        console.log('in player: water state')
-        player.VELOCITY = player.VELOCITY / 2
-       
+        //console.log('in player: water state')
+        player.VELOCITY = 50
+        clearInterval(player.SPRINT_INTERVAL_ID)
         player.INTERVAL_ID = setInterval(()=>{
             if(player.HIT_POINTS < player.HIT_POINTS_log){
                 player.HIT_POINTS += 1
                 let healText = scene.add.bitmapText(player.x + Phaser.Math.Between(-50, 50), player.y + Phaser.Math.Between(-10,-60), 'pixel-green', '+1', 16).setScale(2).setOrigin(0)
+                scene.miniMapCamera.ignore(healText)
                 scene.time.delayedCall(500, ()=>{ healText.destroy()})
             }
         }, 200)
@@ -406,7 +443,6 @@ class inWaterPlayerState extends State{
         player.handleMovement()
         if(!scene.physics.overlap(player, scene.ponds)){
             scene.sound.stopAll()
-            player.VELOCITY = player.VELOCITY*2
             clearInterval(player.INTERVAL_ID)
             this.stateMachine.transition('idle')
         }
@@ -417,12 +453,11 @@ class inWaterPlayerState extends State{
 class attackPlayerState extends State{
     enter(scene, player){
         player.pkg.attackCooldown = true
-        console.log('in player: attack')
+        //console.log('in player: attack')
         player.setVelocity(0)
        
         switch(player.pkg.attack_type){
             case 'light':
-                console.log('here')
                 scene.p1AttackUi.setTexture('attack-light-cooldown')
                 player.anims.play('player-light-attack')
                 scene.sound.play('attack-light', {volume: 0.05})
@@ -453,7 +488,7 @@ class attackPlayerState extends State{
 
 class deadPlayerState extends State{
     enter(scene, player){
-        console.log('in player: dead')
+        //console.log('in player: dead')
         clearInterval(player.INTERVAL_ID)
         player.isAlive = false
         player.setVelocity(0)
@@ -489,4 +524,25 @@ class deadPlayerState extends State{
             }
         })
     }
+}
+
+class gamePausePlayerState extends State{
+    enter(scene, player){
+        //console.log('in player: pause')
+        player.anims.pause()
+
+        if(player.walk_noise.isPlaying){
+            player.walk_noise.stop()
+        }
+        if(player.attack_noise_light_hit.isPlaying){
+        player.attack_noise_light_hit.stop()
+        }
+        if(player.attack_noise_heavy_hit.isPlaying){
+            player.attack_noise_heavy_hit.stop()
+        } 
+        if(player.water_noise.isPlaying){
+            player.water_noise.stop()
+        }
+        player.setVelocity(0)
+    } 
 }

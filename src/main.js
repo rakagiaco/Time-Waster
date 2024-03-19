@@ -1,4 +1,20 @@
-//created by cj moshy
+//created by C.J. Moshy for UCSC's CMPM 120
+
+// Technical Execution: Components used -> physics, cameras, text objects, tweens, timers, tilemaps
+// Polish and Style: code base is clean and organized, with good comments
+// Polish and Style: all visual assets made in house 
+
+// audio assets from Pixabay: https://pixabay.com/service/license-summary/ 
+
+/**
+ *      Features
+ * ---- easily scalable quest chain with json formatting support
+ * ---- dynamic inventory
+ * ---- general framework for creating 'entities' and 'items' -> ensures ease of use for future additions by using high level abstractions for gameobjects
+ * ---- custom AI for enemy units
+ * ---- local storage and gamestate saves
+ * ---- custom tilemap made in tiled for unlimited map resizing and reworking
+ */
 
 'use strict'
 
@@ -17,14 +33,14 @@ let config = {
     physics: {
         default: 'arcade',
         arcade: {
-            debug: true,
+            debug: false,
             gravity: {
                 x: 0,
                 y: 0
             }
         }
     },
-    scene: [Loader, Menu, World]
+    scene: [Loader, Menu, World, Credits, GameOver]
 }
 
 let game = new Phaser.Game(config)

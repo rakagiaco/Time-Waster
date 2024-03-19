@@ -44,7 +44,7 @@ class idleAllyState extends State{
 
 class interactionAllyState extends State{
     enter(scene, ally){
-        console.log('in ally: interaction')
+        //console.log('in ally: interaction')
         if(!scene.p1.windowOpen){
             this.createPopupWindow(scene)
         } else {
@@ -104,9 +104,11 @@ class interactionAllyState extends State{
                     questTxt.setInteractive().setOrigin(0).setDepth(3).on('pointerdown', () => {
                         toggleCursor(scene)
                         if (count === 0){ 
+                            scene.sound.play('page-turn', {volume: 0.5})
                             questTxt.text =  element.description
                             avaQ.setText(element.name)
-                        } else {
+                        } else if(count === 1) {
+                            scene.sound.play('page-turn', {volume: 0.5})
                             questTxt.text = element.requirements
                             acceptBTN.setInteractive().setAlpha(1).setDepth(3)
                         }
@@ -164,6 +166,15 @@ class interactionAllyState extends State{
                             scene.p1.windowOpen = false
                             scene.p1.animsFSM.transition('idle')
                             this.stateMachine.transition('idle')
+
+                            if(playercurrentquest.number === 4){
+                                scene.enemies.forEach(element => {
+                                    element.FSM.transition('gamePause')
+                                })
+                                scene.p1.animsFSM.transition('gamePause')
+                                clearAllInterval(scene)
+                                scene.scene.start('gameOver')
+                            }
                         })
                     }    
                 }

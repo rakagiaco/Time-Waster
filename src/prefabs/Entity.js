@@ -32,7 +32,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         this.INTERVAL_ID = undefined
         this.reset_e = true
         this.canMove = true
-        this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0).setDepth(3)//nameplate 
+        this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0).setDepth(2)//nameplate 
 
         //damage dealing properties
         this.lightAttack_dmg = undefined
@@ -53,7 +53,7 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
         })
 
         this.on('pointerdown', ()=>{
-            console.log(`entity-click ${this.entity_type}`)
+           // console.log(`entity-click ${this.entity_type}`)
             toggleCursor(scene)
             this.handleClick()
         })  

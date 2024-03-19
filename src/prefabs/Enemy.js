@@ -9,7 +9,8 @@ class Enemy extends Entity{
             combat: new combatEnemyState(),
             dead: new deadEnemyState(),
             reset: new resetEnemyState(),
-            ignore: new ignoreEnemyState()
+            ignore: new ignoreEnemyState(),
+            gamePause: new gamePauseEnemyState()
         }, [scene, this])
 
         
@@ -45,7 +46,7 @@ class Enemy extends Entity{
 
     //collision handler
     handleCollision(){
-        if(this.FSM.state !== 'combat' && this.FSM.state !== 'ignore'){
+        if(this.FSM.state !== 'combat' && this.FSM.state !== 'ignore' && this.FSM.state !== 'gamePause'){
             this.FSM.transition('combat')
             return
         }
@@ -80,7 +81,7 @@ class Enemy extends Entity{
 
 class idleEnemyState extends State{
     enter(scene, enemy){
-        console.log('in enemy: idle')
+        //console.log('in enemy: idle')
         clearInterval(enemy.INTERVAL_ID)
         enemy.INTERVAL_ID = setInterval(updateMovement, (Math.round(Math.random() *(1751)) + 1750), enemy, scene)
         enemy.entity_text.setColor('#FFFFFF')
@@ -98,7 +99,7 @@ class idleEnemyState extends State{
 class pursuitEnemyState extends State{
 
     enter(scene, enemy){
-        console.log('in enemy: pursuit')
+        //('in enemy: pursuit')
         clearInterval(enemy.INTERVAL_ID)
         enemy.entity_text.setColor('#FF0000')
     }
@@ -117,14 +118,14 @@ class combatEnemyState extends State{
             this.stateMachine.transition('ignore')
             return
         }
-        console.log('in enemy: combat')
+        //console.log('in enemy: combat')
         clearInterval(enemy.INTERVAL_ID) 
         enemy.setVelocity(0)
 
         if(!enemy.isAttacking){
 
             //sound
-            if(scene.sound.sounds.length < 6){
+          
                 switch(enemy.entity_type){
                     case 'Nepian Scout':
                         scene.sound.play('enemy-1-hit', {volume: 0.05})
@@ -135,7 +136,7 @@ class combatEnemyState extends State{
                     default:
                         break
                 }
-            }
+            
 
             if(enemy.isBoss){
                 let switchtomechanic = Math.random()
@@ -154,7 +155,7 @@ class combatEnemyState extends State{
             let x = Math.round(Math.random())
             x === 0 ? scene.p1.HIT_POINTS -= enemy.lightAttack_dmg : scene.p1.HIT_POINTS -= enemy.heavyAttack_dmg
             
-            console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
+            //console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
             let attackText = scene.add.bitmapText(scene.p1.x + Phaser.Math.Between(-30, 30), scene.p1.y + Phaser.Math.Between(-10,-30),'pixel-red', x === 0 ? '-'+enemy.lightAttack_dmg : '-'+enemy.heavyAttack_dmg, 20)
             scene.time.delayedCall(500, ()=>{ attackText.destroy()})
 
@@ -179,7 +180,7 @@ class deadEnemyState extends State{
     enter(scene, enemy){
 
         enemy.HEALTH_BAR.clear()
-        console.log('in enemy: dying')
+        //console.log('in enemy: dying')
 
         switch(enemy.entity_type){
             case 'Nepian Scout':
@@ -273,7 +274,7 @@ class deadEnemyState extends State{
 
 class resetEnemyState extends State{
     enter(scene, enemy){
-        console.log('in enemy: reset')
+        //console.log('in enemy: reset')
         clearInterval(enemy.INTERVAL_ID)
         enemy.setVelocity(0)
         enemy.setVelocityY(enemy.VELOCITY)  
@@ -290,10 +291,19 @@ class resetEnemyState extends State{
 
 class ignoreEnemyState extends State{
     enter(scene, enemy){
-        console.log('in enemy: ignore')
+       // console.log('in enemy: ignore')
         clearInterval(enemy.INTERVAL_ID)
         enemy.setVelocity(0)
         scene.time.delayedCall(5000, ()=> {this.stateMachine.transition('idle')})
     }
 }
+
+
+class gamePauseEnemyState extends State{
+    enter(scene, enemy){
+        //console.log('in enemy: gamepause')
+        enemy.setVelocity(0)
+    }
+}
+
 

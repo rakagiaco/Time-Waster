@@ -45,11 +45,11 @@ class World extends Phaser.Scene{
     //spawn entities and items --------------------
         objlayer.objects.forEach(element => {
             if(element.name === 'boss_spawn'){
-                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 20, [element.x, element.y], 25, 400, true).setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim'))
+                this.enemies.push(new Enemy(this,element.x, element.y, 'enemy-1', 0, 'Electro Lord Kealthis', 100, [element.x, element.y], 16, 650, true).setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim'))
             } else if(element.name === 'enemy_spawn'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y], 10).setScale(1.25).anims.play('enemy-idle-anim'))
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-1-anim', 0, 'Nepian Scout', 50, [element.x, element.y], 7).setScale(1.25).anims.play('enemy-idle-anim'))
             } else if(element.name === 'enemy_spawn_2'){
-                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 17.5, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
+                this.enemies.push(new Enemy(this, element.x, element.y, 'enemy-2-anim', 0, 'Nepian Observer', 50, [element.x, element.y], 12, 200).setScale(1.25).anims.play('enemy2-idle-anim'))
             } else if (element.name === 'bush_1'){
                this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, {sound: 'collect-herb', volume: 0.1}).setScale(2).setSize(35, 30).anims.play('bush-1-anim'))
             } 
@@ -81,7 +81,7 @@ class World extends Phaser.Scene{
         
         //create player and ally
         this.n1 = new Ally(this, npc1Spawn.x, npc1Spawn.y, 'npc-1', 0, undefined, 50).setImmovable().setSize(10,10)
-        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 5000, this.qobj, this.inv)
+        this.p1 = new Player(this, playerSpawn.x, playerSpawn.y, 'player', 0, 'p1', 200, this.qobj, this.inv)
 
         //fullscreen button, credit Nathan Altice
         this.fullscreenBtn = this.add.sprite(game.config.width - 200,  game.config.height - 165, 'fullscreen').setScale(2).setScrollFactor(0).setDepth(3)
@@ -93,7 +93,8 @@ class World extends Phaser.Scene{
         //settings window
         this.settingsBtn = this.add.image(game.config.width - 230, game.config.height - 165, 'save').setScrollFactor(0).setDepth(3).setScale(0.75)
         this.settingsBtn.setOrigin(0.5)
-        this.settingsBtn.setInteractive({ useHandCursor: true }).on('pointerdown', () => {
+        this.settingsBtn.setInteractive({ useHandCursor: true }).once('pointerdown', () => {
+            this.sound.play('click', {volume: 0.5})
             const parse_inv = JSON.stringify(Array.from(this.p1.p1Inventory.inventory.entries()))
             const parse_qst = JSON.stringify(this.p1.questStatus)
             window.localStorage.setItem('existing_inv', parse_inv)
@@ -109,30 +110,32 @@ class World extends Phaser.Scene{
                     loadArrow.destroy()
                 }
             })
-            //TODO: how to go back to menu and then to world without crash...
-                // this.enemies.forEach(element => {
-                //     clearInterval(element.INTERVAL_ID)
-                // })
-                // this.scene.start('menuScene')
+
+            this.time.delayedCall(500, ()=> {
+                this.enemies.forEach(element => {
+                    element.FSM.transition('gamePause')
+                })
+                this.p1.animsFSM.transition('gamePause')
+                clearAllInterval(this)
+                this.scene.start('menuScene')
+            })
         })
 
+        //help/controls button
         this.helpBtn = this.add.image(game.config.width - 250, game.config.height - 165, 'help-icon').setScrollFactor(0).setDepth(3).setOrigin(0.5).setScale(0.50).setInteractive({useHandCursor: true}).on('pointerdown', ()=>{
             this.sound.play('help-toggle', {volume: 0.05})
             this.helpToggle = !this.helpToggle
             this.helpToggle === true ? this.helpPage.setAlpha(1) : this.helpPage.setAlpha(0)
         })
         
-
-        this.p1AttackUi = this.add.sprite(game.config.width/ 2, game.config.height / 2 + 200, 'attack-bar').setOrigin(0.5).setScale(3).setScrollFactor(0).setDepth(3).setInteractive().on('pointerover', ()=>{
-
-
-        })
+        //Abilitys/UI
+        this.p1AttackUi = this.add.sprite(game.config.width/ 2, game.config.height / 2 + 200, 'attack-bar').setOrigin(0.5).setScale(3).setScrollFactor(0).setDepth(3)
 
         //minimap, credit Nathan Altice
-        this.miniMapCamera = this.cameras.add(game.config.width - 192, 32, 160, 160).setBounds(0, 0, game.scene.width, game.scene.height).setZoom(0.1)
-        this.miniMapCamera.setBackgroundColor(0x2F3B2D)
+        this.miniMapCamera = this.cameras.add(game.config.width - 192, 32, 160, 160).setBounds(0, 0, game.scene.width, game.scene.height).setZoom(0.15)
+        this.miniMapCamera.setBackgroundColor(0xbfbfbf)
         this.miniMapCamera.startFollow(this.p1, false, 0.4, 0.4)
-        this.miniMapCamera.ignore([this.bushes, bgLayer, this.p1.HEALTH_BAR, this.helpBtn, this.fullscreenBtn, this.settingsBtn, this.helpToggle, this.helpPage, this.p1AttackUi])
+        this.miniMapCamera.ignore([ bgLayer, this.p1.HEALTH_BAR, this.p1.STAMINA_BAR, this.helpBtn, this.fullscreenBtn, this.settingsBtn, this.helpToggle, this.helpPage, this.p1AttackUi])
         this.enemies.forEach(element => {
             this.miniMapCamera.ignore([element.HEALTH_BAR, element.entity_text])
         })
@@ -142,29 +145,21 @@ class World extends Phaser.Scene{
         const mask = mapMask.createGeometryMask()
         this.miniMapCamera.setMask(mask)
         
-
-
-
-
-
-
-
-
-        //debug code
-        /***************************************/
-        let debugToggle = this.input.keyboard.addKey('F')
-        this.physics.world.drawDebug = false
-        debugToggle.on('down', ()=> {
-            if(this.physics.world.drawDebug) {
-                this.physics.world.drawDebug = false;
-                this.physics.world.debugGraphic.clear();
-                this.p1.VELOCITY = 100
-            }else{
-                this.physics.world.drawDebug = true;
-                this.p1.VELOCITY = 5000
-            }
-        })
-        /********************************************/
+        // //debug code
+        // /***************************************/
+        // let debugToggle = this.input.keyboard.addKey('F')
+        // this.physics.world.drawDebug = false
+        // debugToggle.on('down', ()=> {
+        //     if(this.physics.world.drawDebug) {
+        //         this.physics.world.drawDebug = false;
+        //         this.physics.world.debugGraphic.clear();
+        //         this.p1.VELOCITY = 100
+        //     }else{
+        //         this.physics.world.drawDebug = true;
+        //         this.p1.VELOCITY = 5000
+        //     }
+        // })
+        // /********************************************/
     }
     update(){} 
 }

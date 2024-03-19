@@ -9,8 +9,31 @@ class Loader extends Phaser.Scene{
     }
 
     preload(){
+
         //path
         this.load.path = './assets'
+
+        //formatting
+        this.add.text(game.config.width/2, game.config.height/2, 'Loading...',{
+            fontFamily: 'Comic Sans MS',
+            fontSize : '28px',
+            color : '#0000FF',
+            align : 'right', 
+            padding : {top : 5, bottom : 5},
+            fixedWidth : 0,
+        }).setOrigin(0.5)
+
+        //loading bar -> credit Nathan Altice
+        let loadingBar = this.add.graphics()
+        this.load.on('progress', (value)=>{
+            loadingBar.clear()
+            loadingBar.fillStyle(0x00FFFF, 1)
+            loadingBar.fillRect(game.config.width/4, game.config.height/2 + 100, 500, 25)
+        })
+        this.load.on('complete', ()=>{
+            loadingBar.destroy()
+        })
+
 
         //load tilemap
         this.load.image('base-tileset', '/tilesets/base_tileset.png')
@@ -42,7 +65,6 @@ class Loader extends Phaser.Scene{
         this.load.atlas('player', '/spritesheets/player/player.png', '/spritesheets/player/player-walk-anims.json')
 
         //load images (tmp)
-        this.load.image('continue-game-button-hover', '/img/continue-game-button-hover.png')
         this.load.image('continue-game-button', '/img/continue-game-button.png')
         this.load.image('cursor-2', '/img/cursor-2.png')
         this.load.image('cursor', '/img/cursor.png')
@@ -52,7 +74,6 @@ class Loader extends Phaser.Scene{
         this.load.image('fullscreen' , '/img/fullscreen.png')
         this.load.image('mysterious herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
-        this.load.image('new-game-button-hover', '/img/new-game-button-hover.png')
         this.load.image('new-game-button', '/img/new-game-button.png')
         this.load.image('npc-1', '/img/npc-1.png') 
         this.load.image('rect', '/img/rect.png')
@@ -62,6 +83,9 @@ class Loader extends Phaser.Scene{
         this.load.image('attack-light-cooldown', '/img/attack-light-cooldown.png')
         this.load.image('help-page', '/img/help-page.png')
         this.load.image('help-icon', '/img/help-icon.png')
+        this.load.image('credits-button', '/img/credits-button.png')
+        this.load.image('menu-button', '/img/menu-button.png')
+        this.load.image('freeplay-button', '/img/freeplay-button.png')
 
         //load quests
         this.load.json('quest-1', '/quests/quest-1.json')
@@ -73,6 +97,7 @@ class Loader extends Phaser.Scene{
         this.load.json('quest-7', '/quests/quest-7.json')
 
         //load audio
+        this.load.audio('click', '/audio/click.wav')
         this.load.audio('in-water', '/audio/in-water.mp3')
         this.load.audio('walking', '/audio/walking-dirt.mp3')
         this.load.audio('attack-light', '/audio/attack-light.mp3')
@@ -84,12 +109,16 @@ class Loader extends Phaser.Scene{
         this.load.audio('enemy-2-hit', '/audio/enemy-hit-2.mp3')
         this.load.audio('help-toggle', '/audio/help-toggle.mp3')
         this.load.audio('complete-quest', '/audio/complete-quest.mp3')
+        this.load.audio('page-turn', '/audio/page-turn.mp3')
+        this.load.audio('game-over', '/audio/game-over.wav')
 
         this.load.bitmapFont('8-bit', '/font/8-bit.png', '/font/8-bit.xml')
         this.load.bitmapFont('8-bit-white', '/font/8-bit-white.png', '/font/8-bit-white.xml')
         this.load.bitmapFont('pixel-red', '/font/pixel-red.png', '/font/pixel-red.xml')
         this.load.bitmapFont('pixel-yellow', '/font/pixel-yellow.png', '/font/pixel-yellow.xml')
         this.load.bitmapFont('pixel-green', '/font/pixel-green.png', '/font/pixel-green.xml')
+        this.load.bitmapFont('pixel-black', '/font/pixel-black.png', '/font/pixel-black.xml')
+        this.load.bitmapFont('pixel-white', '/font/pixel-white.png', '/font/pixel-white.xml')
 
         //load existing gamestates...
         if(window.localStorage.getItem('existing_quest') != null) {
@@ -107,22 +136,6 @@ class Loader extends Phaser.Scene{
     }   
 
     create(){
-
-
-        /**   //vanilla
-        this.anims.create({
-            key: 'running_vanilla',
-            frames: this.anims.generateFrameNames('player', {
-                prefix: 'character-anim-',
-                start: 1,
-                end: 4
-            }),
-            frameRate: 15,
-            repeat: -1
-        })
-
-        //fire */
-
     //player anims----------------------------
         this.anims.create({
             key: 'player-walk-up',
@@ -249,8 +262,6 @@ class Loader extends Phaser.Scene{
             frameRate: 6,
             repeat: -1,
         })
-        
-        
         
         
         //boss mechanic
