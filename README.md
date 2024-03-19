@@ -29,7 +29,7 @@ IF YOU HAVE COMPLETED THE QUEST, GO BACK TO THE NPC AND CLICK ON IT AGAIN
 
 ## Play Now!
 
-You can play Time Waster here -> [Play Now!](https://cjmoshy.github.io/Elemental-Abstraction/).
+You can play Time Waster here -> [Play Now!](https://cjmoshy.github.io/Time-Waster/).
 
 ## Development
 
