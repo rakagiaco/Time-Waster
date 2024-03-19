@@ -27,6 +27,36 @@ IF YOU SEE A BOUNCING QUEST ICON IT MEANS YOU CAN ACCEPT A QUEST
 IF YOU HAVE COMPLETED THE QUEST, GO BACK TO THE NPC AND CLICK ON IT AGAIN
   - it should guide you to the next quest
 
+## Play Now!
 
-Thank You for playing!
-  
+You can play Time Waster here -> [Play Now!](https://cjmoshy.github.io/Elemental-Abstraction/).
+
+## Development
+
+If you're interested in exploring the code or contributing to the project, feel free to clone the repository and follow these steps:
+
+1. Clone the repository:
+
+   ```bash
+   git clone https://github.com/CJMoshy/RPG.git
+   ```
+
+2. Navigate to the project directory:
+
+   ```bash
+   cd elemental-abstraction
+   ```
+
+3. Open the `index.html` file in Google Chrome to play the game locally.
+
+4. To make changes and test them, you may need to set up a local server environment. You can use tools like `http-server` or `live-server` for this purpose.
+
+## Credits
+
+Time Waster was created by CJ Moshy and is released under the [MIT License](https://github.com/CJMoshy/Elemental-Abstraction/blob/main/LISCENSE.md).
+
+## Feedback and Support
+
+If you encounter any issues while playing the game or have suggestions for improvements, feel free to open an issue on the GitHub repository. Your feedback is highly appreciated!
+
+Thank you for playing Time Waster! I hope you enjoy the game.
