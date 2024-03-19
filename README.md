@@ -53,7 +53,7 @@ If you're interested in exploring the code or contributing to the project, feel 
 
 ## Credits
 
-Time Waster was created by CJ Moshy and is released under the [MIT License](https://github.com/CJMoshy/Elemental-Abstraction/blob/main/LISCENSE.md).
+Time Waster was created by CJ Moshy and is released under the [MIT License](https://github.com/CJMoshy/Time-Waster/blob/main/LISCENSE.md).
 
 ## Feedback and Support
 
