@@ -1,62 +1,141 @@
-# Time Waster
+# Time Waster - RPG Game
 
-This is Time Waster. It's an attempt at a short 'RPG' style video game. As you play you will progress through a short quest chain, culminating in a final boss fight. This game is written in Javascript, using the Phaser3 framework.
+A Phaser.js RPG game built with Vite and TypeScript, featuring quest systems, dynamic inventory, custom AI, and local storage saves.
 
-# Gameplay
+## Features
 
-Players can do the following:
-    - move
-    - light attack '1'
-    - heavy attack '2'
-    - interact with objects
-      - herb sprite on the ground
-      - tree sprite in the beginning zone
-      - loot 'Nepian Observers'
-      - loot 'Electro Lord Kealthis'
+- **Quest System**: Easily scalable quest chain with JSON formatting support
+- **Dynamic Inventory**: Flexible item management system
+- **Entity Framework**: High-level abstractions for game objects
+- **Custom AI**: Intelligent enemy units with state machines
+- **Local Storage**: Game state persistence
+- **Custom Tilemaps**: Made in Tiled for unlimited map resizing
 
-# How to Play
+## Tech Stack
 
-To play, walk up to the wizard NPC on the screen with the bouncing 'quest' icon above its head.
+- **Phaser.js 3.70+**: Game framework
+- **TypeScript**: Type-safe development
+- **Vite**: Modern build tool and dev server
+- **State Machine Pattern**: For entity behavior management
 
-IF YOU SEE A BOUNCING QUEST ICON IT MEANS YOU CAN ACCEPT A QUEST
-  - click on the wizard
-  - click on the main dialogue directly
-  - click exit or accept at any time or when prompted
-  - complete the quests
-  
-IF YOU HAVE COMPLETED THE QUEST, GO BACK TO THE NPC AND CLICK ON IT AGAIN
-  - it should guide you to the next quest
+## Prerequisites
 
-## Play Now!
+- Node.js 18+ 
+- npm or yarn
 
-You can play Time Waster here -> [Play Now!](https://cjmoshy.github.io/Time-Waster/).
+## Installation
+
+1. **Clone the repository**
+   ```bash
+   git clone <repository-url>
+   cd time-waster-game
+   ```
+
+2. **Install dependencies**
+   ```bash
+   npm install
+   ```
+
+3. **Start development server**
+   ```bash
+   npm run dev
+   ```
+
+4. **Open your browser**
+   Navigate to `http://localhost:3000`
+
+## Available Scripts
+
+- `npm run dev` - Start development server
+- `npm run build` - Build for production
+- `npm run preview` - Preview production build
+- `npm run type-check` - Run TypeScript type checking
+
+## Project Structure
+
+```
+├── src/
+│   ├── config/
+│   │   └── GameConfig.ts          # Game constants and configuration
+│   ├── prefabs/
+│   │   ├── Entity.ts              # Base entity class
+│   │   ├── Player.ts              # Player character
+│   │   ├── Enemy.ts               # Enemy AI and behavior
+│   │   ├── Ally.ts                # NPC ally system
+│   │   ├── Item.ts                # Collectible items
+│   │   └── Inventory.ts           # Inventory management
+│   └── scenes/
+│       ├── general/
+│       │   ├── Loader.ts          # Asset loading
+│       │   ├── Menu.ts            # Main menu
+│       │   ├── Credits.ts         # Credits scene
+│       │   └── GameOver.ts        # Game over scene
+│       └── game/
+│           └── World.ts           # Main game world
+├── lib/
+│   ├── StateMachine.ts            # State machine implementation
+│   ├── HelperFunc.ts              # Utility functions
+│   └── BossMechanics.ts           # Boss-specific mechanics
+├── assets/                         # Game assets (images, audio, etc.)
+├── index.html                     # Main HTML file
+├── vite.config.ts                 # Vite configuration
+├── tsconfig.json                  # TypeScript configuration
+└── package.json                   # Dependencies and scripts
+```
 
 ## Development
 
-If you're interested in exploring the code or contributing to the project, feel free to clone the repository and follow these steps:
+### Adding New Features
 
-1. Clone the repository:
+1. **New Entities**: Extend the `Entity` class
+2. **New States**: Extend the `State` class
+3. **New Scenes**: Extend `Phaser.Scene`
+4. **Configuration**: Add constants to `GameConfig.ts`
 
-   ```bash
-   git clone https://github.com/CJMoshy/RPG.git
-   ```
+### TypeScript Benefits
 
-2. Navigate to the project directory:
+- **Type Safety**: Catch errors at compile time
+- **IntelliSense**: Better IDE support and autocomplete
+- **Refactoring**: Safe code restructuring
+- **Documentation**: Self-documenting code with types
 
-   ```bash
-   cd elemental-abstraction
-   ```
+### Vite Benefits
 
-3. Open the `index.html` file in Google Chrome to play the game locally.
+- **Fast HMR**: Instant hot module replacement
+- **ES Modules**: Modern JavaScript features
+- **Optimized Builds**: Efficient production builds
+- **Plugin Ecosystem**: Rich plugin support
 
-4. To make changes and test them, you may need to set up a local server environment. You can use tools like `http-server` or `live-server` for this purpose.
+## Building for Production
+
+```bash
+npm run build
+```
+
+The built files will be in the `dist/` directory, ready for deployment.
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests if applicable
+5. Submit a pull request
+
+## License
+
+MIT License - see LICENSE file for details
 
 ## Credits
 
-Time Waster was created by CJ Moshy and is released under the [MIT License](https://github.com/CJMoshy/Time-Waster/blob/main/LISCENSE.md).
+- **Original Game**: C.J. Moshy for UCSC's CMPM 120
+- **Audio Assets**: Pixabay (licensed under Pixabay License)
+- **Visual Assets**: Made in-house
+- **Build System**: Converted to Vite + TypeScript by AI Assistant
 
-## Feedback and Support
+## Support
 
-If you encounter any issues while playing the game or have suggestions for improvements, feel free to open an issue on the GitHub repository. Your feedback is highly appreciated!
-
-Thank you for playing Time Waster! I hope you enjoy the game.
+For issues and questions:
+1. Check the existing issues
+2. Create a new issue with detailed information
+3. Include steps to reproduce the problem

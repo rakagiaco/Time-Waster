@@ -1,0 +1,12 @@
+{   
+    "name" : "Quelling the Nepian Threat",
+    "description" : "Traveler, I wonder if we might actually be on to something here. You see, I have been trying to find a solution to the famine for quite some time myself. I have spent countless years researching the valley's curse. Never, until now, have I made any significant discoveries. Thanks to you, traveler, I now feel hopeful for the first time since I can remember. Traveler, we must continue to push the Nepian back. There are more Nepian just southeast of here. Please, slay them and collect some of their blood. Be warned traveler, these Nepian are stronger than the last ones you faced.",
+    "requirements" : "Xavius Silverleaf wants you to collect 4 phials of Lesser Nepian blood",
+    "completiontext" : "Traveler! Welcome back! Have you collected what is required?",
+    "questdata" : {
+        "questnumber": 3,
+        "verb" : "collect",
+        "type" : "lesser nepian blood",
+        "ammount" : 4
+    }
+}

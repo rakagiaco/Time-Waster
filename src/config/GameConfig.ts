@@ -1,0 +1,233 @@
+/**
+ * Game Configuration Constants
+ * Centralized configuration to eliminate magic numbers and improve maintainability
+ */
+
+export interface GameConfigType {
+  TIMING: {
+    SPRINT_INTERVAL: number;
+    SPRINT_DURATION: number;
+    ATTACK_LIGHT_COOLDOWN: number;
+    ATTACK_HEAVY_COOLDOWN: number;
+    ENEMY_ATTACK_DELAY: number;
+    ENEMY_RESET_DELAY: number;
+    ENEMY_DEATH_DELAY: number;
+    ENEMY_FADE_DELAY: number;
+    ENEMY_REVIVE_DELAY: number;
+    HEAL_INTERVAL: number;
+    DAMAGE_TEXT_DURATION: number;
+    CURSOR_ANIMATION_DURATION: number;
+    TREE_ANIMATION_DELAYS: number[];
+  };
+  MOVEMENT: {
+    PLAYER_BASE_VELOCITY: number;
+    PLAYER_SPRINT_VELOCITY: number;
+    PLAYER_WATER_VELOCITY: number;
+    ENEMY_BASE_VELOCITY: number;
+    KNOCKBACK_LIGHT: number;
+    KNOCKBACK_HEAVY: number;
+    BOSS_KNOCKBACK: number;
+    ENEMY_MOVEMENT_DURATION: number;
+    ENEMY_MOVEMENT_PAUSE: number;
+  };
+  COMBAT: {
+    PLAYER_MAX_HEALTH: number;
+    ENEMY_SCOUT_HEALTH: number;
+    ENEMY_OBSERVER_HEALTH: number;
+    BOSS_HEALTH: number;
+    ENEMY_SCOUT_ATTACK: number;
+    ENEMY_OBSERVER_ATTACK: number;
+    BOSS_ATTACK: number;
+    LIGHT_ATTACK_MIN: number;
+    LIGHT_ATTACK_MAX: number;
+    HEAVY_ATTACK_MIN: number;
+    HEAVY_ATTACK_MAX: number;
+    BOSS_AOE_DAMAGE_MIN: number;
+    BOSS_AOE_DAMAGE_MAX: number;
+    BOSS_HEAL_AMOUNT: number;
+    BOSS_HEAL_INTERVAL: number;
+    ENEMY_ATTACK_DAMAGE: number;
+  };
+  UI: {
+    HEALTH_BAR_WIDTH: number;
+    HEALTH_BAR_HEIGHT: number;
+    STAMINA_BAR_WIDTH: number;
+    STAMINA_BAR_HEIGHT: number;
+    HEALTH_BAR_OFFSET_X: number;
+    HEALTH_BAR_OFFSET_Y: number;
+    STAMINA_BAR_OFFSET_Y: number;
+    QUEST_TRACKER_OFFSET_X: number;
+    QUEST_TRACKER_OFFSET_Y: number;
+    QUEST_TRACKER_BODY_OFFSET_Y: number;
+    HEALTH_BAR_WIDTH_DEFAULT: number;
+    HEALTH_BAR_HEIGHT_DEFAULT: number;
+  };
+  DETECTION: {
+    DEFAULT_DISTANCE: number;
+    BOSS_DETECTION: number;
+    ENEMY_OBSERVER_DETECTION: number;
+    ITEM_DETECTION: number;
+    BOSS_AOE_RANGE: number;
+    ENEMY_ATTACK_RANGE: number;
+  };
+  ANIMATION: {
+    PLAYER_WALK_FRAMERATE: number;
+    PLAYER_FRAME_RATE: number;
+    ENEMY_IDLE_FRAMERATE: number;
+    ENEMY_FRAME_RATE: number;
+    ENEMY_DEATH_FRAMERATE: number;
+    BOSS_IDLE_FRAMERATE: number;
+    BOSS_FRAME_RATE: number;
+    BOSS_DEATH_FRAMERATE: number;
+    BOSS_AOE_FRAMERATE: number;
+    BOSS_AOE_FRAME_RATE: number;
+    QUEST_ICON_FRAMERATE: number;
+    QUEST_ICON_FRAME_RATE: number;
+    QUEST_COMPLETE_FRAME_RATE: number;
+    WATER_FRAMERATE: number;
+    WATER_FRAME_RATE: number;
+    TREE_FRAMERATE: number;
+    TREE_FRAME_RATE: number;
+    BUSH_FRAMERATE: number;
+    ATTACK_FRAME_RATE: number;
+    DEATH_FRAME_RATE: number;
+  };
+  SCALE: {
+    PLAYER: number;
+    ENTITY_BASE: number;
+    ENEMY: number;
+    TREE: number;
+    WATER: number;
+    BUSH: number;
+    UI_BUTTON: number;
+    UI_SMALL: number;
+    UI_TINY: number;
+  };
+  SPAWN: {
+    PLAYER_X: number;
+    PLAYER_Y: number;
+  };
+}
+
+const GameConfig: GameConfigType = {
+    // Timing constants (in milliseconds)
+    TIMING: {
+        SPRINT_INTERVAL: 50,
+        SPRINT_DURATION: 3000,
+        ATTACK_LIGHT_COOLDOWN: 1000,
+        ATTACK_HEAVY_COOLDOWN: 3000,
+        ENEMY_ATTACK_DELAY: 2000,
+        ENEMY_RESET_DELAY: 5000,
+        ENEMY_DEATH_DELAY: 1250,
+        ENEMY_FADE_DELAY: 5000,
+        ENEMY_REVIVE_DELAY: 5000,
+        HEAL_INTERVAL: 200,
+        DAMAGE_TEXT_DURATION: 500,
+        CURSOR_ANIMATION_DURATION: 250,
+        TREE_ANIMATION_DELAYS: [2500, 3500, 4500, 5500, 6500, 7500]
+    },
+
+    // Movement and physics constants
+    MOVEMENT: {
+        PLAYER_BASE_VELOCITY: 100,
+        PLAYER_SPRINT_VELOCITY: 175,
+        PLAYER_WATER_VELOCITY: 50,
+        ENEMY_BASE_VELOCITY: 50,
+        KNOCKBACK_LIGHT: 250,
+        KNOCKBACK_HEAVY: 375,
+        BOSS_KNOCKBACK: 400,
+        ENEMY_MOVEMENT_DURATION: 750,
+        ENEMY_MOVEMENT_PAUSE: 500
+    },
+
+    // Health and combat constants
+    COMBAT: {
+        PLAYER_MAX_HEALTH: 200,
+        ENEMY_SCOUT_HEALTH: 50,
+        ENEMY_OBSERVER_HEALTH: 50,
+        BOSS_HEALTH: 100,
+        ENEMY_SCOUT_ATTACK: 7,
+        ENEMY_OBSERVER_ATTACK: 12,
+        BOSS_ATTACK: 16,
+        LIGHT_ATTACK_MIN: 10,
+        LIGHT_ATTACK_MAX: 15,
+        HEAVY_ATTACK_MIN: 20,
+        HEAVY_ATTACK_MAX: 25,
+        BOSS_AOE_DAMAGE_MIN: 15,
+        BOSS_AOE_DAMAGE_MAX: 30,
+        BOSS_HEAL_AMOUNT: 10,
+        BOSS_HEAL_INTERVAL: 500,
+        ENEMY_ATTACK_DAMAGE: 10
+    },
+
+    // UI and display constants
+    UI: {
+        HEALTH_BAR_WIDTH: 150,
+        HEALTH_BAR_HEIGHT: 10,
+        STAMINA_BAR_WIDTH: 150,
+        STAMINA_BAR_HEIGHT: 5,
+        HEALTH_BAR_OFFSET_X: 75,
+        HEALTH_BAR_OFFSET_Y: 165,
+        STAMINA_BAR_OFFSET_Y: 155,
+        QUEST_TRACKER_OFFSET_X: 10,
+        QUEST_TRACKER_OFFSET_Y: 200,
+        QUEST_TRACKER_BODY_OFFSET_Y: 170,
+        HEALTH_BAR_WIDTH_DEFAULT: 100,
+        HEALTH_BAR_HEIGHT_DEFAULT: 8
+    },
+
+    // Detection and range constants
+    DETECTION: {
+        DEFAULT_DISTANCE: 150,
+        BOSS_DETECTION: 650,
+        ENEMY_OBSERVER_DETECTION: 200,
+        ITEM_DETECTION: 100,
+        BOSS_AOE_RANGE: 50,
+        ENEMY_ATTACK_RANGE: 32
+    },
+
+    // Animation frame rates
+    ANIMATION: {
+        PLAYER_WALK_FRAMERATE: 10,
+        PLAYER_FRAME_RATE: 10,
+        ENEMY_IDLE_FRAMERATE: 10,
+        ENEMY_FRAME_RATE: 8,
+        ENEMY_DEATH_FRAMERATE: 6,
+        BOSS_IDLE_FRAMERATE: 6,
+        BOSS_FRAME_RATE: 6,
+        BOSS_DEATH_FRAMERATE: 6,
+        BOSS_AOE_FRAMERATE: 8,
+        BOSS_AOE_FRAME_RATE: 8,
+        QUEST_ICON_FRAMERATE: 5,
+        QUEST_ICON_FRAME_RATE: 5,
+        QUEST_COMPLETE_FRAME_RATE: 5,
+        WATER_FRAMERATE: 4,
+        WATER_FRAME_RATE: 4,
+        TREE_FRAMERATE: 3,
+        TREE_FRAME_RATE: 3,
+        BUSH_FRAMERATE: 5,
+        ATTACK_FRAME_RATE: 8,
+        DEATH_FRAME_RATE: 6
+    },
+
+    // Scale constants
+    SCALE: {
+        PLAYER: 1.65,
+        ENTITY_BASE: 2.5,
+        ENEMY: 1.25,
+        TREE: 2.5,
+        WATER: 2.5,
+        BUSH: 2,
+        UI_BUTTON: 2,
+        UI_SMALL: 0.75,
+        UI_TINY: 0.5
+    },
+
+    // Spawn positions (hardcoded values that should be configurable)
+    SPAWN: {
+        PLAYER_X: 200,
+        PLAYER_Y: 200
+    }
+}
+
+export default GameConfig

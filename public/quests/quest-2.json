@@ -1,0 +1,13 @@
+{   
+    "name" : "Further Concerns",
+    "description" : "Well, now that I have these herbs, I can analyze them. Ah yes, I see now. It seems the herbs indeed possess some form of magic, or magical essence that is. This essence is similar to that of the essence that scoured the valley centuries ago. Although, it is being nullified by something. Some unknown malignance, possibly. You see, Traveler, I think that this valley hides many of its secrets in plain sight.The herbs have told us some basic information about the current state of the valley. Alas, if we are to continue in this exploration for the source of the valley's famine, we must continue with the thorough investigation of the valley. Traveler, there are some Nepian just to the south of here. I need you to begin to clear them away so we can get further into the valley.",
+    "requirements" : "Xavius Silverleaf wants you to slay 5 Nepian Scouts",
+    "completiontext" : "There you are! I have been waiting quite some time… Have you gathered what  I asked of you ?",
+       
+    "questdata" : {
+        "questnumber": 2,
+        "verb" : "kill",
+        "type" : "Nepian Scout",
+        "ammount" : 5
+    }
+}
