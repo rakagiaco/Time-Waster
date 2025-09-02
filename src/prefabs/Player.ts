@@ -4,7 +4,7 @@ import { Inventory } from './Inventory';
 import { StateMachine, State } from '../../lib/StateMachine';
 import { updatePlayerMovement } from '../../lib/HelperFunc';
 import GameConfig from '../config/GameConfig';
-import { keyUp, keyDown, keyLeft, keyRight, keyAttackLight, keyAttackHeavy, keySprint } from '../main';
+import { keyUp, keyDown, keyLeft, keyRight, keyAttackLight, keyAttackHeavy, keySprint } from '../input/InputManager';
 
 // Player States
 class PlayerIdleState extends State {
@@ -21,17 +21,17 @@ class PlayerIdleState extends State {
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
-        // Check for movement input
-        if (keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown) {
+        // Check for movement input (with null checks)
+        if ((keyUp && keyUp.isDown) || (keyDown && keyDown.isDown) || (keyLeft && keyLeft.isDown) || (keyRight && keyRight.isDown)) {
             player.animsFSM.transition('walking');
         }
         
-        // Check for attack input
-        if (keyAttackLight.isDown && !player.attackLightCooldown) {
+        // Check for attack input (with null checks)
+        if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
             player.animsFSM.transition('attacking-light');
         }
         
-        if (keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
+        if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
             player.animsFSM.transition('attacking-heavy');
         }
     }
@@ -43,25 +43,30 @@ class PlayerWalkingState extends State {
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
-        // Handle movement
-        updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight);
+        // Handle movement (with null checks)
+        if (keyUp && keyDown && keyLeft && keyRight) {
+            updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight);
+        } else {
+            // If keys aren't ready yet, just stop movement
+            player.setVelocity(0, 0);
+        }
         
         // Check for sprint
-        if (keySprint.isDown && !player.sprintCooldown) {
+        if (keySprint && keySprint.isDown && !player.sprintCooldown) {
             player.animsFSM.transition('sprinting');
         }
         
         // Check if no movement keys are pressed
-        if (!keyUp.isDown && !keyDown.isDown && !keyLeft.isDown && !keyRight.isDown) {
+        if ((!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown)) {
             player.animsFSM.transition('idle');
         }
         
         // Check for attack input
-        if (keyAttackLight.isDown && !player.attackLightCooldown) {
+        if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
             player.animsFSM.transition('attacking-light');
         }
         
-        if (keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
+        if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
             player.animsFSM.transition('attacking-heavy');
         }
     }
@@ -76,16 +81,21 @@ class PlayerSprintingState extends State {
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
-        // Handle sprint movement (faster)
-        updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight, true);
+        // Handle sprint movement (faster) - with null checks
+        if (keyUp && keyDown && keyLeft && keyRight) {
+            updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight, true);
+        } else {
+            // If keys aren't ready yet, just stop movement
+            player.setVelocity(0, 0);
+        }
         
         // Check if sprint key is released
-        if (!keySprint.isDown) {
+        if (!keySprint || !keySprint.isDown) {
             player.animsFSM.transition('walking');
         }
         
         // Check if no movement keys are pressed
-        if (!keyUp.isDown && !keyDown.isDown && !keyLeft.isDown && !keyRight.isDown) {
+        if ((!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown)) {
             player.animsFSM.transition('idle');
         }
     }
@@ -148,7 +158,7 @@ class PlayerAttackingHeavyState extends State {
 }
 
 export class Player extends Entity {
-    public p1Inventory: Inventory;
+    public p1Inventory!: Inventory;
     public questStatus: any;
     public animsFSM!: StateMachine;
     public windowOpen: boolean = false;
@@ -160,25 +170,56 @@ export class Player extends Entity {
 
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
-        super(scene, x, y, 'player');
-        
-        // Initialize inventory
-        this.p1Inventory = new Inventory();
-        if (inventory) {
-            this.p1Inventory.loadFromData(inventory);
+        try {
+            console.log('=== PLAYER CONSTRUCTOR START ===');
+            console.log('Scene:', scene);
+            console.log('Position:', x, y);
+            console.log('Inventory:', inventory);
+            console.log('Quest data:', questData);
+            
+            super(scene, x, y, 'player');
+            console.log('Player sprite created successfully');
+            
+            // Initialize inventory
+            console.log('Initializing inventory...');
+            this.p1Inventory = new Inventory();
+            if (inventory) {
+                this.p1Inventory.loadFromData(inventory);
+            }
+            console.log('Inventory initialized successfully');
+            
+            // Initialize quest status
+            console.log('Initializing quest status...');
+            this.questStatus = questData || { finished: false, currentQuest: null };
+            console.log('Quest status initialized successfully');
+            
+            // Setup state machine
+            console.log('Setting up state machine...');
+            this.setupStateMachine();
+            console.log('State machine setup successfully');
+            
+            // Setup physics
+            console.log('Setting up physics...');
+            this.setupPhysics();
+            console.log('Physics setup successfully');
+            
+            // Setup input
+            console.log('Setting up input...');
+            this.setupInput();
+            console.log('Input setup successfully');
+            
+            // Initialize health bar after everything else is set up
+            console.log('Initializing health bar...');
+            this.initializeHealthBar();
+            console.log('Health bar initialized successfully');
+            
+            console.log('=== PLAYER CONSTRUCTOR COMPLETE ===');
+        } catch (error) {
+            console.error('=== CRITICAL ERROR IN PLAYER CONSTRUCTOR ===');
+            console.error('Error:', error);
+            console.error('Stack:', (error as any)?.stack);
+            console.error('===========================================');
         }
-        
-        // Initialize quest status
-        this.questStatus = questData || { finished: false, currentQuest: null };
-        
-        // Setup state machine
-        this.setupStateMachine();
-        
-        // Setup physics
-        this.setupPhysics();
-        
-        // Setup input
-        this.setupInput();
     }
 
     private setupStateMachine(): void {

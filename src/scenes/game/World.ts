@@ -22,52 +22,114 @@ export class World extends Phaser.Scene {
 
     constructor() {
         super('worldScene');
+        console.log('=== WORLD SCENE CONSTRUCTOR ===');
+        console.log('Scene key:', 'worldScene');
+        console.log('==============================');
     }
 
     create(data: WorldData): void {
-        // Create tilemap
-        this.createTilemap();
-        
-        // Wait a frame to ensure animations are fully loaded
-        this.time.delayedCall(100, () => {
-            // Create player
-            this.player = new Player(this, 500, 400, data.inv, data.qobj);
+        try {
+            console.log('=== WORLD SCENE CREATE ===');
+            console.log('Scene key:', this.scene.key);
+            console.log('Data received:', data);
             
-            // Create enemies
-            this.createEnemies();
+            // Create tilemap
+            this.createTilemap();
+            console.log('Tilemap created successfully');
             
-            // Create allies
-            this.createAllies();
-            
-            // Create items
-            this.createItems();
-            
-            // Setup camera
-            this.cameras.main.startFollow(this.player);
-            this.cameras.main.setZoom(1);
-            
-            // Setup minimap camera
-            this.setupMinimap();
-            
-            // Setup input
-            this.setupInput();
-        });
+            // Wait a frame to ensure animations are fully loaded
+            this.time.delayedCall(100, () => {
+                try {
+                    console.log('=== CREATING GAME OBJECTS ===');
+                    
+                    // Create player
+                    console.log('Creating player...');
+                    this.player = new Player(this, 500, 400, data.inv, data.qobj);
+                    console.log('Player created successfully:', this.player);
+                    
+                    // Create enemies
+                    console.log('Creating enemies...');
+                    this.createEnemies();
+                    console.log('Enemies created successfully, count:', this.enemies.length);
+                    
+                    // Create allies
+                    console.log('Creating allies...');
+                    this.createAllies();
+                    console.log('Allies created successfully, count:', this.allies.length);
+                    
+                    // Create items
+                    console.log('Creating items...');
+                    this.createItems();
+                    console.log('Items created successfully, count:', this.items.length);
+                    
+                    // Setup camera
+                    console.log('Setting up camera...');
+                    this.cameras.main.startFollow(this.player);
+                    this.cameras.main.setZoom(1);
+                    console.log('Camera setup complete');
+                    
+                    // Setup minimap camera
+                    console.log('Setting up minimap...');
+                    this.setupMinimap();
+                    console.log('Minimap setup complete');
+                    
+                    // Setup input
+                    console.log('Setting up input...');
+                    this.setupInput();
+                    console.log('Input setup complete');
+                    
+                    console.log('=== WORLD SCENE SETUP COMPLETE ===');
+                } catch (error) {
+                    console.error('=== CRITICAL ERROR CREATING GAME OBJECTS ===');
+                    console.error('Error:', error);
+                    console.error('Stack:', (error as any)?.stack);
+                    console.error('==========================================');
+                }
+            });
+        } catch (error) {
+            console.error('=== CRITICAL ERROR IN WORLD CREATE ===');
+            console.error('Error:', error);
+            console.error('Stack:', (error as any)?.stack);
+            console.error('=====================================');
+        }
     }
 
     update(): void {
         // Update player (only if it exists)
         if (this.player) {
-            this.player.update();
+            try {
+                this.player.update();
+            } catch (error) {
+                console.error('Error updating player:', error);
+            }
         }
         
-        // Update enemies
-        this.enemies.forEach(enemy => enemy.update());
+        // Update enemies (with safety checks)
+        this.enemies.forEach(enemy => {
+            try {
+                enemy.update();
+            } catch (error) {
+                console.error('Error updating enemy:', error);
+            }
+        });
         
-        // Update allies
-        this.allies.forEach(ally => ally.update());
+        // Update allies (with safety checks)
+        this.allies.forEach(ally => {
+            try {
+                ally.update();
+            } catch (error) {
+                console.error('Error updating ally:', error);
+            }
+        });
         
-        // Update items
-        this.items.forEach(item => item.update());
+        // Update items (with safety checks)
+        this.items.forEach(item => {
+            try {
+                item.update();
+            } catch (error) {
+                console.error('Error updating item:', error);
+            }
+        });
     }
 
     private createTilemap(): void {
@@ -83,22 +145,49 @@ export class World extends Phaser.Scene {
     }
 
     private createEnemies(): void {
-        // Create enemy instances at specific positions
-        this.enemies.push(new Enemy(this, 200, 200));
-        this.enemies.push(new Enemy(this, 800, 600));
-        this.enemies.push(new Enemy(this, 400, 800));
+        try {
+            console.log('Creating enemy 1...');
+            this.enemies.push(new Enemy(this, 200, 200));
+            console.log('Enemy 1 created successfully');
+            
+            console.log('Creating enemy 2...');
+            this.enemies.push(new Enemy(this, 800, 600));
+            console.log('Enemy 2 created successfully');
+            
+            console.log('Creating enemy 3...');
+            this.enemies.push(new Enemy(this, 400, 800));
+            console.log('Enemy 3 created successfully');
+        } catch (error) {
+            console.error('Error creating enemies:', error);
+        }
     }
 
     private createAllies(): void {
-        // Create NPC ally
-        this.allies.push(new Ally(this, 300, 300));
+        try {
+            console.log('Creating ally...');
+            this.allies.push(new Ally(this, 300, 300));
+            console.log('Ally created successfully');
+        } catch (error) {
+            console.error('Error creating ally:', error);
+        }
     }
 
     private createItems(): void {
-        // Create collectible items
-        this.items.push(new Item(this, 150, 150, 'mysterious-herb'));
-        this.items.push(new Item(this, 750, 550, 'fruit'));
-        this.items.push(new Item(this, 350, 750, 'nepian-blood'));
+        try {
+            console.log('Creating item 1...');
+            this.items.push(new Item(this, 150, 150, 'mysterious-herb'));
+            console.log('Item 1 created successfully');
+            
+            console.log('Creating item 2...');
+            this.items.push(new Item(this, 750, 550, 'fruit'));
+            console.log('Item 2 created successfully');
+            
+            console.log('Creating item 3...');
+            this.items.push(new Item(this, 350, 750, 'nepian-blood'));
+            console.log('Item 3 created successfully');
+        } catch (error) {
+            console.error('Error creating items:', error);
+        }
     }
 
     private setupMinimap(): void {

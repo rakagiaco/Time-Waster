@@ -19,9 +19,13 @@ class EnemyPatrolState extends State {
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
-        // Check if player is detected
-        if (listen(scene as any, enemy)) {
-            enemy.animsFSM.transition('pursuing');
+        // Check if player is detected (with safety check)
+        try {
+            if (listen(scene as any, enemy)) {
+                enemy.animsFSM.transition('pursuing');
+            }
+        } catch (error) {
+            console.warn('Error in listen function for enemy patrolling:', error);
         }
         
         // Simple patrol movement
@@ -43,9 +47,13 @@ class EnemyPursuingState extends State {
         // Move towards player
         enemy.pursuePlayer();
         
-        // Check if player is out of range
-        if (!listen(scene as any, enemy)) {
-            enemy.animsFSM.transition('patrolling');
+        // Check if player is out of range (with safety check)
+        try {
+            if (!listen(scene as any, enemy)) {
+                enemy.animsFSM.transition('patrolling');
+            }
+        } catch (error) {
+            console.warn('Error in listen function for enemy pursuing:', error);
         }
         
         // Check if close enough to attack

@@ -4,6 +4,7 @@ import { Menu } from './scenes/general/Menu';
 import { World } from './scenes/game/World';
 import { Credits } from './scenes/general/Credits';
 import { GameOver } from './scenes/general/GameOver';
+import { initializeInputKeys } from './input/InputManager';
 
 //created by C.J. Moshy for UCSC's CMPM 120
 
@@ -49,32 +50,87 @@ const config: Phaser.Types.Core.GameConfig = {
     scene: [Loader, Menu, World, Credits, GameOver]
 };
 
-const game = new Phaser.Game(config);
+let game: Phaser.Game;
 
-// Initialize input keys
-export let keyUp: Phaser.Input.Keyboard.Key;
-export let keyDown: Phaser.Input.Keyboard.Key;
-export let keyLeft: Phaser.Input.Keyboard.Key;
-export let keyRight: Phaser.Input.Keyboard.Key;
-export let keyAttackLight: Phaser.Input.Keyboard.Key;
-export let keyAttackHeavy: Phaser.Input.Keyboard.Key;
-export let keyInventory: Phaser.Input.Keyboard.Key;
-export let keySprint: Phaser.Input.Keyboard.Key;
-
-export const amountOfQuests = 7;
-
-// Initialize keys after game is created
-game.events.once('texturesReady', () => {
-    const keyboard = game.input.keyboard;
-    if (keyboard) {
-        keyUp = (keyboard as any).addKey('W');
-        keyDown = (keyboard as any).addKey('S');
-        keyLeft = (keyboard as any).addKey('A');
-        keyRight = (keyboard as any).addKey('D');
-        keyAttackLight = (keyboard as any).addKey('ONE');
-        keyAttackHeavy = (keyboard as any).addKey('TWO');
-        keyInventory = (keyboard as any).addKey('I');
-        keySprint = (keyboard as any).addKey('SHIFT');
-    }
+// Add global error handler for uncaught errors
+window.addEventListener('error', (event) => {
+    console.error('=== GLOBAL ERROR ===');
+    console.error('Error:', event.error);
+    console.error('Message:', event.message);
+    console.error('Filename:', event.filename);
+    console.error('Lineno:', event.lineno);
+    console.error('Colno:', event.colno);
+    console.error('Stack:', event.error?.stack);
+    console.error('===================');
 });
+
+// Add unhandled promise rejection handler
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('=== UNHANDLED PROMISE REJECTION ===');
+    console.error('Reason:', event.reason);
+    console.error('Promise:', event.promise);
+    console.error('===================================');
+});
+
+try {
+    console.log('=== PHASER GAME INITIALIZATION ===');
+    console.log('Phaser version:', Phaser.VERSION);
+    console.log('Phaser object:', typeof Phaser);
+    console.log('Phaser.Game:', typeof Phaser.Game);
+    console.log('Game config:', config);
+    console.log('Available scenes:', Array.isArray(config.scene) ? config.scene.map((s: any) => 'Scene') : 'Scene');
+    
+    // Check if gameContainer exists
+    const container = document.getElementById('gameContainer');
+    if (!container) {
+        throw new Error('Game container element "gameContainer" not found in DOM');
+    }
+    console.log('Game container found:', container);
+    
+    // Check if WebGL is supported
+    if (!Phaser.WEBGL) {
+        console.warn('WebGL not available, falling back to Canvas');
+    }
+    
+    console.log('Creating Phaser game...');
+    game = new Phaser.Game(config);
+    console.log('Phaser game created successfully');
+    
+    // Add game event listeners for debugging
+    game.events.on('ready', () => {
+        console.log('Game ready event fired');
+    });
+    
+    game.events.on('start', () => {
+        console.log('Game start event fired');
+    });
+    
+    game.events.on('error', (error: any) => {
+        console.error('Game error event:', error);
+    });
+    
+} catch (error) {
+    console.error('=== CRITICAL ERROR CREATING PHASER GAME ===');
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Error message:', (error as any)?.message);
+    console.error('Error stack:', (error as any)?.stack);
+    console.error('Full error object:', error);
+    console.error('===========================================');
+    
+    // Try to provide helpful debugging info
+    console.log('=== DEBUGGING INFO ===');
+    console.log('Document ready state:', document.readyState);
+    console.log('Window load state:', window.performance?.navigation?.type);
+    console.log('Available DOM elements:', {
+        gameContainer: document.getElementById('gameContainer'),
+        body: document.body,
+        html: document.documentElement
+    });
+    console.log('=====================');
+}
+
+// Initialize input keys after game is created
+if (game) {
+    initializeInputKeys(game);
+}
 

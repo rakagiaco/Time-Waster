@@ -81,7 +81,23 @@ export function createLootInterfaceWindow(item: GameItem, contextScene: GameScen
 * @returns {boolean} 
 */
 export function listen(scene: GameScene, listener: any): boolean {
-    let x = scene.p1.getPosition()
+    // Get player from the scene - handle both old and new scene structures
+    let player: any;
+    if ((scene as any).p1) {
+        player = (scene as any).p1;
+    } else if ((scene as any).player) {
+        player = (scene as any).player;
+    } else {
+        console.warn('No player found in scene for listen function');
+        return false;
+    }
+    
+    if (!player || !player.getPosition) {
+        console.warn('Player object or getPosition method not available');
+        return false;
+    }
+    
+    let x = player.getPosition()
     let x1 = x[0]
     let y1 = x[1]
     if(listener.detectionDistance === 0 || listener.detectionDistance === undefined){
@@ -127,6 +143,11 @@ export function CreateQuestObject(jsonData: any, player: any): any {
 * @returns {Phaser.Math.Vector2}
 */
 export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.Math.Vector2 {
+    if (!toknock || !knocker || !toknock.getPosition || !knocker.getPosition) {
+        console.warn('Invalid objects passed to determineKnockbackDirection');
+        return new Phaser.Math.Vector2(0, 0);
+    }
+    
     let pos = toknock.getPosition()
     let epos = knocker.getPosition()
 

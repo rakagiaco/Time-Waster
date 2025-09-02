@@ -13,9 +13,11 @@ export class Menu extends Phaser.Scene {
     }
 
     create(data: MenuData): void {
-        console.log('Menu scene create() called');
-        console.log('Available textures:', this.textures.getTextureKeys());
-        console.log('Available fonts:', this.cache.bitmapFont.entries.entries);
+        try {
+            console.log('=== MENU SCENE CREATE ===');
+            console.log('Scene key:', this.scene.key);
+            console.log('Available textures:', this.textures.getTextureKeys());
+            console.log('Available fonts:', this.cache.bitmapFont.entries.entries);
         
         // Check if button textures exist
         console.log('Button textures check:');
@@ -70,5 +72,12 @@ export class Menu extends Phaser.Scene {
             });
 
         console.log('Menu scene setup complete');
+        
+        } catch (error) {
+            console.error('=== CRITICAL ERROR IN MENU CREATE ===');
+            console.error('Error:', error);
+            console.error('Stack:', (error as any)?.stack);
+            console.error('=====================================');
+        }
     }
 }

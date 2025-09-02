@@ -168,6 +168,7 @@ const GameConfig: GameConfigType = {
         STAMINA_BAR_HEIGHT: 5,
         HEALTH_BAR_OFFSET_X: 75,
         HEALTH_BAR_OFFSET_Y: 165,
+        HEALTH_BAR_HEIGHT_OFFSET_Y: 165,
         STAMINA_BAR_OFFSET_Y: 155,
         QUEST_TRACKER_OFFSET_X: 10,
         QUEST_TRACKER_OFFSET_Y: 200,

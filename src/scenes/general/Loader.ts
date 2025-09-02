@@ -8,21 +8,78 @@ export class Loader extends Phaser.Scene {
     }
 
     init(): void {
-        console.log('Loader scene init() called');
+        try {
+            console.log('=== LOADER SCENE INIT ===');
+            console.log('Scene key:', this.scene.key);
+            console.log('Scene name:', 'Loader');
+            console.log('Game config:', this.game.config);
+            console.log('=======================');
+        } catch (error) {
+            console.error('Error in Loader init():', error);
+        }
     }
 
     preload(): void {
-        console.log('Loader scene preload() called');
-        
-        // Add loading text
-        this.add.text((this.game.config.width as number) / 2, (this.game.config.height as number) / 2, 'Loading...', {
-            fontFamily: 'Arial',
-            fontSize: '28px',
-            color: '#0000FF',
-            align: 'center',
-            padding: { top: 5, bottom: 5 },
-            fixedWidth: 0,
-        }).setOrigin(0.5);
+        try {
+            console.log('=== LOADER SCENE PRELOAD ===');
+            console.log('Scene key:', this.scene.key);
+            console.log('Game width:', this.game.config.width);
+            console.log('Game height:', this.game.config.height);
+            
+            // Add loading text
+            const loadingText = this.add.text((this.game.config.width as number) / 2, (this.game.config.height as number) / 2, 'Loading...', {
+                fontFamily: 'Arial',
+                fontSize: '28px',
+                color: '#0000FF',
+                align: 'center',
+                padding: { top: 5, bottom: 5 },
+                fixedWidth: 0,
+            }).setOrigin(0.5);
+            
+            console.log('Loading text created:', loadingText);
+            
+            // Loading bar
+            let loadingBar = this.add.graphics();
+            console.log('Loading bar created:', loadingBar);
+            
+            this.load.on('progress', (_value: number) => {
+                try {
+                    loadingBar.clear();
+                    loadingBar.fillStyle(0x00FFFF, 1);
+                    loadingBar.fillRect((this.game.config.width as number) / 4, (this.game.config.height as number) / 2 + 100, 500, 25);
+                } catch (error) {
+                    console.error('Error in progress handler:', error);
+                }
+            });
+            
+            this.load.on('complete', () => {
+                try {
+                    console.log('=== ASSET LOADING COMPLETE ===');
+                    console.log('All assets loaded successfully');
+                    loadingBar.destroy();
+                    console.log('Loading bar destroyed');
+                } catch (error) {
+                    console.error('Error in complete handler:', error);
+                }
+            });
+            
+            this.load.on('loaderror', (file: any) => {
+                console.error('=== ASSET LOAD ERROR ===');
+                console.error('Failed to load asset:', file.key);
+                console.error('File type:', file.type);
+                console.error('URL:', file.url);
+                console.error('Error:', file.state);
+                console.error('======================');
+            });
+            
+            console.log('Asset loading event handlers set up');
+            
+        } catch (error) {
+            console.error('=== CRITICAL ERROR IN LOADER PRELOAD ===');
+            console.error('Error:', error);
+            console.error('Stack:', (error as any)?.stack);
+            console.error('=========================================');
+        }
 
         // Loading bar
         let loadingBar = this.add.graphics();
@@ -64,9 +121,6 @@ export class Loader extends Phaser.Scene {
         
         // Load player spritesheet
         this.load.spritesheet('player', 'spritesheets/player/player.png', { frameWidth: 32, frameHeight: 32 });
-
-        // Load player atlas
-        this.load.atlas('player', 'spritesheets/player/player.png', 'spritesheets/player/player-walk-anims.json');
 
         // Load images
         this.load.image('continue-game-button', 'img/continue-game-button.png');
@@ -127,39 +181,61 @@ export class Loader extends Phaser.Scene {
     }
 
     create(): void {
-        console.log('Loader scene create() called');
-        
-        // Create animations
-        this.createAnimations();
-        
-        console.log('Animations created, transitioning to Menu scene...');
-        
-        // Transition to Menu scene
-        this.scene.start('menuScene');
-        
-        console.log('Scene transition initiated');
+        try {
+            console.log('Loader scene create() called');
+            
+            // Create animations
+            this.createAnimations();
+            
+            console.log('Animations created, transitioning to Menu scene...');
+            
+            // Transition to Menu scene
+            this.scene.start('menuScene');
+            
+            console.log('Scene transition initiated');
+        } catch (error) {
+            console.error('Error in Loader create():', error);
+        }
     }
 
     private createAnimations(): void {
-        // Water animations
+        try {
+            console.log('=== CREATING ANIMATIONS ===');
+            
+            // Water animations
+            try {
+                this.anims.create({
+                    key: 'water-anim',
+                    frames: this.anims.generateFrameNumbers('water-pond', { start: 0, end: 3 }),
+                    frameRate: GameConfig.ANIMATION.WATER_FRAMERATE,
+                    repeat: -1
+                });
+                console.log('Water animation created successfully');
+            } catch (error) {
+                console.error('Failed to create water animation:', error);
+            }
+
+        // Tree animations - create simple animations for each tree type
         this.anims.create({
-            key: 'water-anim',
-            frames: this.anims.generateFrameNumbers('water-pond', { start: 0, end: 3 }),
-            frameRate: GameConfig.ANIMATION.WATER_FRAMERATE,
+            key: 'tree-1-anim',
+            frames: this.anims.generateFrameNumbers('tree-1', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: -1
         });
 
-        // Tree animations with loop (tree-1 has 31 frames, so 7 animations of 4-5 frames each)
-        for (let i = 0; i < 7; i++) {
-            const startFrame = i * 4;
-            const endFrame = Math.min(startFrame + 3, 30); // Don't exceed 30 (31 frames total)
-            this.anims.create({
-                key: `tree-1-anim-${i}`,
-                frames: this.anims.generateFrameNumbers('tree-1', { start: startFrame, end: endFrame }),
-                frameRate: GameConfig.ANIMATION.TREE_FRAMERATE,
-                repeat: -1
-            });
-        }
+        this.anims.create({
+            key: 'tree-2-anim',
+            frames: this.anims.generateFrameNumbers('tree-2', { start: 0, end: 0 }),
+            frameRate: 1,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'tree-3-anim',
+            frames: this.anims.generateFrameNumbers('tree-3', { start: 0, end: 0 }),
+            frameRate: 1,
+            repeat: -1
+        });
 
         // Player animations (2 frames per direction)
         this.anims.create({
@@ -205,79 +281,98 @@ export class Loader extends Phaser.Scene {
             repeat: 0
         });
 
-        // Enemy animations (check actual frame counts)
+        // Enemy animations (single frame since spritesheets are small)
         this.anims.create({
             key: 'enemy-1-walk',
-            frames: this.anims.generateFrameNumbers('enemy-1-anim', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.ENEMY_FRAME_RATE,
+            frames: this.anims.generateFrameNumbers('enemy-1-anim', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: -1
         });
 
         this.anims.create({
             key: 'enemy-2-walk',
-            frames: this.anims.generateFrameNumbers('enemy-2-anim', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.ENEMY_FRAME_RATE,
+            frames: this.anims.generateFrameNumbers('enemy-2-anim', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: -1
         });
 
-        // Boss animations (check actual frame counts)
+        // Boss animations (single frame since spritesheets are small)
         this.anims.create({
             key: 'boss-1-walk',
-            frames: this.anims.generateFrameNumbers('boss-1', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.BOSS_FRAME_RATE,
+            frames: this.anims.generateFrameNumbers('boss-1', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: -1
         });
 
         this.anims.create({
             key: 'boss-aoe-anim',
-            frames: this.anims.generateFrameNumbers('boss-aoe', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.BOSS_AOE_FRAME_RATE,
+            frames: this.anims.generateFrameNumbers('boss-aoe', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: 0
         });
 
-        // NPC animation
+        // NPC animation - use static image
         this.anims.create({
             key: 'npc-1',
-            frames: this.anims.generateFrameNumbers('npc-1', { start: 0, end: 0 }),
+            frames: [{ key: 'npc-1', frame: 0 }],
             frameRate: 1,
             repeat: -1
         });
 
-        // Death animations (check actual frame counts)
+        // Death animations (single frame since spritesheets are small)
         this.anims.create({
             key: 'enemy-1-death',
-            frames: this.anims.generateFrameNumbers('enemy-1-death', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.DEATH_FRAME_RATE,
+            frames: this.anims.generateFrameNumbers('enemy-1-death', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: 0
         });
 
         this.anims.create({
             key: 'enemy-2-death',
-            frames: this.anims.generateFrameNumbers('enemy-2-death', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.DEATH_FRAME_RATE,
+            frames: this.anims.generateFrameNumbers('enemy-2-death', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: 0
         });
 
         this.anims.create({
             key: 'boss-death',
-            frames: this.anims.generateFrameNumbers('boss-death', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.BOSS_DEATH_FRAMERATE,
+            frames: this.anims.generateFrameNumbers('boss-death', { start: 0, end: 0 }),
+            frameRate: 1,
             repeat: 0
         });
 
-        // Quest animations
-        this.anims.create({
-            key: 'quest-icon-bounce',
-            frames: this.anims.generateFrameNumbers('quest-icon', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.QUEST_ICON_FRAME_RATE,
-            repeat: -1
-        });
+        // Quest animations (single frame since spritesheets are small)
+        try {
+            this.anims.create({
+                key: 'quest-icon-bounce',
+                frames: this.anims.generateFrameNumbers('quest-icon', { start: 0, end: 0 }),
+                frameRate: 1,
+                repeat: -1
+            });
+            console.log('Quest icon animation created successfully');
+        } catch (error) {
+            console.error('Failed to create quest icon animation:', error);
+        }
 
-        this.anims.create({
-            key: 'quest-complete-icon-bounce',
-            frames: this.anims.generateFrameNumbers('quest-complete-icon', { start: 0, end: 1 }),
-            frameRate: GameConfig.ANIMATION.QUEST_COMPLETE_FRAME_RATE,
-            repeat: -1
-        });
+        try {
+            this.anims.create({
+                key: 'quest-complete-icon-bounce',
+                frames: this.anims.generateFrameNumbers('quest-complete-icon', { start: 0, end: 0 }),
+                frameRate: 1,
+                repeat: -1
+            });
+            console.log('Quest complete icon animation created successfully');
+        } catch (error) {
+            console.error('Failed to create quest complete icon animation:', error);
+        }
+        
+        console.log('=== ANIMATION CREATION COMPLETE ===');
+        
+        } catch (error) {
+            console.error('=== CRITICAL ERROR IN CREATE ANIMATIONS ===');
+            console.error('Error:', error);
+            console.error('Stack:', (error as any)?.stack);
+            console.error('==========================================');
+        }
     }
 }

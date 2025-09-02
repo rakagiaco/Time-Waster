@@ -21,18 +21,35 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
-        // Create health bar
-        this.createHealthBar();
+        // Don't create health bar immediately - wait for fonts to load
+        // this.createHealthBar();
     }
 
     protected createHealthBar(): void {
         this.healthBar = this.scene.add.graphics();
-        this.healthBarText = this.scene.add.bitmapText(this.x, this.y - 30, 'pixel-white', '', 16);
-        this.updateHealthBar();
+        this.healthBarText = this.scene.add.bitmapText(this.x, this.y - 30, 'pixel-white', `${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`, 16);
+        
+        // Draw initial health bar
+        this.healthBar.clear();
+        this.healthBar.fillStyle(0xff0000, 1);
+        this.healthBar.fillRect(
+            this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2,
+            this.y - GameConfig.UI.HEALTH_BAR_HEIGHT_OFFSET_Y,
+            GameConfig.UI.HEALTH_BAR_WIDTH,
+            GameConfig.UI.HEALTH_BAR_HEIGHT
+        );
     }
 
     protected updateHealthBar(): void {
-        updateHealthBar(this.healthBar, this.HIT_POINTS, this.MAX_HIT_POINTS, this.x, this.y - 30, GameConfig.UI.HEALTH_BAR_WIDTH_DEFAULT, GameConfig.UI.HEALTH_BAR_HEIGHT_DEFAULT);
+        // Store health data in the entity for the helper function to access
+        this.setData('hitPoints', this.HIT_POINTS);
+        this.setData('maxHitPoints', this.MAX_HIT_POINTS);
+        
+        // Update health bar position
+        if (this.healthBar && this.healthBarText) {
+            this.healthBar.setPosition(this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2, this.y - GameConfig.UI.HEALTH_BAR_HEIGHT_OFFSET_Y);
+            this.healthBarText.setPosition(this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2, this.y - GameConfig.UI.HEALTH_BAR_HEIGHT_OFFSET_Y - 15);
+        }
     }
 
     public takeDamage(amount: number): void {
@@ -65,5 +82,11 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
 
     public isDead(): boolean {
         return this.HIT_POINTS <= 0;
+    }
+
+    public initializeHealthBar(): void {
+        if (!this.healthBar) {
+            this.createHealthBar();
+        }
     }
 }
