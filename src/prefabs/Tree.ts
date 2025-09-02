@@ -1,6 +1,5 @@
 import Phaser from 'phaser';
 import { Item } from './Item';
-import { createLootInterfaceWindow } from '../../lib/HelperFunc';
 import { Player } from './Player';
 
 export class Tree extends Phaser.Physics.Arcade.Sprite {

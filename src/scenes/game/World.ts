@@ -294,7 +294,12 @@ export class World extends Phaser.Scene {
         try {
             console.log('Creating quest giver Narvark near spawn...');
             // Create quest giver near spawn point (500, 400) with slight offset
-            const questGiver = new Ally(this, 600, 500).setScale(1.5);
+            const npc1Spawn = this.tilemap.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
+            if (!npc1Spawn) {
+                console.error('NPC spawn point not found in tilemap!');
+                return;
+            }
+            const questGiver = new Ally(this, npc1Spawn.x as number, npc1Spawn.y as number,).setScale(1.5);
             questGiver.entity_type = 'Narvark'; // Name the quest giver
 
             // Set Narvark as static (no movement, no interaction detection)
@@ -316,230 +321,55 @@ export class World extends Phaser.Scene {
     private createItems(): void {
         try {
             console.log('Creating biome-specific items...');
+            // for now all there is are herbs
 
-            // Create mysterious herbs in each biome
-            this.createOakForestHerbs();
-            this.createPineGroveHerbs();
-            this.createAncientGroveHerbs();
-            this.createCherryBlossomGroveHerbs();
-
-            console.log(`Items created successfully, total count: ${this.items.length}`);
+            if (this.objlayer) {
+                this.objlayer.objects.forEach(element => {
+                    if (element.name === 'bush_1') {
+                        const bush = new Item(this, element.x as number, element.y as number, 'mysterious herb', { sound: 'collect-herb', volume: 0.5 })
+                        bush.setScale(0.75).setSize(35, 30).anims.play('bush-1-anim')
+                        this.items.push(bush)
+                    }
+                })
+            }
 
         } catch (error) {
             console.error('Error creating items:', error);
         }
     }
 
-    private createOakForestHerbs(): void {
-        console.log('Creating herbs in Oak Forest...');
-        // Oak Forest herbs - Northwest region
-        const oakHerbs = [
-            { x: 550, y: 550 },
-            { x: 750, y: 650 },
-            { x: 950, y: 750 },
-            { x: 650, y: 850 },
-            { x: 850, y: 950 }
-        ];
-
-        oakHerbs.forEach((pos) => {
-            const herb = new Item(this, pos.x, pos.y, 'mysterious herb', { sound: 'collect-herb', volume: 0.5 });
-            this.items.push(herb);
-        });
-        console.log(`Oak Forest herbs created: ${oakHerbs.length}`);
-    }
-
-    private createPineGroveHerbs(): void {
-        console.log('Creating herbs in Pine Grove...');
-        // Pine Grove herbs - Northeast region
-        const pineHerbs = [
-            { x: 3050, y: 550 },
-            { x: 3250, y: 650 },
-            { x: 3450, y: 750 },
-            { x: 3150, y: 850 },
-            { x: 3350, y: 950 }
-        ];
-
-        pineHerbs.forEach((pos) => {
-            const herb = new Item(this, pos.x, pos.y, 'mysterious herb', { sound: 'collect-herb', volume: 0.5 });
-            this.items.push(herb);
-        });
-        console.log(`Pine Grove herbs created: ${pineHerbs.length}`);
-    }
-
-    private createAncientGroveHerbs(): void {
-        console.log('Creating herbs in Ancient Grove...');
-        // Ancient Grove herbs - Central region (rare and valuable)
-        const ancientHerbs = [
-            { x: 1950, y: 1550 },
-            { x: 2150, y: 1750 },
-            { x: 2350, y: 1950 },
-            { x: 2050, y: 2150 }
-        ];
-
-        ancientHerbs.forEach((pos) => {
-            const herb = new Item(this, pos.x, pos.y, 'mysterious herb', { sound: 'collect-herb', volume: 0.5 });
-            this.items.push(herb);
-        });
-        console.log(`Ancient Grove herbs created: ${ancientHerbs.length}`);
-    }
-
-    private createCherryBlossomGroveHerbs(): void {
-        console.log('Creating herbs in Cherry Blossom Grove...');
-        // Cherry Blossom Grove herbs - Southwest region
-        const cherryHerbs = [
-            { x: 550, y: 2950 },
-            { x: 750, y: 3050 },
-            { x: 950, y: 3150 },
-            { x: 650, y: 3250 },
-            { x: 850, y: 3350 }
-        ];
-
-        cherryHerbs.forEach((pos) => {
-            const herb = new Item(this, pos.x, pos.y, 'mysterious herb', { sound: 'collect-herb', volume: 0.5 });
-            this.items.push(herb);
-        });
-        console.log(`Cherry Blossom Grove herbs created: ${cherryHerbs.length}`);
-    }
-
     private createTrees(): void {
         try {
-            console.log('Creating biome regions with trees...');
+            if (this.objlayer) {
+                this.objlayer.objects.forEach(element => {
+                    // if (element.name === 'pond') {
+                    //     this.ponds.push(this.physics.add.sprite(element.x, element.y, 'water-pond', 0).setSize(22, 22).setScale(2.5).setImmovable(true).anims.play('water-moving', true))
+                    if (element.name === 'tree_1') {
+                        this.trees.push(new Tree(this, element.x as number, element.y as number, 'tree-1'));
+                    } else if (element.name === 'tree_2') {
+                        this.trees.push(new Tree(this, element.x as number, element.y as number, 'tree-2'));
+                    } else if (element.name === 'tree_3') {
+                        // TODO : logic for interacting with trees can be baked into tree prefab
+                        // let x = this.physics.add.sprite(element.x, element.y, 'tree-3', 0).setSize(30, 2).setOffset(15, 62).setDepth(2).setScale(2.5).setImmovable(true).setInteractive().on('pointerdown', () => {
+                        //     if (listen(this, x)) {
+                        //         toggleCursor(this)
+                        //         x.anims.play('tree-3-anim')
+                        //         this.time.delayedCall(2000, () => {
+                        //             let y = new Item(this, x.x, x.y, 'fruit', 0, 'fruit', true, true).setAlpha(0)
+                        //             this.p1.windowOpen ? undefined : createLootInterfaceWindow(y, this)
+                        //         })
+                        //         x.input.enabled = false
+                        //     }
+                        // })
+                        this.trees.push(new Tree(this, element.x as number, element.y as number, 'tree-3'));
+                    }
+                })
+            }
 
-            // BIOME 1: Oak Forest (tree-1) - Northwest region
-            this.createOakForest();
-
-            // BIOME 2: Pine Grove (tree-2) - Northeast region  
-            this.createPineGrove();
-
-            // BIOME 3: Ancient Grove (tree-2-second) - Central region
-            this.createAncientGrove();
-
-            // BIOME 4: Cherry Blossom Grove (tree-3) - Southwest region
-            this.createCherryBlossomGrove();
-
-            // SPECIAL: Tree of Life - Top left corner
-            this.createTreeOfLife();
-
-            console.log(`Trees created successfully, total count: ${this.trees.length}`);
-
+            this.createTreeOfLife()
         } catch (error) {
             console.error('Error creating trees:', error);
         }
-    }
-
-    private createOakForest(): void {
-        console.log('Creating Oak Forest biome (Northwest)...');
-        // Oak Forest - Northwest region (x: 400-1200, y: 400-1200)
-        const oakPositions = [
-            { x: 500, y: 500, type: 'tree-1' },
-            { x: 600, y: 600, type: 'tree-1' },
-            { x: 700, y: 500, type: 'tree-1' },
-            { x: 800, y: 600, type: 'tree-1' },
-            { x: 900, y: 500, type: 'tree-1' },
-            { x: 1000, y: 600, type: 'tree-1' },
-            { x: 500, y: 700, type: 'tree-1' },
-            { x: 600, y: 800, type: 'tree-1' },
-            { x: 700, y: 700, type: 'tree-1' },
-            { x: 800, y: 800, type: 'tree-1' },
-            { x: 900, y: 700, type: 'tree-1' },
-            { x: 1000, y: 800, type: 'tree-1' },
-            { x: 500, y: 900, type: 'tree-1' },
-            { x: 600, y: 1000, type: 'tree-1' },
-            { x: 700, y: 900, type: 'tree-1' },
-            { x: 800, y: 1000, type: 'tree-1' },
-            { x: 900, y: 900, type: 'tree-1' },
-            { x: 1000, y: 1000, type: 'tree-1' }
-        ];
-
-        oakPositions.forEach((pos) => {
-            const tree = new Tree(this, pos.x, pos.y, pos.type);
-            this.trees.push(tree);
-        });
-        console.log(`Oak Forest created with ${oakPositions.length} trees`);
-    }
-
-    private createPineGrove(): void {
-        console.log('Creating Pine Grove biome (Northeast)...');
-        // Pine Grove - Northeast region (x: 2800-4000, y: 400-1200)
-        const pinePositions = [
-            { x: 3000, y: 500, type: 'tree-2' },
-            { x: 3100, y: 600, type: 'tree-2' },
-            { x: 3200, y: 500, type: 'tree-2' },
-            { x: 3300, y: 600, type: 'tree-2' },
-            { x: 3400, y: 500, type: 'tree-2' },
-            { x: 3500, y: 600, type: 'tree-2' },
-            { x: 3000, y: 700, type: 'tree-2' },
-            { x: 3100, y: 800, type: 'tree-2' },
-            { x: 3200, y: 700, type: 'tree-2' },
-            { x: 3300, y: 800, type: 'tree-2' },
-            { x: 3400, y: 700, type: 'tree-2' },
-            { x: 3500, y: 800, type: 'tree-2' },
-            { x: 3000, y: 900, type: 'tree-2' },
-            { x: 3100, y: 1000, type: 'tree-2' },
-            { x: 3200, y: 900, type: 'tree-2' },
-            { x: 3300, y: 1000, type: 'tree-2' },
-            { x: 3400, y: 900, type: 'tree-2' },
-            { x: 3500, y: 1000, type: 'tree-2' }
-        ];
-
-        pinePositions.forEach((pos) => {
-            const tree = new Tree(this, pos.x, pos.y, pos.type);
-            this.trees.push(tree);
-        });
-        console.log(`Pine Grove created with ${pinePositions.length} trees`);
-    }
-
-    private createAncientGrove(): void {
-        console.log('Creating Ancient Grove biome (Central)...');
-        // Ancient Grove - Central region (x: 1800-2600, y: 1400-2200)
-        const ancientPositions = [
-            { x: 1900, y: 1500, type: 'tree-2-second' },
-            { x: 2100, y: 1600, type: 'tree-2-second' },
-            { x: 2300, y: 1500, type: 'tree-2-second' },
-            { x: 1900, y: 1800, type: 'tree-2-second' },
-            { x: 2100, y: 1900, type: 'tree-2-second' },
-            { x: 2300, y: 1800, type: 'tree-2-second' },
-            { x: 1900, y: 2100, type: 'tree-2-second' },
-            { x: 2100, y: 2200, type: 'tree-2-second' },
-            { x: 2300, y: 2100, type: 'tree-2-second' }
-        ];
-
-        ancientPositions.forEach((pos) => {
-            const tree = new Tree(this, pos.x, pos.y, pos.type);
-            this.trees.push(tree);
-        });
-        console.log(`Ancient Grove created with ${ancientPositions.length} trees`);
-    }
-
-    private createCherryBlossomGrove(): void {
-        console.log('Creating Cherry Blossom Grove biome (Southwest)...');
-        // Cherry Blossom Grove - Southwest region (x: 400-1200, y: 2800-3600)
-        const cherryPositions = [
-            { x: 500, y: 2900, type: 'tree-3' },
-            { x: 600, y: 3000, type: 'tree-3' },
-            { x: 700, y: 2900, type: 'tree-3' },
-            { x: 800, y: 3000, type: 'tree-3' },
-            { x: 900, y: 2900, type: 'tree-3' },
-            { x: 1000, y: 3000, type: 'tree-3' },
-            { x: 500, y: 3100, type: 'tree-3' },
-            { x: 600, y: 3200, type: 'tree-3' },
-            { x: 700, y: 3100, type: 'tree-3' },
-            { x: 800, y: 3200, type: 'tree-3' },
-            { x: 900, y: 3100, type: 'tree-3' },
-            { x: 1000, y: 3200, type: 'tree-3' },
-            { x: 500, y: 3300, type: 'tree-3' },
-            { x: 600, y: 3400, type: 'tree-3' },
-            { x: 700, y: 3300, type: 'tree-3' },
-            { x: 800, y: 3400, type: 'tree-3' },
-            { x: 900, y: 3300, type: 'tree-3' },
-            { x: 1000, y: 3400, type: 'tree-3' }
-        ];
-
-        cherryPositions.forEach((pos) => {
-            const tree = new Tree(this, pos.x, pos.y, pos.type);
-            this.trees.push(tree);
-        });
-        console.log(`Cherry Blossom Grove created with ${cherryPositions.length} trees`);
     }
 
     private createTreeOfLife(): void {
