@@ -53,6 +53,7 @@ export class DayNightCycle {
         this.timeText.setDepth(1001);
         this.timeText.setScrollFactor(0);
         this.timeText.setTint(0xffffff);
+        this.timeText.setScale(2)
     }
 
     private setupDebugControls(): void {

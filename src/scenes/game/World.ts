@@ -287,14 +287,14 @@ export class World extends Phaser.Scene {
                 }
             })
         }
-        
+
     }
 
     private createAllies(): void {
         try {
             console.log('Creating quest giver Narvark near spawn...');
             // Create quest giver near spawn point (500, 400) with slight offset
-            const questGiver = new Ally(this, 600, 500);
+            const questGiver = new Ally(this, 600, 500).setScale(1.5);
             questGiver.entity_type = 'Narvark'; // Name the quest giver
 
             // Set Narvark as static (no movement, no interaction detection)
@@ -546,65 +546,19 @@ export class World extends Phaser.Scene {
         console.log('Creating Tree of Life (Top Left)...');
 
         // Create the Tree of Life in the top left corner of the map
-        const treeOfLife = new Tree(this, 200, 200, 'tree-2-second');
+        const treeOfLife = new Tree(this, 350, 400, 'tree-2-second')
+        treeOfLife.clearFruit()
 
         // Make it extra special - larger scale and unique properties
-        treeOfLife.setScale(2.5); // Much larger than normal trees
+        treeOfLife.setScale(4); // Much larger than normal trees
         treeOfLife.setDepth(10); // Ensure it's visible above other objects
 
-        // Add special visual effects
-        this.addTreeOfLifeEffects(treeOfLife);
-
+        // Create the title text
+        this.createTreeOfLifeTitle(treeOfLife);
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
 
         console.log('Tree of Life created successfully');
-    }
-
-    private addTreeOfLifeEffects(tree: Tree): void {
-        // Create a glowing aura around the tree
-        const aura = this.add.graphics();
-        aura.fillStyle(0x00ff00, 0.3); // Green glow
-        aura.fillCircle(tree.x, tree.y, 80);
-        aura.setDepth(tree.depth - 1);
-
-        // Animate the aura
-        this.tweens.add({
-            targets: aura,
-            alpha: 0.1,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1
-        });
-
-        // Create floating particles around the tree
-        for (let i = 0; i < 6; i++) {
-            const particle = this.add.graphics();
-            particle.fillStyle(0x90EE90, 0.8); // Light green
-            particle.fillCircle(0, 0, 2);
-
-            // Position particles in a circle around the tree
-            const angle = (i / 6) * Math.PI * 2;
-            const radius = 60;
-            const x = tree.x + Math.cos(angle) * radius;
-            const y = tree.y + Math.sin(angle) * radius;
-
-            particle.setPosition(x, y);
-            particle.setDepth(tree.depth + 1);
-
-            // Animate particles floating up and down
-            this.tweens.add({
-                targets: particle,
-                y: y - 20,
-                duration: 3000 + Math.random() * 1000,
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.easeInOut'
-            });
-        }
-
-        // Create the title text
-        this.createTreeOfLifeTitle(tree);
     }
 
     private createTreeOfLifeTitle(tree: Tree): void {

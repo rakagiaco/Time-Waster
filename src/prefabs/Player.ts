@@ -274,7 +274,7 @@ export class Player extends Entity {
         this.healthBarText.setAlpha(0); // hide the text on players ? preference thing...
 
         this.healthBar.setX(-(GameConfig.UI.HEALTH_BAR_WIDTH / 2))
-        this.healthBar.setY((this.scene.game.config.height as number / 2 ) - GameConfig.UI.HEALTH_BAR_OFFSET_Y)
+        this.healthBar.setY((this.scene.game.config.height as number / 2) - GameConfig.UI.HEALTH_BAR_OFFSET_Y)
 
         this.healthBar.setDepth(10000); // high depth
 

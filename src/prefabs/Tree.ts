@@ -30,9 +30,9 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
 
         // Set scale based on tree type
         if (treeType === 'tree-2-second') {
-            this.setScale(1.5);
+            this.setScale(3);
         } else {
-            this.setScale(1.0);
+            this.setScale(2);
         }
 
         // Create initial fruit
@@ -66,13 +66,15 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
                 return ['tree-1-anim0'];
         }
     }
-
-    private createFruit(): void {
-        if (!this.hasFruit) return;
-
+    public clearFruit(): void {
         // Clear existing fruit
         this.fruitItems.forEach(fruit => fruit.destroy());
         this.fruitItems = [];
+    }
+    private createFruit(): void {
+        if (!this.hasFruit) return;
+
+        this.clearFruit()
 
         // Create 1-3 fruit items around the tree
         const fruitCount = Math.floor(Math.random() * 3) + 1;
