@@ -218,11 +218,11 @@ export class Player extends Entity {
             this.initializeInputKeys(scene);
             console.log('Input setup successfully');
 
-            // Initialize health bar after everything else is set up
-            console.log('Initializing health bar...');
-            this.initializeHealthBar();
-            this.healthBar.setScrollFactor(0);
-            console.log('Health bar initialized successfully');
+            // health bar
+            this.setupHealthBar()
+
+            // player size
+            this.setScale(GameConfig.SCALE.PLAYER)
 
             console.log('=== PLAYER CONSTRUCTOR COMPLETE ===');
         } catch (error) {
@@ -233,7 +233,18 @@ export class Player extends Entity {
         }
     }
 
+    private setupHealthBar(): void {
+        // Initialize health bar after everything else is set up
+        console.log('Initializing health bar...');
+        this.initializeHealthBar();
 
+        // jank for now need to fix
+        this.healthBar.setScrollFactor(0)
+        this.healthBarText.setAlpha(0) // hide the text on players ? preference thing...
+        this.healthBar.setX(GameConfig.UI.HEALTH_BAR_OFFSET_X);
+        this.healthBar.setY(GameConfig.UI.HEALTH_BAR_OFFSET_Y);
+        console.log('Health bar initialized successfully');
+    }
     // Initialize keys after game is created
     private initializeInputKeys(scene: Phaser.Scene): void {
 

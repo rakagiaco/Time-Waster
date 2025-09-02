@@ -24,14 +24,14 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
 
     protected createHealthBar(): void {
         this.healthBar = this.scene.add.graphics();
-        this.healthBarText = this.scene.add.bitmapText(this.x, this.y - 30, 'pixel-white', `${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`, 16);
+        this.healthBarText = this.scene.add.bitmapText(this.x, this.y, 'pixel-white', `${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`, 16);
 
         // Draw initial health bar
         this.healthBar.clear();
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(
             this.x,
-            this.y - 30,
+            this.y,
             GameConfig.UI.HEALTH_BAR_WIDTH,
             GameConfig.UI.HEALTH_BAR_HEIGHT
         );

@@ -36,7 +36,6 @@ export class World extends Phaser.Scene {
             // Create tilemap
             this.createTilemap();
 
-
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
             //     // Wait a frame to ensure animations are fully loaded
@@ -64,18 +63,13 @@ export class World extends Phaser.Scene {
             this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.cameras.main.startFollow(this.player);
-            this.cameras.main.setZoom(1);
+            this.cameras.main.setZoom(1.5);
             console.log('Camera setup complete');
 
             //             // Setup minimap camera
             //             console.log('Setting up minimap...');
             //             this.setupMinimap();
             //             console.log('Minimap setup complete');
-
-            //             // Setup input
-            //             console.log('Setting up input...');
-            //             this.setupInput();
-            //             console.log('Input setup complete');
 
             //             console.log('=== WORLD SCENE SETUP COMPLETE ===');
             //         } catch (error) {
