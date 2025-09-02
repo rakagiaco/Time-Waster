@@ -47,5 +47,5 @@ let game = new Phaser.Game(config)
 
 let keyUp, keyDown, keyLeft, keyRight, keyAttackLight, keyAttackHeavy, keyInventory, keySprint
 
-const ammountOfQuests = 7
+const amountOfQuests = 7
 

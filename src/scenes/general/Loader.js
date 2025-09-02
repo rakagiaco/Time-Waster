@@ -144,7 +144,7 @@ class Loader extends Phaser.Scene{
                 start: 1,
                 end: 2
             }),
-            frameRate: 10,
+            frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: false
         })
 
@@ -155,7 +155,7 @@ class Loader extends Phaser.Scene{
                 start: 1,
                 end: 2
             }),
-            frameRate: 10,
+            frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: false
         })
 
@@ -167,7 +167,7 @@ class Loader extends Phaser.Scene{
                 start: 1,
                 end: 2
             }),
-            frameRate: 10,
+            frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: false
         })
 
@@ -179,7 +179,7 @@ class Loader extends Phaser.Scene{
                 start: 1,
                 end: 2
             }),
-            frameRate: 10,
+            frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: false
         })
 
@@ -210,14 +210,14 @@ class Loader extends Phaser.Scene{
         this.anims.create({
             key: 'enemy-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-1-anim', {start: 0, end: 7}),
-            frameRate: 10,
+            frameRate: GameConfig.ANIMATION.ENEMY_IDLE_FRAMERATE,
             repeat: -1
         })
         
         this.anims.create({
             key: 'enemy-1-death-anim',
             frames: this.anims.generateFrameNumbers('enemy-1-death', {start: 0, end: 7}),
-            frameRate: 6,
+            frameRate: GameConfig.ANIMATION.ENEMY_DEATH_FRAMERATE,
             repeat: false,
         })
 
@@ -295,53 +295,16 @@ class Loader extends Phaser.Scene{
             repeat: -1
         })
 
-        this.anims.create({
-            key: 'tree-1-anim0',
-            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
-            frameRate: 3,
-            repeat: -1,
-            repeatDelay: 2500
-        })
-
-        this.anims.create({
-            key: 'tree-1-anim1',
-            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
-            frameRate: 3,
-            repeat: -1,
-            repeatDelay: 3500
-        })
-
-        this.anims.create({
-            key: 'tree-1-anim2',
-            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
-            frameRate: 3,
-            repeat: -1,
-            repeatDelay: 4500
-        })
-
-        this.anims.create({
-            key: 'tree-1-anim3',
-            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
-            frameRate: 3,
-            repeat: -1,
-            repeatDelay: 5500
-        })
-
-        this.anims.create({
-            key: 'tree-1-anim4',
-            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
-            frameRate: 3,
-            repeat: -1,
-            repeatDelay: 6500
-        })
-
-        this.anims.create({
-            key: 'tree-1-anim5',
-            frames: this.anims.generateFrameNumbers('tree-1',{start: 0, end: 4}),
-            frameRate: 3,
-            repeat: -1,
-            repeatDelay: 7500
-        })
+        // Create tree-1 animations with different repeat delays
+        for (let i = 0; i < 6; i++) {
+            this.anims.create({
+                key: `tree-1-anim${i}`,
+                frames: this.anims.generateFrameNumbers('tree-1', {start: 0, end: 4}),
+                frameRate: 3,
+                repeat: -1,
+                repeatDelay: 2500 + (i * 1000)
+            })
+        }
 
         this.anims.create({
             key: 'tree-2-anim0',

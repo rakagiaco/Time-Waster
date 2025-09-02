@@ -123,7 +123,7 @@ class interactionAllyState extends State{
                         } 
 
                         //save quest status
-                        Window & typeof globalThis.localStorage.setItem('existing_quest', JSON.stringify(playercurrentquest))
+                        window.localStorage.setItem('existing_quest', JSON.stringify(playercurrentquest))
 
                         window.destroy()
                         closeBTN.destroy()
@@ -140,7 +140,7 @@ class interactionAllyState extends State{
                     questTxt = scene.add.text(scene.cameras.main.scrollX + ((scene.cameras.main.width/4)+25), scene.cameras.main.scrollY + scene.cameras.main.height/3, 
                     element.completiontext , {font: '9px Arial' , fill: '#FFFFFF', resolution: 2,  wordWrap : { width: 400, useAdvancedWrap: true }}).setDepth(3)
 
-                    if(playercurrentquest.currentQuest.actual >= playercurrentquest.currentQuest.ammount){
+                    if(playercurrentquest.currentQuest.actual >= playercurrentquest.currentQuest.amount){
                         completeBTN = scene.add.bitmapText(scene.cameras.main.scrollX + ((scene.cameras.main.width/4) + 225), scene.cameras.main.scrollY + scene.cameras.main.height/2, '8-bit-white', 'complete quest', 24).setOrigin(0.5).setInteractive().setDepth(3)
                         completeBTN.on('pointerdown', ()=>{
                             scene.sound.play('complete-quest', {volume: 0.05})
@@ -149,13 +149,13 @@ class interactionAllyState extends State{
                             playercurrentquest.number = element.questdata.questnumber
                             playercurrentquest.finished = true 
 
-                            Window & typeof globalThis.localStorage.setItem('existing_quest', JSON.stringify(playercurrentquest))
+                            window.localStorage.setItem('existing_quest', JSON.stringify(playercurrentquest))
                               
                             if(playercurrentquest.currentQuest.verb != 'kill'){
-                                scene.p1.p1Inventory.remove(playercurrentquest.currentQuest.type, playercurrentquest.currentQuest.actual)
+                                scene.p1.p1Inventory.remove(playercurrentquest.currentQuest.type, playercurrentquest.currentQuest.amount)
                             }
                             const parse = JSON.stringify(Array.from(scene.p1.p1Inventory.inventory.entries()))
-                            Window & typeof globalThis.localStorage.setItem('existing_inv', parse)
+                            window.localStorage.setItem('existing_inv', parse)
 
                             avaQ.destroy()
                             window.destroy()

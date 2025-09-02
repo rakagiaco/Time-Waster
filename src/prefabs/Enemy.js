@@ -30,7 +30,7 @@ class Enemy extends Entity{
         this.heavyAttack_dmg = Phaser.Math.Between( _attackPower + _attackPower/2, _attackPower * 1.5)
 
         //physical
-        super.VELOCITY = 50
+        super.VELOCITY = GameConfig.MOVEMENT.ENEMY_BASE_VELOCITY
     }
 
     init(){}
@@ -157,9 +157,9 @@ class combatEnemyState extends State{
             
             //console.log('enemy hit player -> ' + scene.p1.HIT_POINTS + '  ' + enemy.lightAttack_dmg + '  ' + enemy.heavyAttack_dmg)
             let attackText = scene.add.bitmapText(scene.p1.x + Phaser.Math.Between(-30, 30), scene.p1.y + Phaser.Math.Between(-10,-30),'pixel-red', x === 0 ? '-'+enemy.lightAttack_dmg : '-'+enemy.heavyAttack_dmg, 20)
-            scene.time.delayedCall(500, ()=>{ attackText.destroy()})
+            scene.time.delayedCall(GameConfig.TIMING.DAMAGE_TEXT_DURATION, ()=>{ attackText.destroy()})
 
-            scene.time.delayedCall(2000, ()=>{
+            scene.time.delayedCall(GameConfig.TIMING.ENEMY_ATTACK_DELAY, ()=>{
                 if(!(enemy.FSM.state === 'dead')){
                     enemy.isAttacking = false
                     enemy.FSM.transition('pursuit') 
@@ -211,7 +211,7 @@ class deadEnemyState extends State{
         let alias = scene.p1.questStatus
         if(alias.finished === false){
             if(alias.currentQuest.verb === 'kill' && alias.currentQuest.type == enemy.entity_type){
-                if(alias.currentQuest.ammount > alias.currentQuest.actual){
+                if(alias.currentQuest.amount > alias.currentQuest.actual){
                     alias.currentQuest.actual += 1
                 }
             }
@@ -222,7 +222,7 @@ class deadEnemyState extends State{
         if(drops <= 65){
             enemy.is_lootable = true
             
-            scene.time.delayedCall(1250, ()=>{
+            scene.time.delayedCall(GameConfig.TIMING.ENEMY_DEATH_DELAY, ()=>{
                 enemy.setInteractive()
                 if(enemy.entity_type === 'Nepian Observer'){
                     enemy.anims.play('enemy-2-lootable-anim')
@@ -232,13 +232,13 @@ class deadEnemyState extends State{
             })
         }
             
-        scene.time.delayedCall(5000, () => {
+        scene.time.delayedCall(GameConfig.TIMING.ENEMY_FADE_DELAY, () => {
             scene.tweens.add({
                 targets: enemy,
                 alpha: { from: 1, to: 0 },
                 duration: 2000,
                 onComplete: () =>{
-                    scene.time.delayedCall(5000, ()=>{    
+                    scene.time.delayedCall(GameConfig.TIMING.ENEMY_REVIVE_DELAY, ()=>{    
                         scene.tweens.add({
                             targets: [enemy, enemy.entity_text],
                             alpha: { from: 0, to: 1 },
@@ -283,7 +283,7 @@ class resetEnemyState extends State{
 
     execute(scene, enemy){
         if(enemy.y >= 899){
-            scene.time.delayedCall(5000, ()=>{this.stateMachine.transition('idle')})
+            scene.time.delayedCall(GameConfig.TIMING.ENEMY_RESET_DELAY, ()=>{this.stateMachine.transition('idle')})
         }
     }
 }
@@ -294,7 +294,7 @@ class ignoreEnemyState extends State{
        // console.log('in enemy: ignore')
         clearInterval(enemy.INTERVAL_ID)
         enemy.setVelocity(0)
-        scene.time.delayedCall(5000, ()=> {this.stateMachine.transition('idle')})
+        scene.time.delayedCall(GameConfig.TIMING.ENEMY_RESET_DELAY, ()=> {this.stateMachine.transition('idle')})
     }
 }
 

@@ -116,13 +116,13 @@ class Player extends Entity{
                     this.SPRINT_INTERVAL_ID = setInterval(()=>{
                         if(this.stamina <= 0){
                             //console.log('stamina empty, sprint done')
-                            this.VELOCITY = 100
+                            this.VELOCITY = GameConfig.MOVEMENT.PLAYER_BASE_VELOCITY
                             clearInterval(this.SPRINT_INTERVAL_ID)
                         } else{
                             //console.log('stamina -- ', this.stamina)
                             this.stamina -= 0.025
                         }
-                    }, 50)
+                    }, GameConfig.TIMING.SPRINT_INTERVAL)
                 } else {
                     clearInterval(this.SPRINT_INTERVAL_ID)
                     this.SPRINT_INTERVAL_ID = setInterval(()=>{
@@ -133,8 +133,8 @@ class Player extends Entity{
                             //console.log('stamina refil, ', this.stamina)
                             this.stamina += 0.025
                         }
-                    }, 50)
-                    this.VELOCITY = 100
+                    }, GameConfig.TIMING.SPRINT_INTERVAL)
+                    this.VELOCITY = GameConfig.MOVEMENT.PLAYER_BASE_VELOCITY
                 }
             }
         })
@@ -164,7 +164,7 @@ class Player extends Entity{
                 case 'light':
                     // console.log('player used light attack on enemy')
                     attackText = this.parentScene.add.bitmapText(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), 'pixel-yellow', this.pkg.dmg, 24)
-                    this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
+                    this.parentScene.time.delayedCall(GameConfig.TIMING.DAMAGE_TEXT_DURATION, ()=>{ attackText.destroy()})
 
                     //ensure no sound overlap  
                     if(!this.attack_noise_light_hit.isPlaying){
@@ -176,7 +176,7 @@ class Player extends Entity{
                         collided.FSM.transition('dead')
                     } else { // lives
                         collided.HIT_POINTS -= this.pkg.dmg //take damage
-                        attackVelocity = 250 //knockback
+                        attackVelocity = GameConfig.MOVEMENT.KNOCKBACK_LIGHT //knockback
                         collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity) //apply knockback
                         this.scene.time.delayedCall(250, () => {
                             collided.FSM.transition('pursuit')
@@ -186,9 +186,9 @@ class Player extends Entity{
                     break
                 case 'heavy':
                     // console.log('player used heavy attack on enemy')
-                    attackText = this.parentScene.add.bitmapText(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), 'pixel-yellow', this.pkg.dmg, 24)
-                    this.parentScene.time.delayedCall(500, ()=>{ attackText.destroy()})
-    
+                                        attackText = this.parentScene.add.bitmapText(collided.x + Phaser.Math.Between(-50, 50), collided.y + Phaser.Math.Between(-10,-60), 'pixel-yellow', this.pkg.dmg, 24)
+                    this.parentScene.time.delayedCall(GameConfig.TIMING.DAMAGE_TEXT_DURATION, ()=>{ attackText.destroy()})
+
                     //sound overlap
                     if(!this.attack_noise_heavy_hit.isPlaying){
                         this.attack_noise_heavy_hit.play()
@@ -199,7 +199,7 @@ class Player extends Entity{
                         collided.FSM.transition('dead')
                     } else {
                         collided.HIT_POINTS -= this.pkg.dmg
-                        attackVelocity = 375
+                        attackVelocity = GameConfig.MOVEMENT.KNOCKBACK_HEAVY
                         collided.setVelocity(attackVector.x * attackVelocity, attackVector.y * attackVelocity)
                         this.scene.time.delayedCall(350, ()=> {
                             collided.FSM.transition('pursuit')
@@ -257,12 +257,12 @@ class Player extends Entity{
         if(keyAttackLight.isDown){
             this.pkg.attack_type = 'light'
             this.pkg.isAttacking = true
-            this.pkg.dmg = Math.round(Math.random() * Phaser.Math.Between(10, 15)) + Phaser.Math.Between(10, 15)
+            this.pkg.dmg = Math.round(Math.random() * Phaser.Math.Between(GameConfig.COMBAT.LIGHT_ATTACK_MIN, GameConfig.COMBAT.LIGHT_ATTACK_MAX)) + Phaser.Math.Between(GameConfig.COMBAT.LIGHT_ATTACK_MIN, GameConfig.COMBAT.LIGHT_ATTACK_MAX)
             //console.log('Light attack -> ' + this.pkg.dmg)
         } else if (keyAttackHeavy.isDown){
             this.pkg.attack_type = 'heavy'
             this.pkg.isAttacking = true
-            this.pkg.dmg = Math.round(Math.random() *Phaser.Math.Between(15, 20)) + Phaser.Math.Between(20, 25)  
+            this.pkg.dmg = Math.round(Math.random() *Phaser.Math.Between(GameConfig.COMBAT.HEAVY_ATTACK_MIN, GameConfig.COMBAT.HEAVY_ATTACK_MAX)) + Phaser.Math.Between(GameConfig.COMBAT.HEAVY_ATTACK_MIN, GameConfig.COMBAT.HEAVY_ATTACK_MAX)  
             //console.log('Heavy attack ->' + this.pkg.dmg)
         } else {
             this.pkg.attack_type = undefined
@@ -275,7 +275,7 @@ class Player extends Entity{
         if(this.questStatus.finished === false){
             this.questTrackerTxtTitle.setAlpha(1).setDepth(3)
             let alias = this.questStatus.currentQuest
-            this.questTrackerTxtBody.text = alias.verb + ' ' +  alias.ammount + ' ' +  alias.type + ' ' + alias.actual + '/' + alias.ammount
+            this.questTrackerTxtBody.text = alias.verb + ' ' +  alias.amount + ' ' +  alias.type + ' ' + alias.actual + '/' + alias.amount
             this.questTrackerTxtBody.setAlpha(1).setDepth(3)
             this.parentScene.miniMapCamera.ignore([this.questTrackerTxtTitle,this.questTrackerTxtBody])
         } else {
@@ -307,17 +307,7 @@ class Player extends Entity{
     }
 
     updateHealthBar(){
-        let currentHealthPercent = this.HIT_POINTS / this.HIT_POINTS_log
-        this.HEALTH_BAR.clear()
-        if(currentHealthPercent < 0.3){
-            this.HEALTH_BAR.fillStyle(0xFF0000)
-        }else if(currentHealthPercent < 0.5 && currentHealthPercent > 0.3){
-            this.HEALTH_BAR.fillStyle(0xFFFF00)
-
-        }else{
-            this.HEALTH_BAR.fillStyle(0x00FF00)
-        }
-        this.HEALTH_BAR.fillRect(game.config.width/2 - 75, game.config.height/2 + 165, this.HEALTH_BAR.width * currentHealthPercent, 10)
+        updateHealthBar(this.HEALTH_BAR, this.HIT_POINTS, this.HIT_POINTS_log, game.config.width/2 - 75, game.config.height/2 + 165, this.HEALTH_BAR.width, 10)
     }
 
     updateStaminaBar(){
@@ -352,9 +342,7 @@ class idlePlayerState extends State{
             }, 50)
 
         }
-        if(player.walk_noise.isPlaying){
-            player.walk_noise.pause()
-        }
+        safeStopSound(player.walk_noise)
 
         //console.log('in player: idle')
         player.setVelocity(0)
@@ -367,7 +355,7 @@ class idlePlayerState extends State{
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
             if(player.animsFSM.state !== 'attack'){
-                player.walk_noise.stop() //fix
+                safeStopSound(player.walk_noise)
                 this.stateMachine.transition('attack')
             }
         }
@@ -394,13 +382,13 @@ class movingState extends State{
             player.listenForCombatInput()
         } else if(player.pkg.isAttacking) {
             if(player.animsFSM.state !== 'attack'){
-                player.walk_noise.stop()
+                safeStopSound(player.walk_noise)
                 this.stateMachine.transition('attack')
             }
         }
 
         if(!(keyUp.isDown || keyDown.isDown || keyLeft.isDown || keyRight.isDown)) {
-            player.walk_noise.stop()
+            safeStopSound(player.walk_noise)
             this.stateMachine.transition('idle')
         }else{
             player.handleMovement()
@@ -413,9 +401,7 @@ class interactionPlayerState extends State{
         //('in player: interaction')
         player.anims.pause()
 
-        if(player.walk_noise.isPlaying){
-            player.walk_noise.stop()
-        }
+        safeStopSound(player.walk_noise)
         player.setVelocity(0)
     }
 }
@@ -433,9 +419,9 @@ class inWaterPlayerState extends State{
                 player.HIT_POINTS += 1
                 let healText = scene.add.bitmapText(player.x + Phaser.Math.Between(-50, 50), player.y + Phaser.Math.Between(-10,-60), 'pixel-green', '+1', 16).setScale(2).setOrigin(0)
                 scene.miniMapCamera.ignore(healText)
-                scene.time.delayedCall(500, ()=>{ healText.destroy()})
+                scene.time.delayedCall(GameConfig.TIMING.DAMAGE_TEXT_DURATION, ()=>{ healText.destroy()})
             }
-        }, 200)
+        }, GameConfig.TIMING.HEAL_INTERVAL)
     }
 
     execute(scene, player){
@@ -463,7 +449,7 @@ class attackPlayerState extends State{
                 scene.sound.play('attack-light', {volume: 0.05})
                 this.stateMachine.transition('idle')
                 player.pkg.isAttacking = false
-                scene.time.delayedCall(1000, () =>{ 
+                scene.time.delayedCall(GameConfig.TIMING.ATTACK_LIGHT_COOLDOWN, () =>{ 
                     scene.p1AttackUi.setTexture('attack-bar')
                     player.pkg.attackCooldown = false
                 })
@@ -474,7 +460,7 @@ class attackPlayerState extends State{
                 scene.sound.play('attack-heavy', {volume: 0.05})
                 player.pkg.isAttacking = false
                 this.stateMachine.transition('idle')
-                scene.time.delayedCall(3000, () =>{ 
+                scene.time.delayedCall(GameConfig.TIMING.ATTACK_HEAVY_COOLDOWN, () =>{ 
                     scene.p1AttackUi.setTexture('attack-bar')
                     player.pkg.attackCooldown = false
                 })
@@ -495,12 +481,8 @@ class deadPlayerState extends State{
         player.HEALTH_BAR.clear()
         player.checkWindow()
 
-        if(player.walk_noise.isPlaying){
-            player.walk_noise.stop()
-        }
-        if(player.water_noise.isPlaying){
-            player.water_noise.stop()
-        }
+        safeStopSound(player.walk_noise)
+        safeStopSound(player.water_noise)
 
         scene.tweens.add({
             targets: player,
@@ -531,18 +513,10 @@ class gamePausePlayerState extends State{
         //console.log('in player: pause')
         player.anims.pause()
 
-        if(player.walk_noise.isPlaying){
-            player.walk_noise.stop()
-        }
-        if(player.attack_noise_light_hit.isPlaying){
-        player.attack_noise_light_hit.stop()
-        }
-        if(player.attack_noise_heavy_hit.isPlaying){
-            player.attack_noise_heavy_hit.stop()
-        } 
-        if(player.water_noise.isPlaying){
-            player.water_noise.stop()
-        }
+        safeStopSound(player.walk_noise)
+        safeStopSound(player.attack_noise_light_hit)
+        safeStopSound(player.attack_noise_heavy_hit)
+        safeStopSound(player.water_noise)
         player.setVelocity(0)
     } 
 }

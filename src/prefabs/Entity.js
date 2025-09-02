@@ -30,7 +30,6 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
 
         //timing, reset
         this.INTERVAL_ID = undefined
-        this.reset_e = true
         this.canMove = true
         this.entity_text = scene.add.text(this.x, this.y-20, this.entity_type, {fill: '#FFFFFF'}).setAlpha(0).setDepth(2)//nameplate 
 
@@ -79,16 +78,6 @@ class Entity extends Phaser.Physics.Arcade.Sprite{
     }
 
     updateHealthBar(){
-        let currentHealthPercent = this.HIT_POINTS / this.HIT_POINTS_log
-        this.HEALTH_BAR.clear()
-        if(currentHealthPercent < 0.3){
-            this.HEALTH_BAR.fillStyle(0xFF0000)
-        }else if(currentHealthPercent < 0.5 && currentHealthPercent > 0.3){
-            this.HEALTH_BAR.fillStyle(0xFFFF00)
-
-        }else{
-            this.HEALTH_BAR.fillStyle(0x00FF00)
-        }
-        this.HEALTH_BAR.fillRect(this.x, this.y - 15, this.HEALTH_BAR.width * currentHealthPercent, 5)
+        updateHealthBar(this.HEALTH_BAR, this.HIT_POINTS, this.HIT_POINTS_log, this.x, this.y - 15, this.HEALTH_BAR.width, 5)
     }
 }

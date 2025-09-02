@@ -14,23 +14,23 @@ class Inventory{
         }
     }
 
-    add(item, ammount){
+    add(item, amount){
         if(!this.inventory.has(item)){
-            this.inventory.set(item, ammount)
+            this.inventory.set(item, amount)
             return true
         } else {
             let x = this.inventory.get(item)
-            this.inventory.set(item, x+ammount)
+            this.inventory.set(item, x + amount)
         }
-        return false
+        return true // Always return true since item was added
     }
 
-    remove(item, ammount){
+    remove(item, amount){
         if(this.inventory.has(item)){
-            if(this.get(item) === ammount){
+            if(this.get(item) === amount){
                 this.inventory.delete(item)
-            }else if (this.get(item) >= ammount){
-                this.inventory.set(item, this.get(item) - ammount)
+            }else if (this.get(item) >= amount){
+                this.inventory.set(item, this.get(item) - amount)
             }
             return true
         }

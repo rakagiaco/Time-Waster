@@ -37,7 +37,7 @@ class World extends Phaser.Scene{
         this.quests = []
 
         //get all the quest data
-        for(let i = 0; i < ammountOfQuests; i++){
+        for(let i = 0; i < amountOfQuests; i++){
             this.quests.push(this.cache.json.get(`quest-${i + 1}`)) 
         }
 
