@@ -11,6 +11,54 @@
     <style>
         body {
             background-image: linear-gradient(to right, #094603, #0229b5);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            font-family: 'Courier New', monospace;
+        }
+        
+        #gameContainer {
+            flex: 1;
+        }
+        
+        #debugPanel {
+            width: 350px;
+            height: 100vh;
+            background-color: #2a2a2a;
+            border-left: 3px solid #00ff00;
+            padding: 20px;
+            box-sizing: border-box;
+            color: #ffffff;
+            font-size: 12px;
+            line-height: 1.4;
+            overflow-y: auto;
+            display: none;
+        }
+        
+        #debugPanel h3 {
+            color: #00ff00;
+            margin-top: 0;
+            margin-bottom: 15px;
+            font-size: 16px;
+        }
+        
+        #debugPanel .debug-section {
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #444;
+        }
+        
+        #debugPanel .debug-section:last-child {
+            border-bottom: none;
+        }
+        
+        #debugPanel .debug-label {
+            color: #ffff00;
+            font-weight: bold;
+        }
+        
+        #debugPanel .debug-value {
+            color: #ffffff;
         }
     </style>
     <title>RPG</title>
@@ -19,6 +67,13 @@
 <body>
 
     <div id="gameContainer">
+    </div>
+    
+    <div id="debugPanel">
+        <h3>DEBUG MODE</h3>
+        <div id="debugContent">
+            <!-- Debug information will be populated here -->
+        </div>
     </div>
 
 </body>

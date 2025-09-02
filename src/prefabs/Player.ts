@@ -1,6 +1,7 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { Inventory } from './Inventory';
+import { Item } from './Item';
 import { StateMachine, State } from '../../lib/StateMachine';
 import { updatePlayerMovement } from '../../lib/HelperFunc';
 import GameConfig from '../config/GameConfig';
@@ -14,6 +15,7 @@ export let keyAttackLight: Phaser.Input.Keyboard.Key;
 export let keyAttackHeavy: Phaser.Input.Keyboard.Key;
 export let keyInventory: Phaser.Input.Keyboard.Key;
 export let keySprint: Phaser.Input.Keyboard.Key;
+export let keyInteract: Phaser.Input.Keyboard.Key;
 
 // Player States
 class PlayerIdleState extends State {
@@ -43,6 +45,11 @@ class PlayerIdleState extends State {
 
         if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
             player.animsFSM.transition('attacking-heavy');
+        }
+
+        // Check for proximity pickup input
+        if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
+            player.performProximityPickup();
         }
     }
 }
@@ -78,6 +85,11 @@ class PlayerWalkingState extends State {
 
         if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
             player.animsFSM.transition('attacking-heavy');
+        }
+
+        // Check for proximity pickup input
+        if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
+            player.performProximityPickup();
         }
     }
 }
@@ -177,6 +189,7 @@ export class Player extends Entity {
     public attackLightCooldown: boolean = false;
     public attackHeavyCooldown: boolean = false;
     public sprintCooldown: boolean = false;
+    public pickupCooldown: boolean = false;
 
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
@@ -258,6 +271,7 @@ export class Player extends Entity {
             keyAttackHeavy = (keyboard as any).addKey('TWO');
             keyInventory = (keyboard as any).addKey('I');
             keySprint = (keyboard as any).addKey('SHIFT');
+            keyInteract = (keyboard as any).addKey('E');
 
             console.log('Input keys initialized successfully');
         }
@@ -308,12 +322,98 @@ export class Player extends Entity {
         return this.p1Inventory;
     }
 
+    public getPosition(): [number, number] {
+        return [this.x, this.y];
+    }
+
+    public heal(amount: number): void {
+        this.HIT_POINTS = Math.min(this.HIT_POINTS + amount, this.MAX_HIT_POINTS);
+        console.log(`Player healed for ${amount} HP. Current HP: ${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
+    }
+
     public getQuestStatus(): any {
         return this.questStatus;
     }
 
     public setQuestStatus(status: any): void {
         this.questStatus = status;
+    }
+
+    public performProximityPickup(): void {
+        const pickupRadius = 60; // Proximity radius for pickup
+        let itemsCollected = 0;
+
+        // Set pickup cooldown
+        this.pickupCooldown = true;
+        this.scene.time.delayedCall(1000, () => { // 1 second cooldown
+            this.pickupCooldown = false;
+        });
+
+        // Find all collectible items in the scene
+        this.scene.children.list.forEach(child => {
+            if (child instanceof Item) {
+                const item = child as Item;
+                const distance = Phaser.Math.Distance.Between(this.x, this.y, item.x, item.y);
+                
+                if (distance <= pickupRadius) {
+                    // Check if it's a fruit item
+                    const itemType = item.getItemType();
+                    if (this.isFruitItem(itemType)) {
+                        // Add to inventory
+                        this.p1Inventory.add(itemType, 1);
+                        
+                        // Play collection sound
+                        const soundEffect = item.getSoundEffect();
+                        if (soundEffect) {
+                            this.scene.sound.play(soundEffect.sound, { volume: soundEffect.volume });
+                        }
+                        
+                        // Show pickup feedback
+                        this.showPickupFeedback(itemType, item.x, item.y);
+                        
+                        // Destroy the item
+                        item.destroy();
+                        itemsCollected++;
+                    }
+                }
+            }
+        });
+
+        // Show general pickup feedback if items were collected
+        if (itemsCollected > 0) {
+            console.log(`Collected ${itemsCollected} items via proximity pickup`);
+        } else {
+            console.log('No items found in pickup range');
+        }
+    }
+
+    private isFruitItem(itemType: string): boolean {
+        const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'fruit'];
+        return fruitTypes.includes(itemType);
+    }
+
+    private showPickupFeedback(itemType: string, x: number, y: number): void {
+        // Create floating text showing item pickup
+        const pickupText = this.scene.add.bitmapText(
+            x + Phaser.Math.Between(-10, 10),
+            y - 20,
+            'pixel-white',
+            `+${itemType}`,
+            12
+        );
+        pickupText.setOrigin(0.5);
+
+        // Animate the text floating up and fading out
+        this.scene.tweens.add({
+            targets: pickupText,
+            y: pickupText.y - 20,
+            alpha: 0,
+            duration: 1000,
+            ease: 'Power2',
+            onComplete: () => {
+                pickupText.destroy();
+            }
+        });
     }
 
     public saveGame(): void {

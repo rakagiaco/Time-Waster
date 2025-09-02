@@ -31,6 +31,9 @@ export class Menu extends Phaser.Scene {
 
         this.cameras.main.setBackgroundColor('0xffffff');
 
+        // Setup custom cursor
+        this.input.setDefaultCursor('url(/img/cursor.png), pointer');
+
         // Continue button
         const continueBtn = this.add.image((this.game.config.width as number) / 2, ((this.game.config.height as number) / 2) + 50, 'continue-game-button')
             .setScale(2)

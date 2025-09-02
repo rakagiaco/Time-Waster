@@ -88,26 +88,46 @@ export function listen(scene: GameScene, listener: any): boolean {
     } else if ((scene as any).player) {
         player = (scene as any).player;
     } else {
+        // Try to find player by searching through children
+        scene.children.list.forEach(child => {
+            if (child.constructor.name === 'Player') {
+                player = child;
+            }
+        });
+    }
+
+    if (!player) {
         console.warn('No player found in scene for listen function');
         return false;
     }
 
-    if (!player || !player.getPosition) {
-        console.warn('Player object or getPosition method not available');
-        return false;
+    // Try getPosition method first, fallback to direct x,y properties
+    let playerX: number, playerY: number;
+    if (player.getPosition && typeof player.getPosition === 'function') {
+        const pos = player.getPosition();
+        playerX = pos[0];
+        playerY = pos[1];
+    } else {
+        playerX = player.x;
+        playerY = player.y;
     }
 
-    let x = player.getPosition()
-    let x1 = x[0]
-    let y1 = x[1]
     if (listener.detectionDistance === 0 || listener.detectionDistance === undefined) {
-        listener.detectionDistance = GameConfig.DETECTION.DEFAULT_DISTANCE
+        listener.detectionDistance = GameConfig.DETECTION.DEFAULT_DISTANCE;
     }
-    if (x1 > (listener.x - listener.detectionDistance) && x1 < (listener.x + listener.detectionDistance) && y1 > (listener.y - listener.detectionDistance) && y1 < (listener.y + listener.detectionDistance)) {
-        return true
-    } else {
-        return false
+
+    const distance = Math.sqrt(
+        Math.pow(playerX - listener.x, 2) + Math.pow(playerY - listener.y, 2)
+    );
+
+    const isInRange = distance <= listener.detectionDistance;
+    
+    // Debug logging (can be removed later)
+    if (isInRange) {
+        console.log(`Enemy ${listener.entity_type} detected player at distance ${distance.toFixed(1)} (range: ${listener.detectionDistance})`);
     }
+
+    return isInRange;
 }
 
 //------CreateQuestObject

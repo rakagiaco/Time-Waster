@@ -10,6 +10,9 @@ export class Credits extends Phaser.Scene {
     create(): void {
         this.cameras.main.setBackgroundColor('0x000000');
 
+        // Setup custom cursor
+        this.input.setDefaultCursor('url(/img/cursor.png), pointer');
+
         // Credits text
         this.add.bitmapText((this.game.config.width as number) / 2, (this.game.config.height as number) / 2 - 100, '8-bit-white', 'Credits', 64).setOrigin(0.5);
         this.add.bitmapText((this.game.config.width as number) / 2, (this.game.config.height as number) / 2 - 50, '8-bit-white', 'Game created by C.J. Moshy', 32).setOrigin(0.5);

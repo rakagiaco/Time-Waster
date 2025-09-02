@@ -71,6 +71,9 @@ export class Ally extends Entity {
         
         // Load quest data
         this.loadQuestData();
+        
+        // Create name tag
+        this.createNameTag();
     }
 
     private setupStateMachine(): void {
@@ -110,6 +113,9 @@ export class Ally extends Entity {
         
         // Update health bar position
         this.updateHealthBar();
+        
+        // Update name tag position
+        this.updateNameTag();
     }
 
     public takeDamage(_amount: number): void {

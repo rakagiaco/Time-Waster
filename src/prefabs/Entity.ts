@@ -7,6 +7,8 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
     protected VELOCITY: number;
     protected healthBar!: Phaser.GameObjects.Graphics;
     protected healthBarText!: Phaser.GameObjects.BitmapText;
+    public entity_text!: Phaser.GameObjects.BitmapText;
+    public entity_type: string = 'Entity';
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
         super(scene, x, y, texture, frame);
@@ -76,6 +78,10 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
         return this.MAX_HIT_POINTS;
     }
 
+    public getVelocity(): number {
+        return this.VELOCITY;
+    }
+
     public isDead(): boolean {
         return this.HIT_POINTS <= 0;
     }
@@ -83,6 +89,23 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
     public initializeHealthBar(): void {
         if (!this.healthBar) {
             this.createHealthBar();
+        }
+    }
+
+    public createNameTag(): void {
+        if (!this.entity_text) {
+            console.log(`Creating name tag for ${this.entity_type} at (${this.x}, ${this.y})`);
+            this.entity_text = this.scene.add.bitmapText(this.x, this.y - 30, 'pixel-white', this.entity_type, 12);
+            this.entity_text.setOrigin(0.5, 0.5);
+            this.entity_text.setScrollFactor(1); // Follow world scroll
+            this.entity_text.setDepth(100);
+            console.log(`Name tag created successfully for ${this.entity_type}`);
+        }
+    }
+
+    public updateNameTag(): void {
+        if (this.entity_text) {
+            this.entity_text.setPosition(this.x, this.y - 30);
         }
     }
 }

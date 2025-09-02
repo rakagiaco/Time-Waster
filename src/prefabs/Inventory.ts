@@ -59,4 +59,12 @@ export class Inventory {
     public getSize(): number {
         return this.items.size;
     }
+
+    public getInventoryData(): { type: string; count: number }[] {
+        const data: { type: string; count: number }[] = [];
+        this.items.forEach((count, type) => {
+            data.push({ type, count });
+        });
+        return data;
+    }
 }
