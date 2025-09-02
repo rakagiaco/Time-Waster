@@ -4,13 +4,22 @@ import { Inventory } from './Inventory';
 import { StateMachine, State } from '../../lib/StateMachine';
 import { updatePlayerMovement } from '../../lib/HelperFunc';
 import GameConfig from '../config/GameConfig';
-import { keyUp, keyDown, keyLeft, keyRight, keyAttackLight, keyAttackHeavy, keySprint } from '../input/InputManager';
+
+
+export let keyUp: Phaser.Input.Keyboard.Key;
+export let keyDown: Phaser.Input.Keyboard.Key;
+export let keyLeft: Phaser.Input.Keyboard.Key;
+export let keyRight: Phaser.Input.Keyboard.Key;
+export let keyAttackLight: Phaser.Input.Keyboard.Key;
+export let keyAttackHeavy: Phaser.Input.Keyboard.Key;
+export let keyInventory: Phaser.Input.Keyboard.Key;
+export let keySprint: Phaser.Input.Keyboard.Key;
 
 // Player States
 class PlayerIdleState extends State {
     enter(_scene: Phaser.Scene, player: Player): void {
         player.setVelocity(0, 0);
-        
+
         // Check if animation exists before playing
         if (player.anims.exists('player-walk-down')) {
             player.anims.play('player-walk-down', true);
@@ -23,14 +32,15 @@ class PlayerIdleState extends State {
     execute(_scene: Phaser.Scene, player: Player): void {
         // Check for movement input (with null checks)
         if ((keyUp && keyUp.isDown) || (keyDown && keyDown.isDown) || (keyLeft && keyLeft.isDown) || (keyRight && keyRight.isDown)) {
+            console.log("here")
             player.animsFSM.transition('walking');
         }
-        
+
         // Check for attack input (with null checks)
         if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
             player.animsFSM.transition('attacking-light');
         }
-        
+
         if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
             player.animsFSM.transition('attacking-heavy');
         }
@@ -50,22 +60,22 @@ class PlayerWalkingState extends State {
             // If keys aren't ready yet, just stop movement
             player.setVelocity(0, 0);
         }
-        
+
         // Check for sprint
         if (keySprint && keySprint.isDown && !player.sprintCooldown) {
             player.animsFSM.transition('sprinting');
         }
-        
+
         // Check if no movement keys are pressed
         if ((!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown)) {
             player.animsFSM.transition('idle');
         }
-        
+
         // Check for attack input
         if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
             player.animsFSM.transition('attacking-light');
         }
-        
+
         if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
             player.animsFSM.transition('attacking-heavy');
         }
@@ -88,12 +98,12 @@ class PlayerSprintingState extends State {
             // If keys aren't ready yet, just stop movement
             player.setVelocity(0, 0);
         }
-        
+
         // Check if sprint key is released
         if (!keySprint || !keySprint.isDown) {
             player.animsFSM.transition('walking');
         }
-        
+
         // Check if no movement keys are pressed
         if ((!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown)) {
             player.animsFSM.transition('idle');
@@ -104,17 +114,17 @@ class PlayerSprintingState extends State {
 class PlayerAttackingLightState extends State {
     enter(scene: Phaser.Scene, player: Player): void {
         player.attackLightCooldown = true;
-        
+
         // Check if animation exists before playing
         if (player.anims.exists('player-light-attack')) {
             player.anims.play('player-light-attack', true);
         } else {
             console.warn('Animation "player-light-attack" not found');
         }
-        
+
         // Play attack sound
         scene.sound.play('attack-light', { volume: 0.5 });
-        
+
         // Set cooldown
         scene.time.delayedCall(GameConfig.TIMING.ATTACK_LIGHT_COOLDOWN, () => {
             player.attackLightCooldown = false;
@@ -132,17 +142,17 @@ class PlayerAttackingLightState extends State {
 class PlayerAttackingHeavyState extends State {
     enter(scene: Phaser.Scene, player: Player): void {
         player.attackHeavyCooldown = true;
-        
+
         // Check if animation exists before playing
         if (player.anims.exists('player-heavy-attack')) {
             player.anims.play('player-heavy-attack', true);
         } else {
             console.warn('Animation "player-heavy-attack" not found');
         }
-        
+
         // Play attack sound
         scene.sound.play('attack-heavy', { volume: 0.5 });
-        
+
         // Set cooldown
         scene.time.delayedCall(GameConfig.TIMING.ATTACK_HEAVY_COOLDOWN, () => {
             player.attackHeavyCooldown = false;
@@ -163,23 +173,23 @@ export class Player extends Entity {
     public animsFSM!: StateMachine;
     public windowOpen: boolean = false;
     public currentWindow: any = { objs: [] };
-    
+
     public attackLightCooldown: boolean = false;
     public attackHeavyCooldown: boolean = false;
     public sprintCooldown: boolean = false;
 
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
+        super(scene, x, y, 'player');
         try {
             console.log('=== PLAYER CONSTRUCTOR START ===');
             console.log('Scene:', scene);
             console.log('Position:', x, y);
             console.log('Inventory:', inventory);
             console.log('Quest data:', questData);
-            
-            super(scene, x, y, 'player');
+
             console.log('Player sprite created successfully');
-            
+
             // Initialize inventory
             console.log('Initializing inventory...');
             this.p1Inventory = new Inventory();
@@ -187,38 +197,57 @@ export class Player extends Entity {
                 this.p1Inventory.loadFromData(inventory);
             }
             console.log('Inventory initialized successfully');
-            
+
             // Initialize quest status
             console.log('Initializing quest status...');
             this.questStatus = questData || { finished: false, currentQuest: null };
             console.log('Quest status initialized successfully');
-            
+
             // Setup state machine
             console.log('Setting up state machine...');
             this.setupStateMachine();
             console.log('State machine setup successfully');
-            
+
             // Setup physics
             console.log('Setting up physics...');
             this.setupPhysics();
             console.log('Physics setup successfully');
-            
+
             // Setup input
             console.log('Setting up input...');
-            this.setupInput();
+            this.initializeInputKeys(scene);
             console.log('Input setup successfully');
-            
+
             // Initialize health bar after everything else is set up
             console.log('Initializing health bar...');
             this.initializeHealthBar();
             console.log('Health bar initialized successfully');
-            
+
             console.log('=== PLAYER CONSTRUCTOR COMPLETE ===');
         } catch (error) {
             console.error('=== CRITICAL ERROR IN PLAYER CONSTRUCTOR ===');
             console.error('Error:', error);
             console.error('Stack:', (error as any)?.stack);
             console.error('===========================================');
+        }
+    }
+
+
+    // Initialize keys after game is created
+    private initializeInputKeys(scene: Phaser.Scene): void {
+
+        const keyboard = scene.input.keyboard
+        if (keyboard) {
+            keyUp = keyboard.addKey("W")
+            keyDown = (keyboard as any).addKey('S');
+            keyLeft = (keyboard as any).addKey('A');
+            keyRight = (keyboard as any).addKey('D');
+            keyAttackLight = (keyboard as any).addKey('ONE');
+            keyAttackHeavy = (keyboard as any).addKey('TWO');
+            keyInventory = (keyboard as any).addKey('I');
+            keySprint = (keyboard as any).addKey('SHIFT');
+
+            console.log('Input keys initialized successfully');
         }
     }
 
@@ -230,7 +259,7 @@ export class Player extends Entity {
             'attacking-light': new PlayerAttackingLightState(),
             'attacking-heavy': new PlayerAttackingHeavyState()
         };
-        
+
         this.animsFSM = new StateMachine('idle', states, [this.scene, this]);
     }
 
@@ -240,24 +269,20 @@ export class Player extends Entity {
         this.setOffset(8, 16);
     }
 
-    private setupInput(): void {
-        // Input keys are imported from main.ts
-    }
-
     public update(): void {
         // Update state machine
         this.animsFSM.step();
-        
+
         // Update health bar position
         this.updateHealthBar();
     }
 
     public takeDamage(amount: number): void {
         super.takeDamage(amount);
-        
+
         // Play damage sound
         this.scene.sound.play('enemy-hit', { volume: 0.5 });
-        
+
         // Check if player is dead
         if (this.isDead()) {
             this.scene.scene.start('GameOver');
@@ -286,7 +311,7 @@ export class Player extends Entity {
         if (this.questStatus) {
             window.localStorage.setItem('existing_quest', JSON.stringify(this.questStatus));
         }
-        
+
         // Save inventory
         if (this.p1Inventory) {
             window.localStorage.setItem('existing_inv', JSON.stringify(this.p1Inventory.getData()));
