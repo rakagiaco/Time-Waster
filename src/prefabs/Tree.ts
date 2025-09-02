@@ -12,32 +12,32 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
 
     constructor(scene: Phaser.Scene, x: number, y: number, treeType: string) {
         super(scene, x, y, treeType);
-        
+
         this.treeType = treeType;
-        
+
         // Add to scene
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
+
         // Setup physics with collision at base of trunk
         this.setCollideWorldBounds(false);
         this.setSize(32, 24); // Smaller height for trunk collision
         this.setOffset(16, 40); // Offset down to base of trunk
-        
+
         // Enable collision detection
-        this.body!.setImmovable(true);
-        this.body!.setCollideWorldBounds(false);
-        
+        this.setImmovable(true);
+        this.setCollideWorldBounds(false);
+
         // Set scale based on tree type
         if (treeType === 'tree-2-second') {
             this.setScale(1.5);
         } else {
             this.setScale(1.0);
         }
-        
+
         // Create initial fruit
         this.createFruit();
-        
+
         // Start tree animation
         this.startTreeAnimation();
     }
@@ -46,7 +46,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         // Determine animation based on tree type and position
         const animVariants = this.getTreeAnimationVariants();
         const randomAnim = animVariants[Math.floor(Math.random() * animVariants.length)];
-        
+
         if (this.scene.anims.exists(randomAnim)) {
             this.anims.play(randomAnim);
         }
@@ -76,34 +76,34 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
 
         // Create 1-3 fruit items around the tree
         const fruitCount = Math.floor(Math.random() * 3) + 1;
-        
+
         for (let i = 0; i < fruitCount; i++) {
             // Position fruit around the tree base
             const angle = (i / fruitCount) * Math.PI * 2;
             const distance = 20 + Math.random() * 15; // 20-35 pixels from tree center
             const fruitX = this.x + Math.cos(angle) * distance;
             const fruitY = this.y + Math.sin(angle) * distance;
-            
+
             // Determine fruit type based on tree type
             const fruitType = this.getFruitTypeForTree();
-            
+
             const fruit = new Item(
-                this.scene, 
-                fruitX, 
-                fruitY, 
+                this.scene,
+                fruitX,
+                fruitY,
                 fruitType,
                 { sound: 'collect-herb', volume: 0.3 }
             );
-            
+
             // Make fruit smaller
             fruit.setScale(0.8);
-            
+
             // Make fruit interactive for collection
             fruit.setInteractive();
             fruit.on('pointerdown', () => {
                 this.collectFruitFromTree(fruit);
             });
-            
+
             this.fruitItems.push(fruit);
         }
     }
@@ -114,10 +114,10 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         // Remove all fruit
         this.fruitItems.forEach(fruit => fruit.destroy());
         this.fruitItems = [];
-        
+
         this.hasFruit = false;
         this.fruitRespawnTimer = 0;
-        
+
         console.log(`Fruit collected from ${this.treeType} tree`);
     }
 
@@ -125,7 +125,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         // Handle fruit respawn
         if (!this.hasFruit) {
             this.fruitRespawnTimer += this.scene.game.loop.delta;
-            
+
             if (this.fruitRespawnTimer >= this.fruitRespawnDelay) {
                 this.hasFruit = true;
                 this.createFruit();
@@ -168,7 +168,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
     private collectFruitFromTree(fruit: Item): void {
         // Find the player in the scene
         const player = this.scene.children.list.find(child => child instanceof Player) as Player;
-        
+
         if (!player) {
             console.error('Player not found for fruit collection');
             return;
@@ -184,11 +184,11 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         // Add fruit to player's inventory
         const fruitType = fruit.getItemType();
         player.p1Inventory.add(fruitType, 1);
-        
+
         // Play collection sound
         if (fruit.getSoundEffect()) {
-            this.scene.sound.play(fruit.getSoundEffect()!.sound, { 
-                volume: fruit.getSoundEffect()!.volume 
+            this.scene.sound.play(fruit.getSoundEffect()!.sound, {
+                volume: fruit.getSoundEffect()!.volume
             });
         }
 
@@ -227,9 +227,5 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
     public getCollisionRadius(): number {
         // Return a slightly larger radius for pathfinding to ensure enemies don't get too close
         return Math.max(this.width, this.height) / 2 + 20;
-    }
-
-    public getTreeType(): string {
-        return this.treeType;
     }
 }

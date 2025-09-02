@@ -33,10 +33,9 @@ export class World extends Phaser.Scene {
 
     private miniMapCamera!: Phaser.Cameras.Scene2D.Camera;
     private minimapMask!: Phaser.GameObjects.Graphics;
-    private minimapPlayerDot!: Phaser.GameObjects.Graphics;
     private debugManager!: DebugManager;
     private inventoryUI!: InventoryUI;
-    
+
     // Day/Night and Lighting Systems
     private dayNightCycle!: DayNightCycle;
     private flashlight!: Flashlight;
@@ -68,11 +67,6 @@ export class World extends Phaser.Scene {
                 this.loadSaveData();
             }
 
-            //     // Wait a frame to ensure animations are fully loaded
-            //     this.time.delayedCall(100, () => {
-            //         try {
-            //             console.log('=== CREATING GAME OBJECTS ===');
-
             // Create enemies
             console.log('Creating enemies...');
             this.createEnemies();
@@ -93,12 +87,12 @@ export class World extends Phaser.Scene {
             this.createTrees();
             console.log('Trees created successfully, count:', this.trees.length);
 
-            //             // Setup camera
+            // Setup camera
             console.log('Setting up camera...');
             this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.cameras.main.startFollow(this.player);
-            this.cameras.main.setZoom(1.5);
+            // absolutely under no circumstances should we change the zoom level of the main camera
             console.log('Camera setup complete');
 
             // Setup minimap camera
@@ -125,7 +119,7 @@ export class World extends Phaser.Scene {
             // Setup Day/Night Cycle
             console.log('Setting up day/night cycle...');
             this.dayNightCycle = new DayNightCycle(this);
-            
+
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
                 if (this.flashlight) {
@@ -135,7 +129,7 @@ export class World extends Phaser.Scene {
                         this.flashlight.activate();
                     }
                 }
-                
+
                 if (this.treeLightEmission) {
                     if (data.isDay) {
                         this.treeLightEmission.deactivate();
@@ -144,7 +138,7 @@ export class World extends Phaser.Scene {
                     }
                 }
             });
-            
+
             console.log('Day/night cycle setup complete');
 
             // Setup Flashlight
@@ -257,7 +251,6 @@ export class World extends Phaser.Scene {
         }
 
         // Update minimap to follow player
-        this.updateMinimap();
 
         // Update debug manager
         if (this.debugManager) {
@@ -296,22 +289,22 @@ export class World extends Phaser.Scene {
 
         // Add enemies scattered across outer sectors and middle of the map
         console.log('Creating enemies across the map...');
-        
+
         // Upper left sector
         this.createEnemyWithName(this, 800, 800, 'enemy-1-anim', 'Nepian Scout');
         this.createEnemyWithName(this, 1000, 600, 'enemy-2-anim', 'Nepian Observer');
         this.createEnemyWithName(this, 600, 1000, 'enemy-1-anim', 'Nepian Scout');
-        
+
         // Upper right sector
         this.createEnemyWithName(this, 3000, 800, 'enemy-2-anim', 'Nepian Observer');
         this.createEnemyWithName(this, 3200, 600, 'enemy-1-anim', 'Nepian Scout');
         this.createEnemyWithName(this, 2800, 1000, 'enemy-2-anim', 'Nepian Observer');
-        
+
         // Lower left sector
         this.createEnemyWithName(this, 800, 2800, 'enemy-1-anim', 'Nepian Scout');
         this.createEnemyWithName(this, 1000, 3000, 'enemy-2-anim', 'Nepian Observer');
         this.createEnemyWithName(this, 600, 3200, 'enemy-1-anim', 'Nepian Scout');
-        
+
         // Lower right quadrant - existing groups
         this.createEnemyWithName(this, 2000, 2500, 'enemy-1-anim', 'Nepian Scout');
         this.createEnemyWithName(this, 2200, 2500, 'enemy-1-anim', 'Nepian Scout');
@@ -325,13 +318,13 @@ export class World extends Phaser.Scene {
         this.createEnemyWithName(this, 2000, 3400, 'enemy-2-anim', 'Nepian Observer');
         this.createEnemyWithName(this, 2200, 3400, 'enemy-2-anim', 'Nepian Observer');
         this.createEnemyWithName(this, 2400, 3400, 'enemy-2-anim', 'Nepian Observer');
-        
+
         // Middle area enemies
         this.createEnemyWithName(this, 1800, 1800, 'enemy-1-anim', 'Nepian Scout');
         this.createEnemyWithName(this, 2200, 2000, 'enemy-2-anim', 'Nepian Observer');
         this.createEnemyWithName(this, 1600, 2200, 'enemy-1-anim', 'Nepian Scout');
         this.createEnemyWithName(this, 2000, 1800, 'enemy-2-anim', 'Nepian Observer');
-        
+
         console.log('Enemies created successfully, total count:', this.enemies.length);
     }
 
@@ -347,15 +340,15 @@ export class World extends Phaser.Scene {
             // Create quest giver near spawn point (500, 400) with slight offset
             const questGiver = new Ally(this, 600, 500);
             questGiver.entity_type = 'Narvark'; // Name the quest giver
-            
+
             // Set Narvark as static (no movement, no interaction detection)
             questGiver.setStatic(true);
-            
+
             // Update the name tag with the correct name
             if (questGiver.entity_text) {
                 questGiver.entity_text.setText('Narvark');
             }
-            
+
             questGiver.showQuestIcon(); // Show exclamation mark over head
             this.allies.push(questGiver);
             console.log('Quest giver Narvark created successfully');
@@ -367,13 +360,13 @@ export class World extends Phaser.Scene {
     private createItems(): void {
         try {
             console.log('Creating biome-specific items...');
-            
+
             // Create mysterious herbs in each biome
             this.createOakForestHerbs();
             this.createPineGroveHerbs();
             this.createAncientGroveHerbs();
             this.createCherryBlossomGroveHerbs();
-            
+
             console.log(`Items created successfully, total count: ${this.items.length}`);
 
         } catch (error) {
@@ -455,22 +448,22 @@ export class World extends Phaser.Scene {
     private createTrees(): void {
         try {
             console.log('Creating biome regions with trees...');
-            
+
             // BIOME 1: Oak Forest (tree-1) - Northwest region
             this.createOakForest();
-            
+
             // BIOME 2: Pine Grove (tree-2) - Northeast region  
             this.createPineGrove();
-            
+
             // BIOME 3: Ancient Grove (tree-2-second) - Central region
             this.createAncientGrove();
-            
+
             // BIOME 4: Cherry Blossom Grove (tree-3) - Southwest region
             this.createCherryBlossomGrove();
-            
+
             // SPECIAL: Tree of Life - Top left corner
             this.createTreeOfLife();
-            
+
             console.log(`Trees created successfully, total count: ${this.trees.length}`);
 
         } catch (error) {
@@ -595,30 +588,30 @@ export class World extends Phaser.Scene {
 
     private createTreeOfLife(): void {
         console.log('Creating Tree of Life (Top Left)...');
-        
+
         // Create the Tree of Life in the top left corner of the map
         const treeOfLife = new Tree(this, 200, 200, 'tree-2-second');
-        
+
         // Make it extra special - larger scale and unique properties
         treeOfLife.setScale(2.5); // Much larger than normal trees
         treeOfLife.setDepth(10); // Ensure it's visible above other objects
-        
+
         // Add special visual effects
         this.addTreeOfLifeEffects(treeOfLife);
-        
+
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
-        
+
         console.log('Tree of Life created successfully');
     }
-    
+
     private addTreeOfLifeEffects(tree: Tree): void {
         // Create a glowing aura around the tree
         const aura = this.add.graphics();
         aura.fillStyle(0x00ff00, 0.3); // Green glow
         aura.fillCircle(tree.x, tree.y, 80);
         aura.setDepth(tree.depth - 1);
-        
+
         // Animate the aura
         this.tweens.add({
             targets: aura,
@@ -627,22 +620,22 @@ export class World extends Phaser.Scene {
             yoyo: true,
             repeat: -1
         });
-        
+
         // Create floating particles around the tree
         for (let i = 0; i < 6; i++) {
             const particle = this.add.graphics();
             particle.fillStyle(0x90EE90, 0.8); // Light green
             particle.fillCircle(0, 0, 2);
-            
+
             // Position particles in a circle around the tree
             const angle = (i / 6) * Math.PI * 2;
             const radius = 60;
             const x = tree.x + Math.cos(angle) * radius;
             const y = tree.y + Math.sin(angle) * radius;
-            
+
             particle.setPosition(x, y);
             particle.setDepth(tree.depth + 1);
-            
+
             // Animate particles floating up and down
             this.tweens.add({
                 targets: particle,
@@ -653,24 +646,24 @@ export class World extends Phaser.Scene {
                 ease: 'Sine.easeInOut'
             });
         }
-        
+
         // Create the title text
         this.createTreeOfLifeTitle(tree);
     }
-    
+
     private createTreeOfLifeTitle(tree: Tree): void {
         // Create the main title
         const title = this.add.bitmapText(
-            tree.x, 
-            tree.y - 120, 
-            '8-bit', 
-            'TREE OF LIFE', 
+            tree.x,
+            tree.y - 120,
+            '8-bit',
+            'TREE OF LIFE',
             32
         ).setOrigin(0.5);
-        
+
         title.setDepth(tree.depth + 2);
         title.setTint(0x00ff00); // Green color
-        
+
         // Add a subtle glow effect to the title
         this.tweens.add({
             targets: title,
@@ -679,19 +672,19 @@ export class World extends Phaser.Scene {
             yoyo: true,
             repeat: -1
         });
-        
+
         // Create a subtitle
         const subtitle = this.add.bitmapText(
-            tree.x, 
-            tree.y - 90, 
-            '8-bit', 
-            'Ancient & Sacred', 
+            tree.x,
+            tree.y - 90,
+            '8-bit',
+            'Ancient & Sacred',
             16
         ).setOrigin(0.5);
-        
+
         subtitle.setDepth(tree.depth + 2);
         subtitle.setTint(0x90EE90); // Light green color
-        
+
         // Add floating animation to the subtitle
         this.tweens.add({
             targets: subtitle,
@@ -704,65 +697,29 @@ export class World extends Phaser.Scene {
     }
 
     private setupMinimap(): void {
-        const minimapSize = 150;
+        const minimapSize = 175;
         const minimapX = 20;
         const minimapY = 20;
 
         // Create circular minimap camera
         this.miniMapCamera = this.cameras.add(minimapX, minimapY, minimapSize, minimapSize);
+        this.miniMapCamera.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
         this.miniMapCamera.setZoom(0.25);
-        this.miniMapCamera.setBackgroundColor(0x2a2a2a);
-        
+        this.miniMapCamera.startFollow(this.player, true, 0.1, 0.1);
+
         // Create circular mask for the minimap
         this.minimapMask = this.add.graphics();
         this.minimapMask.fillStyle(0xffffff, 0); // Transparent mask
         this.minimapMask.fillCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, minimapSize / 2);
-        this.minimapMask.setScrollFactor(0);
-        this.minimapMask.setDepth(1000);
+
+        const minimapRing = this.add.graphics().lineStyle(5, 0x000000, 1); // thickness=4, black color, full alpha
+        minimapRing.strokeCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, (minimapSize / 2) + 5)
+        minimapRing.setScrollFactor(0).setDepth(1000) // Fix the ring in place on the screen
+        this.miniMapCamera.ignore(minimapRing)
         
         // Apply mask to minimap camera to make it circular
         this.miniMapCamera.setMask(this.minimapMask.createGeometryMask());
-        
-        // Create player dot for minimap
-        this.minimapPlayerDot = this.add.graphics();
-        this.minimapPlayerDot.fillStyle(0xff0000, 1);
-        this.minimapPlayerDot.fillCircle(0, 0, 4);
-        this.minimapPlayerDot.setScrollFactor(0);
-        this.minimapPlayerDot.setDepth(1001);
-        
-        // Set initial position to center on player
-        this.centerMinimapOnPlayer();
-    }
 
-    private centerMinimapOnPlayer(): void {
-        if (!this.miniMapCamera || !this.player) return;
-
-        // Center the minimap on the player
-        const playerX = this.player.x;
-        const playerY = this.player.y;
-        
-        // Calculate the scroll position to center the player in the minimap
-        const scrollX = playerX - (this.miniMapCamera.width / 2) / this.miniMapCamera.zoom;
-        const scrollY = playerY - (this.miniMapCamera.height / 2) / this.miniMapCamera.zoom;
-        
-        // Clamp the scroll position to stay within world bounds
-        const clampedX = Math.max(0, Math.min(scrollX, this.tilemap.widthInPixels - (this.miniMapCamera.width / this.miniMapCamera.zoom)));
-        const clampedY = Math.max(0, Math.min(scrollY, this.tilemap.heightInPixels - (this.miniMapCamera.height / this.miniMapCamera.zoom)));
-        
-        this.miniMapCamera.setScroll(clampedX, clampedY);
-    }
-
-    private updateMinimap(): void {
-        // Always center the minimap on the player
-        this.centerMinimapOnPlayer();
-        
-        // Update player dot position (always centered in the minimap)
-        if (this.minimapPlayerDot) {
-            const minimapSize = 150;
-            const minimapX = 20;
-            const minimapY = 20;
-            this.minimapPlayerDot.setPosition(minimapX + minimapSize / 2, minimapY + minimapSize / 2);
-        }
     }
 
     private updateDebugInfo(): void {
@@ -804,7 +761,7 @@ export class World extends Phaser.Scene {
 
     private getActiveAnimations(): string[] {
         const animations: string[] = [];
-        
+
         if (this.player && this.player.anims.currentAnim) {
             animations.push(`Player: ${this.player.anims.currentAnim.key}`);
         }
@@ -826,7 +783,7 @@ export class World extends Phaser.Scene {
 
     private getInputKeyStates(): { [key: string]: boolean } {
         const keyStates: { [key: string]: boolean } = {};
-        
+
         // Check global input keys (as used in Player class)
         const keyboard = this.input.keyboard;
         if (keyboard) {
@@ -873,8 +830,8 @@ export class World extends Phaser.Scene {
         this.enemies.forEach((enemy, index) => {
             const name = enemy.entity_type && enemy.entity_type !== 'Entity' ? enemy.entity_type : `Enemy ${index + 1}`;
             this.debugManager.addInfoText(
-                enemy.x, 
-                enemy.y - 50, 
+                enemy.x,
+                enemy.y - 50,
                 `${name}\nHP: ${enemy.getHealth()}/${enemy.getMaxHealth()}`,
                 0xff0000
             );
@@ -883,8 +840,8 @@ export class World extends Phaser.Scene {
         this.allies.forEach((ally, index) => {
             const name = ally.entity_type && ally.entity_type !== 'Entity' ? ally.entity_type : `Ally ${index + 1}`;
             this.debugManager.addInfoText(
-                ally.x, 
-                ally.y - 50, 
+                ally.x,
+                ally.y - 50,
                 `${name}\nHP: ${ally.getHealth()}/${ally.getMaxHealth()}`,
                 0x0000ff
             );
@@ -893,8 +850,8 @@ export class World extends Phaser.Scene {
         this.trees.forEach((tree, index) => {
             const fruitStatus = tree.hasFruitAvailable() ? 'Has Fruit' : 'No Fruit';
             this.debugManager.addInfoText(
-                tree.x, 
-                tree.y - 50, 
+                tree.x,
+                tree.y - 50,
                 `Tree ${index + 1}\n${tree.getTreeType()}\n${fruitStatus}`,
                 0x8B4513
             );
@@ -912,27 +869,27 @@ export class World extends Phaser.Scene {
     private setupCollisionDetection(): void {
         // Player collision with trees
         this.physics.add.collider(this.player, this.trees);
-        
+
         // Enemy collision with trees
         this.enemies.forEach(enemy => {
             this.physics.add.collider(enemy, this.trees);
         });
-        
+
         // Enemy collision with player
         this.enemies.forEach(enemy => {
             this.physics.add.collider(enemy, this.player);
         });
-        
+
         // Ally collision with trees
         this.allies.forEach(ally => {
             this.physics.add.collider(ally, this.trees);
         });
-        
+
         // Ally collision with player
         this.allies.forEach(ally => {
             this.physics.add.collider(ally, this.player);
         });
-        
+
         console.log('Collision detection configured for all entities');
     }
 
