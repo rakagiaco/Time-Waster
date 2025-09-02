@@ -221,6 +221,7 @@ export class Player extends Entity {
             // Initialize health bar after everything else is set up
             console.log('Initializing health bar...');
             this.initializeHealthBar();
+            this.healthBar.setScrollFactor(0);
             console.log('Health bar initialized successfully');
 
             console.log('=== PLAYER CONSTRUCTOR COMPLETE ===');
@@ -273,8 +274,6 @@ export class Player extends Entity {
         // Update state machine
         this.animsFSM.step();
 
-        // Update health bar position
-        this.updateHealthBar();
     }
 
     public takeDamage(amount: number): void {

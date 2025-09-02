@@ -1,5 +1,4 @@
 import Phaser from 'phaser';
-import { updateHealthBar } from '../../lib/HelperFunc';
 import GameConfig from '../config/GameConfig';
 
 export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
@@ -11,30 +10,28 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string, frame?: string | number) {
         super(scene, x, y, texture, frame);
-        
+
         // Initialize properties
         this.HIT_POINTS = 100;
         this.MAX_HIT_POINTS = 100;
         this.VELOCITY = 100;
-        
+
         // Add to scene
         scene.add.existing(this);
         scene.physics.add.existing(this);
-        
-        // Don't create health bar immediately - wait for fonts to load
-        // this.createHealthBar();
+
     }
 
     protected createHealthBar(): void {
         this.healthBar = this.scene.add.graphics();
         this.healthBarText = this.scene.add.bitmapText(this.x, this.y - 30, 'pixel-white', `${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`, 16);
-        
+
         // Draw initial health bar
         this.healthBar.clear();
         this.healthBar.fillStyle(0xff0000, 1);
         this.healthBar.fillRect(
-            this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2,
-            this.y - GameConfig.UI.HEALTH_BAR_HEIGHT_OFFSET_Y,
+            this.x,
+            this.y - 30,
             GameConfig.UI.HEALTH_BAR_WIDTH,
             GameConfig.UI.HEALTH_BAR_HEIGHT
         );
@@ -44,18 +41,17 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
         // Store health data in the entity for the helper function to access
         this.setData('hitPoints', this.HIT_POINTS);
         this.setData('maxHitPoints', this.MAX_HIT_POINTS);
-        
+
         // Update health bar position
         if (this.healthBar && this.healthBarText) {
-            this.healthBar.setPosition(this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2, this.y - GameConfig.UI.HEALTH_BAR_HEIGHT_OFFSET_Y);
-            this.healthBarText.setPosition(this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2, this.y - GameConfig.UI.HEALTH_BAR_HEIGHT_OFFSET_Y - 15);
+            this.healthBar.setPosition(this.x / 2, this.y / 2);
         }
     }
 
     public takeDamage(amount: number): void {
         this.HIT_POINTS = Math.max(0, this.HIT_POINTS - amount);
         this.updateHealthBar();
-        
+
         if (this.HIT_POINTS <= 0) {
             this.die();
         }

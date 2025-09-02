@@ -19,18 +19,18 @@ import GameConfig from '../src/config/GameConfig';
 * @returns {void} 
 */
 export function createLootInterfaceWindow(item: GameItem, contextScene: GameScene, player: Player, miniMapCamera: Phaser.Cameras.Scene2D.Camera): void {
-    
+
     let closeBTN: Phaser.GameObjects.BitmapText, itemImg: Phaser.GameObjects.Image
     const window = contextScene.add.graphics().setDepth(2)
     window.fillStyle(0x000000, 1) // Color and alpha (transparency)
-    window.fillRect(contextScene.cameras.main.scrollX + contextScene.cameras.main.width/2 - 100, contextScene.cameras.main.scrollY + contextScene.cameras.main.height/2 - 100, 200, 200)
+    window.fillRect(contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2 - 100, contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2 - 100, 200, 200)
 
     player.windowOpen = true
     player.animsFSM.transition('interacting')
 
-    closeBTN = contextScene.add.bitmapText(contextScene.cameras.main.scrollX + contextScene.cameras.main.width/2- 90, contextScene.cameras.main.scrollY + contextScene.cameras.main.height/2-100, '8-bit-white','exit',25)
+    closeBTN = contextScene.add.bitmapText(contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2 - 90, contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2 - 100, '8-bit-white', 'exit', 25)
     closeBTN.setInteractive().setDepth(2)
-        closeBTN.on('pointerdown', () => {
+    closeBTN.on('pointerdown', () => {
         toggleCursor(contextScene)
         window.destroy()
         closeBTN.destroy()
@@ -39,22 +39,22 @@ export function createLootInterfaceWindow(item: GameItem, contextScene: GameScen
         player.animsFSM.transition('idle')
     })
 
-    itemImg = contextScene.add.image(contextScene.cameras.main.scrollX + contextScene.cameras.main.width/2, contextScene.cameras.main.scrollY + contextScene.cameras.main.height/2, item.item_type).setOrigin(0.5).setInteractive().setDepth(2).on('pointerdown', ()=>{
+    itemImg = contextScene.add.image(contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2, contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2, item.item_type).setOrigin(0.5).setInteractive().setDepth(2).on('pointerdown', () => {
         let invUpd = player
         invUpd.p1Inventory.add(item.item_type, 1)
         let alias = player.questStatus
 
-        if(alias.finished === false){
-            if(alias.currentQuest.verb === 'collect' && alias.currentQuest.type == item.item_type){
-                if(alias.currentQuest.ammount > alias.currentQuest.actual){
+        if (alias.finished === false) {
+            if (alias.currentQuest.verb === 'collect' && alias.currentQuest.type == item.item_type) {
+                if (alias.currentQuest.ammount > alias.currentQuest.actual) {
                     alias.currentQuest.actual += 1
                 }
             }
         }
 
-        if(item.soundEffect !== undefined){
-            contextScene.sound.play(item.soundEffect.sound, {volume: item.soundEffect.volume})
-        } 
+        if (item.soundEffect !== undefined) {
+            contextScene.sound.play(item.soundEffect.sound, { volume: item.soundEffect.volume })
+        }
 
         toggleCursor(contextScene)
         window.destroy()
@@ -91,19 +91,19 @@ export function listen(scene: GameScene, listener: any): boolean {
         console.warn('No player found in scene for listen function');
         return false;
     }
-    
+
     if (!player || !player.getPosition) {
         console.warn('Player object or getPosition method not available');
         return false;
     }
-    
+
     let x = player.getPosition()
     let x1 = x[0]
     let y1 = x[1]
-    if(listener.detectionDistance === 0 || listener.detectionDistance === undefined){
+    if (listener.detectionDistance === 0 || listener.detectionDistance === undefined) {
         listener.detectionDistance = GameConfig.DETECTION.DEFAULT_DISTANCE
     }
-    if(x1 > (listener.x-listener.detectionDistance) && x1 < (listener.x+listener.detectionDistance) && y1 > (listener.y-listener.detectionDistance) && y1 < (listener.y+listener.detectionDistance)){
+    if (x1 > (listener.x - listener.detectionDistance) && x1 < (listener.x + listener.detectionDistance) && y1 > (listener.y - listener.detectionDistance) && y1 < (listener.y + listener.detectionDistance)) {
         return true
     } else {
         return false
@@ -120,11 +120,11 @@ export function listen(scene: GameScene, listener: any): boolean {
 */
 export function CreateQuestObject(jsonData: any, player: any): any {
     let returnObj = {
-        "questnumber" : jsonData.questdata.questnumber,
-        "verb" : jsonData.questdata.verb,
-        "type" : jsonData.questdata.type,
-        "amount" : jsonData.questdata.ammount, // Note: JSON uses misspelled "ammount" but we correct it here
-        "actual" : 0
+        "questnumber": jsonData.questdata.questnumber,
+        "verb": jsonData.questdata.verb,
+        "type": jsonData.questdata.type,
+        "amount": jsonData.questdata.ammount, // Note: JSON uses misspelled "ammount" but we correct it here
+        "actual": 0
     }
 
     let x = player.p1Inventory.get(jsonData.questdata.type)
@@ -147,21 +147,21 @@ export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.
         console.warn('Invalid objects passed to determineKnockbackDirection');
         return new Phaser.Math.Vector2(0, 0);
     }
-    
+
     let pos = toknock.getPosition()
     let epos = knocker.getPosition()
 
     let returnVec = new Phaser.Math.Vector2(0)
     //xpos
-    if(pos[0] < (epos[0] +10)){
+    if (pos[0] < (epos[0] + 10)) {
         returnVec.x = -1
-    }else{
+    } else {
         returnVec.x = 1
     }
 
-    if(pos[1] < (epos[1] + 10)){
+    if (pos[1] < (epos[1] + 10)) {
         returnVec.y = -1
-    }else{
+    } else {
         returnVec.y = 1
     }
 
@@ -178,7 +178,7 @@ export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.
 */
 export function toggleCursor(scene: Scene): void {
     scene.input.setDefaultCursor('url(assets/img/cursor-2.png), pointer')
-    scene.time.delayedCall(GameConfig.TIMING.CURSOR_ANIMATION_DURATION, ()=>{scene.input.setDefaultCursor('url(assets/img/cursor.png), pointer')})
+    scene.time.delayedCall(GameConfig.TIMING.CURSOR_ANIMATION_DURATION, () => { scene.input.setDefaultCursor('url(assets/img/cursor.png), pointer') })
 }
 
 //------updateMovement (Enemy AI)
@@ -190,33 +190,37 @@ export function toggleCursor(scene: Scene): void {
 * @returns {void}
 */
 export function updateMovement(entity: any, scene: Scene): void {
-    var decider =  Math.round(Math.random() * 4)
-    switch(decider){
+    var decider = Math.round(Math.random() * 4)
+    switch (decider) {
         case 1:
             entity.setVelocityX(entity.VELOCITY)
             scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_DURATION, () => {
                 entity.setVelocity(0)
-                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => {entity.setVelocityX(-entity.VELOCITY)})})
+                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => { entity.setVelocityX(-entity.VELOCITY) })
+            })
             break
         case 2:
             entity.setVelocityX(-entity.VELOCITY)
             scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_DURATION, () => {
                 entity.setVelocity(0)
-                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => {entity.setVelocityX(entity.VELOCITY)})})
+                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => { entity.setVelocityX(entity.VELOCITY) })
+            })
             break
         case 3:
             entity.setVelocityY(entity.VELOCITY)
             scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_DURATION, () => {
                 entity.setVelocity(0)
-                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => {entity.setVelocityY(-entity.VELOCITY)})})
+                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => { entity.setVelocityY(-entity.VELOCITY) })
+            })
             break
         case 4:
             entity.setVelocityY(-entity.VELOCITY)
             scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_DURATION, () => {
                 entity.setVelocity(0)
-                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => {entity.setVelocityY(entity.VELOCITY)})})
+                scene.time.delayedCall(GameConfig.MOVEMENT.ENEMY_MOVEMENT_PAUSE, () => { entity.setVelocityY(entity.VELOCITY) })
+            })
             break
-    }   
+    }
 }
 
 //------updatePlayerMovement
@@ -233,23 +237,23 @@ export function updateMovement(entity: any, scene: Scene): void {
 */
 export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.Key, keyDown: Phaser.Input.Keyboard.Key, keyLeft: Phaser.Input.Keyboard.Key, keyRight: Phaser.Input.Keyboard.Key, isSprinting: boolean = false): void {
     let velocity = isSprinting ? GameConfig.MOVEMENT.PLAYER_SPRINT_VELOCITY : GameConfig.MOVEMENT.PLAYER_BASE_VELOCITY;
-    
+
     let vx = 0;
     let vy = 0;
-    
+
     if (keyUp.isDown) vy -= velocity;
     if (keyDown.isDown) vy += velocity;
     if (keyLeft.isDown) vx -= velocity;
     if (keyRight.isDown) vx += velocity;
-    
+
     // Normalize diagonal movement
     if (vx !== 0 && vy !== 0) {
         vx *= 0.707; // 1/√2
         vy *= 0.707;
     }
-    
+
     player.setVelocity(vx, vy);
-    
+
     // Update animations based on movement
     if (vx !== 0 || vy !== 0) {
         if (Math.abs(vy) > Math.abs(vx)) {
@@ -282,51 +286,22 @@ export function pursuit(_scene: Scene, entity: any, player: any): void {
     let x1 = x[0]
     let y1 = x[1]
 
-    let vector = new Phaser.Math.Vector2(0,0)
+    let vector = new Phaser.Math.Vector2(0, 0)
 
-    if(x1 < entity.x){
+    if (x1 < entity.x) {
         vector.x = -1
-    }else if(x1 > entity.x){
+    } else if (x1 > entity.x) {
         vector.x = 1
     }
 
-    if(y1 < entity.y){
+    if (y1 < entity.y) {
         vector.y = -1
-    }else if( y1 > entity.y){
+    } else if (y1 > entity.y) {
         vector.y = 1
     }
 
     vector.normalize()
     entity.setVelocity(entity.VELOCITY * vector.x, entity.VELOCITY * vector.y)
-}
-
-
-//------updateHealthBar
-/**
-* Updates health bar with color coding based on health percentage
-*
-* @param {Phaser.GameObjects.Graphics} healthBar The health bar graphics object
-* @param {number} currentHP Current hit points
-* @param {number} maxHP Maximum hit points
-* @param {number} x X position for the health bar
-* @param {number} y Y position for the health bar
-* @param {number} width Width of the health bar
-* @param {number} height Height of the health bar
-* @returns {void}
-*/
-export function updateHealthBar(healthBar: Phaser.GameObjects.Graphics, currentHP: number, maxHP: number, x: number, y: number, width: number, height: number): void {
-    let currentHealthPercent = currentHP / maxHP
-    healthBar.clear()
-    
-    if(currentHealthPercent < 0.3){
-        healthBar.fillStyle(0xFF0000) // Red
-    } else if(currentHealthPercent < 0.5 && currentHealthPercent > 0.3){
-        healthBar.fillStyle(0xFFFF00) // Yellow
-    } else {
-        healthBar.fillStyle(0x00FF00) // Green
-    }
-    
-    healthBar.fillRect(x, y, width * currentHealthPercent, height)
 }
 
 //------safeStopSound
@@ -337,7 +312,7 @@ export function updateHealthBar(healthBar: Phaser.GameObjects.Graphics, currentH
 * @returns {void}
 */
 export function safeStopSound(sound: Phaser.Sound.BaseSound): void {
-    if(sound && sound.isPlaying) {
+    if (sound && sound.isPlaying) {
         sound.stop()
     }
 }

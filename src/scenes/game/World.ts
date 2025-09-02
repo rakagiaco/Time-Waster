@@ -44,11 +44,6 @@ export class World extends Phaser.Scene {
             //         try {
             //             console.log('=== CREATING GAME OBJECTS ===');
 
-            //             // Create player
-            //             console.log('Creating player...');
-            //             this.player = new Player(this, 500, 400, data.inv, data.qobj);
-            //             console.log('Player created successfully:', this.player);
-
             //             // Create enemies
             //             console.log('Creating enemies...');
             //             this.createEnemies();
@@ -65,10 +60,12 @@ export class World extends Phaser.Scene {
             //             console.log('Items created successfully, count:', this.items.length);
 
             //             // Setup camera
-            //             console.log('Setting up camera...');
-            //             this.cameras.main.startFollow(this.player);
-            //             this.cameras.main.setZoom(1);
-            //             console.log('Camera setup complete');
+            console.log('Setting up camera...');
+            this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
+            this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
+            this.cameras.main.startFollow(this.player);
+            this.cameras.main.setZoom(1);
+            console.log('Camera setup complete');
 
             //             // Setup minimap camera
             //             console.log('Setting up minimap...');
