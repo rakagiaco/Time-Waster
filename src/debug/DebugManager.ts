@@ -16,6 +16,18 @@ export interface DebugInfo {
     inputKeys: { [key: string]: boolean };
     memoryUsage?: number;
     renderTime?: number;
+    // Day/Night Cycle Info
+    timeOfDay?: string;
+    currentTime?: number;
+    darknessIntensity?: number;
+    flashlightActive?: boolean;
+    treeLightsActive?: boolean;
+    // Enemy Night Stats
+    enemiesEnhanced?: number;
+    totalEnemies?: number;
+    // Pathfinding Stats
+    enemiesWithPaths?: number;
+    totalObstacles?: number;
 }
 
 export class DebugManager {
@@ -86,6 +98,15 @@ export class DebugManager {
 
         this.scene.input.keyboard?.on('keydown-F3', () => {
             this.togglePathVisualization();
+        });
+
+        // Day/Night cycle toggles
+        this.scene.input.keyboard?.on('keydown-F4', () => {
+            this.toggleToPeakDay();
+        });
+
+        this.scene.input.keyboard?.on('keydown-F5', () => {
+            this.toggleToPeakNight();
         });
     }
 
@@ -182,9 +203,105 @@ export class DebugManager {
                         .join('<br>') || 'None'}
                 </div>
             </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Time of Day:</div>
+                <div class="debug-value">${this.debugInfo.timeOfDay || 'Unknown'}</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Current Time:</div>
+                <div class="debug-value">${this.debugInfo.currentTime ? (this.debugInfo.currentTime * 24).toFixed(1) + 'h' : 'Unknown'}</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Darkness Intensity:</div>
+                <div class="debug-value">${this.debugInfo.darknessIntensity ? (this.debugInfo.darknessIntensity * 100).toFixed(1) + '%' : 'Unknown'}</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Flashlight:</div>
+                <div class="debug-value">${this.debugInfo.flashlightActive ? 'ON' : 'OFF'}</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Tree Lights:</div>
+                <div class="debug-value">${this.debugInfo.treeLightsActive ? 'ON' : 'OFF'}</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Enemy Enhancement:</div>
+                <div class="debug-value">${this.debugInfo.enemiesEnhanced || 0}/${this.debugInfo.totalEnemies || 0} enhanced</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Pathfinding:</div>
+                <div class="debug-value">${this.debugInfo.enemiesWithPaths || 0} enemies with paths, ${this.debugInfo.totalObstacles || 0} obstacles</div>
+            </div>
+            
+            <div class="debug-section">
+                <div class="debug-label">Debug Controls:</div>
+                <div class="debug-value">
+                    <button id="debug-collision-btn" style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision Boxes (F2)</button>
+                    <button id="debug-path-btn" style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths (F3)</button>
+                    <button id="debug-day-btn" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Day (F4)</button>
+                    <button id="debug-night-btn" style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Night (F5)</button>
+                </div>
+            </div>
+            
+
         `;
 
         this.debugContentElement.innerHTML = html;
+        
+        // Set up button event listeners after a small delay to ensure DOM is updated
+        setTimeout(() => {
+            this.setupDebugButtons();
+        }, 100);
+    }
+    
+    private setupDebugButtons(): void {
+        console.log('Setting up debug buttons...');
+        
+        const collisionBtn = document.getElementById('debug-collision-btn');
+        const pathBtn = document.getElementById('debug-path-btn');
+        const dayBtn = document.getElementById('debug-day-btn');
+        const nightBtn = document.getElementById('debug-night-btn');
+        
+        console.log('Debug buttons found:', {
+            collisionBtn: !!collisionBtn,
+            pathBtn: !!pathBtn,
+            dayBtn: !!dayBtn,
+            nightBtn: !!nightBtn
+        });
+        
+        if (collisionBtn) {
+            collisionBtn.addEventListener('click', () => {
+                console.log('Collision button clicked');
+                this.toggleCollisionBoxes();
+            });
+        }
+        
+        if (pathBtn) {
+            pathBtn.addEventListener('click', () => {
+                console.log('Path button clicked');
+                this.togglePathVisualization();
+            });
+        }
+        
+        if (dayBtn) {
+            dayBtn.addEventListener('click', () => {
+                console.log('Day button clicked');
+                this.toggleToPeakDay();
+            });
+        }
+        
+        if (nightBtn) {
+            nightBtn.addEventListener('click', () => {
+                console.log('Night button clicked');
+                this.toggleToPeakNight();
+            });
+        }
     }
 
     public drawCollisionBox(entity: Phaser.Physics.Arcade.Sprite, color: number = 0xff0000): void {
@@ -233,6 +350,30 @@ export class DebugManager {
         this.collisionBoxes.push(graphics);
     }
 
+    public drawPath(path: { x: number; y: number }[], color: number = 0x00ff00): void {
+        if (!this.isEnabled || path.length < 2) return;
+
+        const graphics = this.scene.add.graphics();
+        graphics.lineStyle(3, color, 0.8);
+        
+        // Draw path lines
+        for (let i = 0; i < path.length - 1; i++) {
+            graphics.moveTo(path[i].x, path[i].y);
+            graphics.lineTo(path[i + 1].x, path[i + 1].y);
+        }
+        
+        // Draw waypoint markers
+        graphics.fillStyle(color, 0.6);
+        path.forEach((point, index) => {
+            graphics.fillCircle(point.x, point.y, 4);
+        });
+        
+        graphics.setScrollFactor(0);
+        graphics.setDepth(9995);
+        
+        this.pathVisualizations.push(graphics);
+    }
+
     public addInfoText(x: number, y: number, text: string, color: number = 0xffffff): void {
         if (!this.isEnabled) return;
 
@@ -245,16 +386,20 @@ export class DebugManager {
     }
 
     public toggleCollisionBoxes(): void {
+        console.log('toggleCollisionBoxes called, isEnabled:', this.isEnabled);
         if (!this.isEnabled) return;
         
+        console.log('Collision boxes count:', this.collisionBoxes.length);
         this.collisionBoxes.forEach(box => {
             box.setVisible(!box.visible);
         });
     }
 
     public togglePathVisualization(): void {
+        console.log('togglePathVisualization called, isEnabled:', this.isEnabled);
         if (!this.isEnabled) return;
         
+        console.log('Path visualizations count:', this.pathVisualizations.length);
         this.pathVisualizations.forEach(path => {
             path.setVisible(!path.visible);
         });
@@ -285,6 +430,34 @@ export class DebugManager {
 
         // Clear previous frame's visual debug
         this.clearVisualDebug();
+    }
+
+    private toggleToPeakDay(): void {
+        console.log('toggleToPeakDay called');
+        const worldScene = this.scene as any;
+        console.log('World scene:', worldScene);
+        console.log('DayNightCycle:', worldScene.dayNightCycle);
+        
+        if (worldScene.dayNightCycle) {
+            worldScene.dayNightCycle.setToPeakDay();
+            console.log('Debug: Set to peak day');
+        } else {
+            console.error('DayNightCycle not found in world scene');
+        }
+    }
+
+    private toggleToPeakNight(): void {
+        console.log('toggleToPeakNight called');
+        const worldScene = this.scene as any;
+        console.log('World scene:', worldScene);
+        console.log('DayNightCycle:', worldScene.dayNightCycle);
+        
+        if (worldScene.dayNightCycle) {
+            worldScene.dayNightCycle.setToPeakNight();
+            console.log('Debug: Set to peak night');
+        } else {
+            console.error('DayNightCycle not found in world scene');
+        }
     }
 
     public destroy(): void {

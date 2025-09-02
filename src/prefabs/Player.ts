@@ -16,6 +16,7 @@ export let keyAttackHeavy: Phaser.Input.Keyboard.Key;
 export let keyInventory: Phaser.Input.Keyboard.Key;
 export let keySprint: Phaser.Input.Keyboard.Key;
 export let keyInteract: Phaser.Input.Keyboard.Key;
+export let keyFlashlight: Phaser.Input.Keyboard.Key;
 
 // Player States
 class PlayerIdleState extends State {
@@ -50,6 +51,11 @@ class PlayerIdleState extends State {
         // Check for proximity pickup input
         if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
             player.performProximityPickup();
+        }
+
+        // Check for flashlight toggle input
+        if (keyFlashlight && keyFlashlight.isDown) {
+            player.toggleFlashlight();
         }
     }
 }
@@ -90,6 +96,11 @@ class PlayerWalkingState extends State {
         // Check for proximity pickup input
         if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
             player.performProximityPickup();
+        }
+
+        // Check for flashlight toggle input
+        if (keyFlashlight && keyFlashlight.isDown) {
+            player.toggleFlashlight();
         }
     }
 }
@@ -190,6 +201,12 @@ export class Player extends Entity {
     public attackHeavyCooldown: boolean = false;
     public sprintCooldown: boolean = false;
     public pickupCooldown: boolean = false;
+    public invincibilityFrames: boolean = false;
+    public invincibilityTimer: number = 0;
+    public flashlight: any = null; // Will be set by World scene
+    public isKnockedBack: boolean = false;
+    public knockbackTimer: number = 0;
+    public lanternSprite: Phaser.GameObjects.Graphics | null = null;
 
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
@@ -251,12 +268,87 @@ export class Player extends Entity {
         console.log('Initializing health bar...');
         this.initializeHealthBar();
 
-        // jank for now need to fix
-        this.healthBar.setScrollFactor(0)
-        this.healthBarText.setAlpha(0) // hide the text on players ? preference thing...
-        this.healthBar.setX(GameConfig.UI.HEALTH_BAR_OFFSET_X);
-        this.healthBar.setY(GameConfig.UI.HEALTH_BAR_OFFSET_Y);
+        // Position health bar as fixed UI element
+        this.healthBar.setScrollFactor(0);
+        this.healthBarText.setAlpha(0); // hide the text on players ? preference thing...
+        
+        // Position relative to main camera viewport, not world coordinates
+        const camera = this.scene.cameras.main;
+        this.healthBar.setX(camera.width / 2 + GameConfig.UI.HEALTH_BAR_OFFSET_X);
+        this.healthBar.setY(camera.height - 100);
+        
+        // Set very high depth to ensure it's above minimap and all other UI
+        this.healthBar.setDepth(10000);
+        this.healthBarText.setDepth(10001);
+        
+        // Ensure health bar is not affected by any camera masks
+        this.healthBar.setMask(null);
+        this.healthBarText.setMask(null);
         console.log('Health bar initialized successfully');
+        
+        // Create lantern sprite
+        this.createLantern();
+    }
+    
+    private createLantern(): void {
+        this.lanternSprite = this.scene.add.graphics();
+        this.lanternSprite.setScrollFactor(1); // Follow world
+        this.lanternSprite.setDepth(1000); // Above player
+        this.lanternSprite.setVisible(false); // Hidden by default
+    }
+    
+    public updateLantern(): void {
+        if (!this.lanternSprite || !this.flashlight) return;
+        
+        // Show lantern when flashlight is active and it's night
+        const shouldShow = this.flashlight.isActive && this.flashlight.darknessIntensity > 0.3;
+        this.lanternSprite.setVisible(shouldShow);
+        
+        if (shouldShow) {
+            // Position lantern above player
+            this.lanternSprite.x = this.x;
+            this.lanternSprite.y = this.y - 20;
+            
+            // Draw simple lantern
+            this.lanternSprite.clear();
+            this.lanternSprite.fillStyle(0x8B4513, 1); // Brown handle
+            this.lanternSprite.fillRect(-2, -15, 4, 10);
+            
+            this.lanternSprite.fillStyle(0xFFD700, 1); // Gold lantern
+            this.lanternSprite.fillCircle(0, -20, 6);
+            
+            this.lanternSprite.fillStyle(0xFFFF00, 0.8); // Yellow light
+            this.lanternSprite.fillCircle(0, -20, 4);
+        }
+    }
+    
+    protected updateHealthBar(): void {
+        // Store health data in the entity for the helper function to access
+        this.setData('hitPoints', this.HIT_POINTS);
+        this.setData('maxHitPoints', this.MAX_HIT_POINTS);
+
+        console.log(`Player updateHealthBar called: health=${this.HIT_POINTS}/${this.MAX_HIT_POINTS}, healthBar exists=${!!this.healthBar}, healthBarText exists=${!!this.healthBarText}`);
+
+        // Update health bar visual representation (fixed UI position)
+        if (this.healthBar && this.healthBarText) {
+            // Update health bar visual representation
+            this.healthBar.clear();
+            
+            // Calculate health percentage
+            const healthPercentage = this.HIT_POINTS / this.MAX_HIT_POINTS;
+            const currentWidth = GameConfig.UI.HEALTH_BAR_WIDTH * healthPercentage;
+            
+            // Draw background (red)
+            this.healthBar.fillStyle(0xff0000, 1);
+            this.healthBar.fillRect(0, 0, GameConfig.UI.HEALTH_BAR_WIDTH, GameConfig.UI.HEALTH_BAR_HEIGHT);
+            
+            // Draw current health (green)
+            this.healthBar.fillStyle(0x00ff00, 1);
+            this.healthBar.fillRect(0, 0, currentWidth, GameConfig.UI.HEALTH_BAR_HEIGHT);
+            
+            // Update text (even though it's hidden)
+            this.healthBarText.setText(`${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
+        }
     }
     // Initialize keys after game is created
     private initializeInputKeys(scene: Phaser.Scene): void {
@@ -272,6 +364,7 @@ export class Player extends Entity {
             keyInventory = (keyboard as any).addKey('I');
             keySprint = (keyboard as any).addKey('SHIFT');
             keyInteract = (keyboard as any).addKey('E');
+            keyFlashlight = (keyboard as any).addKey('F');
 
             console.log('Input keys initialized successfully');
         }
@@ -298,18 +391,176 @@ export class Player extends Entity {
     public update(): void {
         // Update state machine
         this.animsFSM.step();
-
+        
+        // Update invincibility frames
+        if (this.invincibilityFrames) {
+            this.invincibilityTimer -= this.scene.game.loop.delta;
+            if (this.invincibilityTimer <= 0) {
+                this.invincibilityFrames = false;
+                this.invincibilityTimer = 0;
+            }
+        }
+        
+        // Update knockback friction
+        if (this.isKnockedBack) {
+            this.knockbackTimer -= this.scene.game.loop.delta;
+            
+            // Apply friction to gradually slow down
+            if (this.body && this.body.velocity) {
+                const friction = 0.85; // Reduce velocity by 15% each frame
+                this.setVelocity(
+                    this.body.velocity.x * friction,
+                    this.body.velocity.y * friction
+                );
+                
+                // Stop knockback when velocity is very low or timer expires
+                const velocityMagnitude = Math.sqrt(
+                    this.body.velocity.x * this.body.velocity.x + 
+                    this.body.velocity.y * this.body.velocity.y
+                );
+                
+                if (velocityMagnitude < 5 || this.knockbackTimer <= 0) {
+                    this.setVelocity(0, 0);
+                    this.isKnockedBack = false;
+                    this.knockbackTimer = 0;
+                }
+            }
+        }
+        
+        // Update lantern
+        this.updateLantern();
     }
 
     public takeDamage(amount: number): void {
+        // Check invincibility frames
+        if (this.invincibilityFrames) {
+            return;
+        }
+        
         super.takeDamage(amount);
 
+        // Set invincibility frames
+        this.invincibilityFrames = true;
+        this.invincibilityTimer = 1000; // 1 second of invincibility
+
         // Play damage sound
-        this.scene.sound.play('enemy-hit', { volume: 0.5 });
+        this.scene.sound.play('enemy-1-hit', { volume: 0.5 });
+
+        // Create damage feedback effects
+        this.createDamageFeedback();
 
         // Check if player is dead
         if (this.isDead()) {
             this.scene.scene.start('GameOver');
+        }
+    }
+    
+    private createDamageFeedback(): void {
+        // Create damage flash effect
+        this.createDamageFlash();
+        
+        // Create knockback effect
+        this.createKnockbackEffect();
+        
+        // Create damage particles
+        this.createDamageParticles();
+    }
+    
+    private createDamageFlash(): void {
+        // Flash the player red using Phaser tweens
+        const originalTint = this.tint;
+        
+        // Create flashing effect using Phaser tweens
+        this.scene.tweens.add({
+            targets: this,
+            tint: 0xff0000,
+            duration: 100,
+            yoyo: true,
+            repeat: 3,
+            onComplete: () => {
+                this.setTint(originalTint);
+            }
+        });
+    }
+    
+    private createKnockbackEffect(): void {
+        // Get direction away from nearest enemy
+        const knockbackDirection = this.getKnockbackDirection();
+        
+        // Apply knockback
+        const knockbackForce = 200;
+        this.setVelocity(
+            knockbackDirection.x * knockbackForce,
+            knockbackDirection.y * knockbackForce
+        );
+        
+        // Set knockback state for friction system
+        this.isKnockedBack = true;
+        this.knockbackTimer = 1000; // 1 second maximum knockback duration
+    }
+    
+    private getKnockbackDirection(): { x: number; y: number } {
+        // Find nearest enemy for knockback direction
+        let nearestEnemy: any = null;
+        let nearestDistance = Infinity;
+        
+        // Use the scene's enemies array if available
+        const worldScene = this.scene as any;
+        if (worldScene.enemies && Array.isArray(worldScene.enemies)) {
+            worldScene.enemies.forEach((enemy: any) => {
+                if (enemy && enemy.x !== undefined && enemy.y !== undefined) {
+                    const distance = Phaser.Math.Distance.Between(this.x, this.y, enemy.x, enemy.y);
+                    if (distance < nearestDistance) {
+                        nearestDistance = distance;
+                        nearestEnemy = enemy;
+                    }
+                }
+            });
+        }
+        
+        if (nearestEnemy) {
+            const dx = this.x - nearestEnemy.x;
+            const dy = this.y - nearestEnemy.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+                return {
+                    x: dx / distance,
+                    y: dy / distance
+                };
+            }
+        }
+        
+        // Default knockback direction (up and left)
+        return { x: -0.7, y: -0.7 };
+    }
+    
+    private createDamageParticles(): void {
+        // Create damage particles around the player
+        for (let i = 0; i < 8; i++) {
+            const particle = this.scene.add.graphics();
+            particle.fillStyle(0xff0000, 0.8);
+            particle.fillCircle(0, 0, 1);
+            
+            // Random position around player
+            const angle = (i / 8) * Math.PI * 2;
+            const distance = 15;
+            const x = this.x + Math.cos(angle) * distance;
+            const y = this.y + Math.sin(angle) * distance;
+            
+            particle.setPosition(x, y);
+            
+            // Animate particle outward
+            this.scene.tweens.add({
+                targets: particle,
+                x: x + Math.cos(angle) * 30,
+                y: y + Math.sin(angle) * 30,
+                alpha: 0,
+                duration: 600,
+                onComplete: () => {
+                    particle.destroy();
+                }
+            });
         }
     }
 
@@ -382,13 +633,26 @@ export class Player extends Entity {
         // Show general pickup feedback if items were collected
         if (itemsCollected > 0) {
             console.log(`Collected ${itemsCollected} items via proximity pickup`);
+            
+            // Update inventory UI if it exists
+            const worldScene = this.scene as any;
+            if (worldScene.inventoryUI) {
+                worldScene.inventoryUI.updateInventoryDisplay();
+            }
         } else {
             console.log('No items found in pickup range');
         }
     }
 
+    public toggleFlashlight(): void {
+        if (this.flashlight) {
+            this.flashlight.toggle();
+            console.log(`Flashlight ${this.flashlight.isLightActive() ? 'ON' : 'OFF'}`);
+        }
+    }
+
     private isFruitItem(itemType: string): boolean {
-        const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'fruit'];
+        const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'fruit', 'tree-of-life-fruit'];
         return fruitTypes.includes(itemType);
     }
 
@@ -426,5 +690,10 @@ export class Player extends Entity {
         if (this.p1Inventory) {
             window.localStorage.setItem('existing_inv', JSON.stringify(this.p1Inventory.getData()));
         }
+    }
+
+    public setHealth(health: number): void {
+        this.HIT_POINTS = Math.max(0, Math.min(health, this.MAX_HIT_POINTS));
+        this.updateHealthBar();
     }
 }

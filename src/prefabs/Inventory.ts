@@ -41,6 +41,10 @@ export class Inventory {
         return Array.from(this.items.entries());
     }
 
+    public getInventoryData(): [string, number][] {
+        return Array.from(this.items.entries());
+    }
+
     public loadFromData(data: [string, number][]): void {
         this.items.clear();
         data.forEach(([itemType, amount]) => {

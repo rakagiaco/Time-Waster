@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SaveSystem } from '../../systems/SaveSystem';
 
 interface MenuData {
     qobj?: any;
@@ -12,7 +13,7 @@ export class Menu extends Phaser.Scene {
         super('menuScene');
     }
 
-    create(data: MenuData): void {
+    create(_data: MenuData): void {
         try {
             console.log('=== MENU SCENE CREATE ===');
             console.log('Scene key:', this.scene.key);
@@ -35,17 +36,27 @@ export class Menu extends Phaser.Scene {
         this.input.setDefaultCursor('url(/img/cursor.png), pointer');
 
         // Continue button
+        const hasSaveData = SaveSystem.hasSaveData();
         const continueBtn = this.add.image((this.game.config.width as number) / 2, ((this.game.config.height as number) / 2) + 50, 'continue-game-button')
             .setScale(2)
-            .setInteractive({ useHandCursor: true });
+            .setInteractive({ useHandCursor: true })
+            .setAlpha(hasSaveData ? 1.0 : 0.5);
         
         console.log('Continue button created:', continueBtn);
         console.log('Continue button interactive:', continueBtn.input);
+        console.log('Has save data:', hasSaveData);
         
-        continueBtn.on('pointerdown', () => {
-            console.log('Continue button clicked');
-            this.scene.start('worldScene');
-        });
+        if (hasSaveData) {
+            continueBtn.on('pointerdown', () => {
+                console.log('Continue button clicked - loading saved game');
+                this.scene.start('worldScene', { loadSaveData: true });
+            });
+        } else {
+            continueBtn.on('pointerdown', () => {
+                console.log('Continue button clicked - no save data available');
+                // Could show a message here
+            });
+        }
 
         // New Game button
         this.add.image((this.game.config.width as number) / 2, ((this.game.config.height as number) / 2) + 130, 'new-game-button')

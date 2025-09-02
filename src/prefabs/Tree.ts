@@ -19,10 +19,14 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
-        // Setup physics
+        // Setup physics with collision at base of trunk
         this.setCollideWorldBounds(false);
-        this.setSize(32, 32);
-        this.setOffset(16, 16);
+        this.setSize(32, 24); // Smaller height for trunk collision
+        this.setOffset(16, 40); // Offset down to base of trunk
+        
+        // Enable collision detection
+        this.body!.setImmovable(true);
+        this.body!.setCollideWorldBounds(false);
         
         // Set scale based on tree type
         if (treeType === 'tree-2-second') {
@@ -149,6 +153,10 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
             case 'tree-2': // Pine trees
                 return 'pinecone';
             case 'tree-2-second': // Ancient trees
+                // Check if this is the Tree of Life (positioned at 200, 200)
+                if (this.x === 200 && this.y === 200) {
+                    return 'tree-of-life-fruit'; // Special fruit for Tree of Life
+                }
                 return 'ancient-fruit';
             case 'tree-3': // Cherry blossom trees
                 return 'cherry';
@@ -191,6 +199,12 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
             fruit.destroy();
         }
 
+        // Update inventory UI if it exists
+        const worldScene = this.scene as any;
+        if (worldScene.inventoryUI) {
+            worldScene.inventoryUI.updateInventoryDisplay();
+        }
+
         // Check if all fruit has been collected
         if (this.fruitItems.length === 0) {
             this.hasFruit = false;
@@ -199,5 +213,23 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         }
 
         console.log(`Collected ${fruitType} from ${this.treeType} tree`);
+    }
+
+    public getCollisionBounds(): { x: number; y: number; width: number; height: number } {
+        return {
+            x: this.x - this.width / 2,
+            y: this.y - this.height / 2,
+            width: this.width,
+            height: this.height
+        };
+    }
+
+    public getCollisionRadius(): number {
+        // Return a slightly larger radius for pathfinding to ensure enemies don't get too close
+        return Math.max(this.width, this.height) / 2 + 20;
+    }
+
+    public getTreeType(): string {
+        return this.treeType;
     }
 }

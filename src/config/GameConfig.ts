@@ -47,6 +47,9 @@ export interface GameConfigType {
     BOSS_HEAL_AMOUNT: number;
     BOSS_HEAL_INTERVAL: number;
     ENEMY_ATTACK_DAMAGE: number;
+    // Night-time modifiers
+    NIGHT_SPEED_MULTIPLIER: number;
+    NIGHT_DAMAGE_MULTIPLIER: number;
   };
   UI: {
     HEALTH_BAR_WIDTH: number;
@@ -157,17 +160,20 @@ const GameConfig: GameConfigType = {
     BOSS_AOE_DAMAGE_MAX: 30,
     BOSS_HEAL_AMOUNT: 10,
     BOSS_HEAL_INTERVAL: 500,
-    ENEMY_ATTACK_DAMAGE: 10
+    ENEMY_ATTACK_DAMAGE: 10,
+    // Night-time modifiers (enemies become faster and stronger at night)
+    NIGHT_SPEED_MULTIPLIER: 1.4,  // 40% faster at night
+    NIGHT_DAMAGE_MULTIPLIER: 1.3  // 30% more damage at night
   },
 
   // UI and display constants
   UI: {
-    HEALTH_BAR_WIDTH: 150,
-    HEALTH_BAR_HEIGHT: 10,
+    HEALTH_BAR_WIDTH: 200,
+    HEALTH_BAR_HEIGHT: 15,
     STAMINA_BAR_WIDTH: 150,
     STAMINA_BAR_HEIGHT: 5,
     HEALTH_BAR_OFFSET_X:  -75,
-    HEALTH_BAR_OFFSET_Y: 165,
+    HEALTH_BAR_OFFSET_Y: 340,
     STAMINA_BAR_OFFSET_Y: 155,
     QUEST_TRACKER_OFFSET_X: 10,
     QUEST_TRACKER_OFFSET_Y: 200,

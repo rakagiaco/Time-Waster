@@ -19,9 +19,17 @@ class AllyIdleState extends State {
     }
 
     execute(scene: Phaser.Scene, ally: Ally): void {
-        // Check if player is nearby for interaction
-        if (listen(scene as any, ally)) {
-            ally.animsFSM.transition('interacting');
+        // For static NPCs, don't do any interaction detection
+        if (ally.isStatic) {
+            return; // Static NPCs don't interact
+        }
+        
+        // For regular villagers, check if player is nearby using simple distance calculation
+        if (ally.player) {
+            const distance = Phaser.Math.Distance.Between(ally.x, ally.y, ally.player.x, ally.player.y);
+            if (distance < 100) { // Interaction range
+                ally.animsFSM.transition('interacting');
+            }
         }
     }
 }
@@ -33,9 +41,17 @@ class AllyInteractingState extends State {
     }
 
     execute(scene: Phaser.Scene, ally: Ally): void {
-        // Check if player is still nearby
-        if (!listen(scene as any, ally)) {
-            ally.animsFSM.transition('idle');
+        // For static NPCs, don't do any interaction detection
+        if (ally.isStatic) {
+            return; // Static NPCs don't interact
+        }
+        
+        // Check if player is still nearby using simple distance calculation
+        if (ally.player) {
+            const distance = Phaser.Math.Distance.Between(ally.x, ally.y, ally.player.x, ally.player.y);
+            if (distance > 100) { // Out of interaction range
+                ally.animsFSM.transition('idle');
+            }
         }
         
         // Check for player interaction
@@ -48,6 +64,7 @@ class AllyInteractingState extends State {
 export class Ally extends Entity {
     public animsFSM!: StateMachine;
     private player: any;
+    private isStatic: boolean = false; // For static NPCs like quest givers
     private questIcon?: Phaser.GameObjects.Sprite;
     private isInteracting: boolean = false;
     private questData: any;
@@ -74,6 +91,20 @@ export class Ally extends Entity {
         
         // Create name tag
         this.createNameTag();
+    }
+    
+    public setStatic(isStatic: boolean = true): void {
+        this.isStatic = isStatic;
+        if (isStatic) {
+            // Static NPCs have physics and collision but don't move
+            this.setVelocity(0, 0);
+            this.body?.setImmovable(true);
+            this.body?.setCollideWorldBounds(false);
+            // Don't start the state machine for static NPCs
+            if (this.animsFSM) {
+                this.animsFSM.transition('idle');
+            }
+        }
     }
 
     private setupStateMachine(): void {

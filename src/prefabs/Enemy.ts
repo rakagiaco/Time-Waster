@@ -329,6 +329,17 @@ export class Enemy extends Entity {
     public flankDirection: number = 1;
     public detectionDistance: number = GameConfig.DETECTION.DEFAULT_DISTANCE;
     public alertIndicator: Phaser.GameObjects.Graphics | null = null;
+    
+    // Night-time stat modifiers
+    private baseVelocity: number = 0;
+    private baseAttackPower: number = 0;
+    private isNightTime: boolean = false;
+    private nightStatsApplied: boolean = false;
+    
+    // Pathfinding properties
+    private currentPath: { x: number; y: number }[] = [];
+    private currentWaypointIndex: number = 0;
+    private pathfindingEnabled: boolean = true;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
         super(scene, x, y, texture);
@@ -337,6 +348,10 @@ export class Enemy extends Entity {
         this.HIT_POINTS = 50;
         this.MAX_HIT_POINTS = 50;
         this.VELOCITY = GameConfig.MOVEMENT.ENEMY_BASE_VELOCITY;
+        
+        // Store base stats for night-time modifications
+        this.baseVelocity = GameConfig.MOVEMENT.ENEMY_BASE_VELOCITY;
+        this.baseAttackPower = this.attackPower;
         
         // Set detection distance based on enemy type
         this.setDetectionDistance();
@@ -426,6 +441,9 @@ export class Enemy extends Entity {
         
         // Check for nearby enemies for group behavior
         this.checkForNearbyEnemies();
+        
+        // Update night-time stats
+        this.updateNightTimeStats();
     }
     
     private checkForNearbyEnemies(): void {
@@ -451,6 +469,118 @@ export class Enemy extends Entity {
                 }
             });
         }
+    }
+
+    private updateNightTimeStats(): void {
+        // Check if day/night cycle exists in the scene
+        const scene = this.scene as any;
+        if (!scene.dayNightCycle) return;
+
+        const dayNightCycle = scene.dayNightCycle;
+        const currentlyNight = dayNightCycle.isCurrentlyNight();
+        
+        // Only update if night status has changed
+        if (currentlyNight !== this.isNightTime) {
+            this.isNightTime = currentlyNight;
+            
+            if (this.isNightTime) {
+                // Apply night-time stat bonuses
+                this.applyNightStats();
+            } else {
+                // Remove night-time stat bonuses
+                this.removeNightStats();
+            }
+        }
+    }
+
+    private applyNightStats(): void {
+        if (this.nightStatsApplied) return;
+        
+        // Apply speed bonus
+        this.VELOCITY = this.baseVelocity * GameConfig.COMBAT.NIGHT_SPEED_MULTIPLIER;
+        
+        // Apply damage bonus
+        this.attackPower = this.baseAttackPower * GameConfig.COMBAT.NIGHT_DAMAGE_MULTIPLIER;
+        
+        this.nightStatsApplied = true;
+        
+        // Visual indicator for night-time enhancement
+        this.setTint(0x6666ff); // Slight blue tint to indicate night enhancement
+        
+        console.log(`${this.entity_type} enhanced for night time - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
+    }
+
+    private removeNightStats(): void {
+        if (!this.nightStatsApplied) return;
+        
+        // Restore base stats
+        this.VELOCITY = this.baseVelocity;
+        this.attackPower = this.baseAttackPower;
+        
+        this.nightStatsApplied = false;
+        
+        // Remove visual indicator
+        this.clearTint();
+        
+        console.log(`${this.entity_type} restored to day time stats - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
+    }
+
+    // Pathfinding methods
+    public setPath(path: { x: number; y: number }[]): void {
+        this.currentPath = [...path];
+        this.currentWaypointIndex = 0;
+    }
+
+    public clearPath(): void {
+        this.currentPath = [];
+        this.currentWaypointIndex = 0;
+    }
+
+    public getNextWaypoint(): { x: number; y: number } | null {
+        if (this.currentPath.length === 0 || this.currentWaypointIndex >= this.currentPath.length) {
+            return null;
+        }
+        return this.currentPath[this.currentWaypointIndex];
+    }
+
+    public moveToWaypoint(): boolean {
+        const waypoint = this.getNextWaypoint();
+        if (!waypoint) return false;
+
+        const distance = Phaser.Math.Distance.Between(this.x, this.y, waypoint.x, waypoint.y);
+        
+        // If we're close enough to the waypoint, move to the next one
+        if (distance < 15) {
+            this.currentWaypointIndex++;
+            return this.currentWaypointIndex < this.currentPath.length;
+        }
+
+        // Move towards the waypoint
+        const angle = Phaser.Math.Angle.Between(this.x, this.y, waypoint.x, waypoint.y);
+        const velocity = this.VELOCITY;
+        
+        this.setVelocity(
+            Math.cos(angle) * velocity,
+            Math.sin(angle) * velocity
+        );
+
+        return true;
+    }
+
+    public isPathfindingEnabled(): boolean {
+        return this.pathfindingEnabled;
+    }
+
+    public setPathfindingEnabled(enabled: boolean): void {
+        this.pathfindingEnabled = enabled;
+        if (!enabled) {
+            this.clearPath();
+        }
+    }
+
+    public setHealth(health: number): void {
+        this.HIT_POINTS = Math.max(0, Math.min(health, this.MAX_HIT_POINTS));
+        this.updateHealthBar();
     }
 
     public reset(): void {
@@ -541,6 +671,25 @@ export class Enemy extends Entity {
         // Update last known player position
         this.lastPlayerPosition = { x: this.player.x, y: this.player.y };
         
+        // Use pathfinding if enabled and pathfinding system is available
+        const scene = this.scene as any;
+        if (this.pathfindingEnabled && scene.pathfinding) {
+            // Check if we need to recalculate path
+            if (this.currentPath.length === 0 || this.shouldRecalculatePath()) {
+                const path = scene.pathfinding.findPath(this.x, this.y, this.player.x, this.player.y);
+                this.setPath(path);
+            }
+            
+            // Move along the path
+            if (this.moveToWaypoint()) {
+                return; // Successfully moving along path
+            } else {
+                // Path completed or failed, fall back to direct movement
+                this.clearPath();
+            }
+        }
+        
+        // Fallback to direct pursuit
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
@@ -561,6 +710,19 @@ export class Enemy extends Entity {
                 this.setVelocity(vx, vy);
             }
         }
+    }
+
+    private shouldRecalculatePath(): boolean {
+        // Recalculate path if player has moved significantly
+        if (this.currentPath.length === 0) return true;
+        
+        const lastWaypoint = this.currentPath[this.currentPath.length - 1];
+        const distanceToTarget = Phaser.Math.Distance.Between(
+            this.player.x, this.player.y, 
+            lastWaypoint.x, lastWaypoint.y
+        );
+        
+        return distanceToTarget > 50; // Recalculate if player moved more than 50 pixels
     }
     
     public flankPlayer(): void {
@@ -614,15 +776,34 @@ export class Enemy extends Entity {
         // Combo attack - multiple hits
         this.attackCooldown = true;
         
-        // First hit
-        this.player.takeDamage(GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE);
+        // First hit with effects
+        this.createAttackEffects();
         this.scene.sound.play('attack-light', { volume: 0.5 });
         
-        // Second hit after short delay
-        this.scene.time.delayedCall(300, () => {
+        this.scene.time.delayedCall(200, () => {
             if (this.player && this.isPlayerInAttackRange()) {
-                this.player.takeDamage(GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE * 0.7);
+                // Use enhanced attack power if night stats are applied
+                const damage = this.nightStatsApplied ? this.attackPower : GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE;
+                this.player.takeDamage(damage);
+                this.createPlayerDamageEffect();
+            }
+        });
+        
+        // Second hit after short delay
+        this.scene.time.delayedCall(500, () => {
+            if (this.player && this.isPlayerInAttackRange()) {
+                // Create second attack effect
+                this.createAttackEffects();
                 this.scene.sound.play('attack-light', { volume: 0.3 });
+                
+                this.scene.time.delayedCall(200, () => {
+                    if (this.player && this.isPlayerInAttackRange()) {
+                        // Use enhanced attack power if night stats are applied (reduced for second hit)
+                        const baseDamage = this.nightStatsApplied ? this.attackPower : GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE;
+                        this.player.takeDamage(baseDamage * 0.7);
+                        this.createPlayerDamageEffect();
+                    }
+                });
             }
         });
         
@@ -666,17 +847,162 @@ export class Enemy extends Entity {
         // Set attack cooldown
         this.attackCooldown = true;
         
-        // Deal damage to player
-        this.player.takeDamage(GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE);
+        // Create attack visual effects
+        this.createAttackEffects();
         
         // Play attack sound
         this.scene.sound.play('attack-light', { volume: 0.5 });
+        
+        // Deal damage to player with slight delay for effect timing
+        this.scene.time.delayedCall(200, () => {
+            if (this.player && this.isPlayerInAttackRange()) {
+                // Use enhanced attack power if night stats are applied
+                const damage = this.nightStatsApplied ? this.attackPower : GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE;
+                this.player.takeDamage(damage);
+                this.createPlayerDamageEffect();
+            }
+        });
         
         // Reset cooldown after delay
         this.scene.time.delayedCall(GameConfig.TIMING.ENEMY_ATTACK_DELAY, () => {
             this.attackCooldown = false;
         });
     }
+    
+    private createAttackEffects(): void {
+        
+        // Create attack slash effect
+        const slashEffect = this.scene.add.graphics();
+        slashEffect.lineStyle(3, 0xff0000, 0.8);
+        
+        // Draw attack line from enemy to player
+        const startX = this.x;
+        const startY = this.y;
+        const endX = this.player.x;
+        const endY = this.player.y;
+        
+        slashEffect.beginPath();
+        slashEffect.moveTo(startX, startY);
+        slashEffect.lineTo(endX, endY);
+        slashEffect.strokePath();
+        
+        // Animate the slash effect
+        this.scene.tweens.add({
+            targets: slashEffect,
+            alpha: 0,
+            duration: 300,
+            onComplete: () => {
+                slashEffect.destroy();
+            }
+        });
+        
+        // Create impact effect at player position
+        const impactEffect = this.scene.add.graphics();
+        impactEffect.fillStyle(0xff0000, 0.6);
+        impactEffect.fillCircle(endX, endY, 15);
+        
+        this.scene.tweens.add({
+            targets: impactEffect,
+            scaleX: 2,
+            scaleY: 2,
+            alpha: 0,
+            duration: 400,
+            onComplete: () => {
+                impactEffect.destroy();
+            }
+        });
+        
+        // Create screen shake effect
+        this.createScreenShake();
+    }
+    
+    private createPlayerDamageEffect(): void {
+        if (!this.player) return;
+        
+        // Calculate actual damage dealt
+        const actualDamage = this.nightStatsApplied ? this.attackPower : GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE;
+        
+        // Create damage text effect
+        const damageText = this.scene.add.bitmapText(
+            this.player.x, 
+            this.player.y - 30, 
+            'pixel-red', 
+            `-${actualDamage}`, 
+            24
+        ).setOrigin(0.5);
+        
+        // Animate damage text
+        this.scene.tweens.add({
+            targets: damageText,
+            y: damageText.y - 50,
+            alpha: 0,
+            duration: 1000,
+            onComplete: () => {
+                damageText.destroy();
+            }
+        });
+        
+        // Create player hit flash effect
+        const originalTint = this.player.tint;
+        this.player.setTint(0xff0000); // Red flash
+        
+        this.scene.time.delayedCall(100, () => {
+            this.player.setTint(originalTint);
+        });
+        
+        // Create blood splatter effect
+        this.createBloodSplatter();
+    }
+    
+    private createBloodSplatter(): void {
+        if (!this.player) return;
+        
+        // Create multiple blood particles
+        for (let i = 0; i < 5; i++) {
+            const bloodParticle = this.scene.add.graphics();
+            bloodParticle.fillStyle(0x8B0000, 0.8);
+            bloodParticle.fillCircle(0, 0, 2);
+            
+            // Random position around player
+            const angle = Math.random() * Math.PI * 2;
+            const distance = Math.random() * 20 + 10;
+            const x = this.player.x + Math.cos(angle) * distance;
+            const y = this.player.y + Math.sin(angle) * distance;
+            
+            bloodParticle.setPosition(x, y);
+            
+            // Animate blood particle
+            this.scene.tweens.add({
+                targets: bloodParticle,
+                y: bloodParticle.y + Math.random() * 30 + 10,
+                alpha: 0,
+                duration: 800 + Math.random() * 400,
+                onComplete: () => {
+                    bloodParticle.destroy();
+                }
+            });
+        }
+    }
+    
+    private createScreenShake(): void {
+        // Get the main camera
+        const camera = this.scene.cameras.main;
+        
+        // Create screen shake effect
+        this.scene.tweens.add({
+            targets: camera,
+            x: camera.x + (Math.random() - 0.5) * 10,
+            y: camera.y + (Math.random() - 0.5) * 10,
+            duration: 100,
+            yoyo: true,
+            repeat: 2,
+            onComplete: () => {
+                camera.setPosition(camera.x, camera.y);
+            }
+        });
+    }
+    
+
 
     public isAttackOnCooldown(): boolean {
         return this.attackCooldown;

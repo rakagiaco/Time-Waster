@@ -13,8 +13,8 @@ export class InventoryUI {
     private inventoryContainer!: Phaser.GameObjects.Container;
     private inventorySlots: Phaser.GameObjects.Container[] = [];
     private slotCount: number = 36; // 4 rows x 9 columns (Minecraft style)
-    private slotSize: number = 40;
-    private slotSpacing: number = 4;
+    private slotSize: number = 24; // Further reduced from 32 to 24
+    private slotSpacing: number = 1; // Further reduced from 2 to 1
     private inventoryWidth: number = 0;
     private inventoryHeight: number = 0;
     private playerInventory: any; // Reference to player's inventory
@@ -48,101 +48,63 @@ export class InventoryUI {
         background.fillRoundedRect(0, 0, this.inventoryWidth, this.inventoryHeight, 8);
         background.lineStyle(3, 0x8B4513, 1);
         background.strokeRoundedRect(0, 0, this.inventoryWidth, this.inventoryHeight, 8);
+        background.setScrollFactor(0);
         this.inventoryContainer.add(background);
 
         // Create title
-        const title = this.scene.add.bitmapText(padding, padding, 'pixel-white', 'INVENTORY', 16);
+        const title = this.scene.add.bitmapText(this.inventoryWidth / 2, 15, '8-bit', 'INVENTORY', 20);
+        title.setOrigin(0.5);
+        title.setTint(0x8B4513);
         title.setScrollFactor(0);
         this.inventoryContainer.add(title);
 
         // Create inventory slots
         this.createInventorySlots();
-
-        // Center the inventory on screen
-        this.centerInventory();
     }
 
     private createInventorySlots(): void {
         const cols = 9;
         const rows = 4;
-        const padding = 20;
-        const titleHeight = 30;
-        const startX = padding;
-        const startY = titleHeight + padding;
-
+        const startX = 10; // Reduced from 20
+        const startY = 30; // Reduced from 40
+        
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
-                const slotIndex = row * cols + col;
-                const x = startX + (col * (this.slotSize + this.slotSpacing));
-                const y = startY + (row * (this.slotSize + this.slotSpacing));
-
-                const slotContainer = this.createSlot(x, y, slotIndex);
+                const slotX = startX + (col * (this.slotSize + this.slotSpacing));
+                const slotY = startY + (row * (this.slotSize + this.slotSpacing));
+                
+                // Create slot background
+                const slotBg = this.scene.add.graphics();
+                slotBg.fillStyle(0x1a1a1a, 1);
+                slotBg.fillRect(slotX, slotY, this.slotSize, this.slotSize);
+                slotBg.lineStyle(1, 0x8B4513, 1);
+                slotBg.strokeRect(slotX, slotY, this.slotSize, this.slotSize);
+                slotBg.setScrollFactor(0);
+                
+                // Create slot container
+                const slotContainer = this.scene.add.container(slotX, slotY);
+                slotContainer.setScrollFactor(0);
+                slotContainer.add(slotBg);
+                
                 this.inventorySlots.push(slotContainer);
                 this.inventoryContainer.add(slotContainer);
             }
         }
     }
 
-    private createSlot(x: number, y: number, index: number): Phaser.GameObjects.Container {
-        const slotContainer = this.scene.add.container(x, y);
-
-        // Slot background
-        const slotBg = this.scene.add.graphics();
-        slotBg.fillStyle(0x8B4513, 1);
-        slotBg.fillRoundedRect(0, 0, this.slotSize, this.slotSize, 4);
-        slotBg.lineStyle(2, 0x654321, 1);
-        slotBg.strokeRoundedRect(0, 0, this.slotSize, this.slotSize, 4);
-        slotContainer.add(slotBg);
-
-        // Slot highlight (for hover/selection)
-        const slotHighlight = this.scene.add.graphics();
-        slotHighlight.lineStyle(3, 0xffff00, 0);
-        slotHighlight.strokeRoundedRect(-2, -2, this.slotSize + 4, this.slotSize + 4, 6);
-        slotContainer.add(slotHighlight);
-
-        // Item icon (will be added when items are present)
-        const itemIcon = this.scene.add.image(this.slotSize / 2, this.slotSize / 2, 'rect');
-        itemIcon.setVisible(false);
-        itemIcon.setScale(0.8);
-        slotContainer.add(itemIcon);
-
-        // Item count text
-        const itemCount = this.scene.add.bitmapText(this.slotSize - 5, this.slotSize - 5, 'pixel-white', '', 10);
-        itemCount.setOrigin(1, 1);
-        itemCount.setVisible(false);
-        slotContainer.add(itemCount);
-
-        // Store references for later use
-        (slotContainer as any).slotIndex = index;
-        (slotContainer as any).itemIcon = itemIcon;
-        (slotContainer as any).itemCount = itemCount;
-        (slotContainer as any).slotHighlight = slotHighlight;
-
-        return slotContainer;
-    }
-
-    private centerInventory(): void {
-        const centerX = this.scene.cameras.main.width / 2;
-        const centerY = this.scene.cameras.main.height / 2;
-        this.inventoryContainer.setPosition(
-            centerX - this.inventoryWidth / 2,
-            centerY - this.inventoryHeight / 2
-        );
-    }
-
     private setupKeybinds(): void {
-        // Toggle inventory with I or Tab
-        this.scene.input.keyboard?.on('keydown-I', () => {
-            this.toggle();
-        });
-
-        this.scene.input.keyboard?.on('keydown-TAB', () => {
-            this.toggle();
-        });
-
-        // Close inventory with Escape
-        this.scene.input.keyboard?.on('keydown-ESC', () => {
-            if (this.isVisible) {
+        this.scene.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
+            if (event.code === 'KeyI') {
+                this.toggle();
+            }
+            
+            // Handle ESC key with priority system
+            if (event.code === 'Escape') {
+                const worldScene = this.scene as any;
+                if (worldScene.getPauseMenu && worldScene.getPauseMenu().isMenuVisible()) {
+                    // Let pause menu handle ESC
+                    return;
+                }
                 this.hide();
             }
         });
@@ -157,95 +119,90 @@ export class InventoryUI {
     }
 
     public show(): void {
+        if (this.isVisible) return;
+        
         this.isVisible = true;
-        this.inventoryContainer.setVisible(true);
+        this.positionInventory();
         this.updateInventoryDisplay();
-        console.log('Inventory opened');
+        this.inventoryContainer.setVisible(true);
     }
 
     public hide(): void {
+        if (!this.isVisible) return;
+        
         this.isVisible = false;
         this.inventoryContainer.setVisible(false);
-        console.log('Inventory closed');
     }
 
-    public isInventoryVisible(): boolean {
-        return this.isVisible;
-    }
-
-    public setPlayerInventory(inventory: any): void {
-        this.playerInventory = inventory;
-        if (this.isVisible) {
-            this.updateInventoryDisplay();
-        }
+    private positionInventory(): void {
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2;
+        
+        this.inventoryContainer.setPosition(
+            centerX - this.inventoryWidth / 2,
+            centerY - this.inventoryHeight / 2
+        );
     }
 
     public setPlayer(player: Player): void {
         this.player = player;
+        this.playerInventory = player.getInventory();
     }
 
-    private updateInventoryDisplay(): void {
+    public updateInventoryDisplay(): void {
         if (!this.playerInventory) return;
 
-        // Clear all slots first
+        // Clear all slots
         this.inventorySlots.forEach(slot => {
-            const itemIcon = (slot as any).itemIcon;
-            const itemCount = (slot as any).itemCount;
-            
-            itemIcon.setVisible(false);
-            itemCount.setVisible(false);
+            // Remove all children except the background (index 0)
+            while (slot.length > 1) {
+                slot.removeAt(1);
+            }
         });
 
         // Get inventory data
         const inventoryData = this.playerInventory.getInventoryData();
         let slotIndex = 0;
 
-        // Display items in slots
-        inventoryData.forEach((item: any) => {
-            if (slotIndex < this.inventorySlots.length) {
-                const slot = this.inventorySlots[slotIndex];
-                const itemIcon = (slot as any).itemIcon;
-                const itemCount = (slot as any).itemCount;
+        inventoryData.forEach(([itemType, count]) => {
+            if (slotIndex >= this.inventorySlots.length) return;
 
-                // Set item icon
-                itemIcon.setTexture(item.type || 'rect');
-                itemIcon.setVisible(true);
+            const slot = this.inventorySlots[slotIndex];
+            
+            // Create item icon
+            const itemIcon = this.scene.add.image(this.slotSize / 2, this.slotSize / 2, itemType);
+            itemIcon.setScale(0.8);
+            itemIcon.setScrollFactor(0);
+            slot.add(itemIcon);
 
-                // Set item count if more than 1
-                if (item.count > 1) {
-                    itemCount.setText(item.count.toString());
-                    itemCount.setVisible(true);
-                } else {
-                    itemCount.setVisible(false);
-                }
-
-                // Make fruit items clickable for consumption
-                if (this.isFruitItem(item.type)) {
-                    itemIcon.setInteractive();
-                    itemIcon.on('pointerdown', () => {
-                        this.consumeFruit(item.type);
-                    });
-                    // Add visual indicator that it's consumable
-                    itemIcon.setTint(0x88ff88); // Light green tint for consumable items
-                } else {
-                    itemIcon.removeInteractive();
-                    itemIcon.clearTint();
-                }
-
-                slotIndex++;
+            // Create count text
+            if (count > 1) {
+                const countText = this.scene.add.bitmapText(this.slotSize - 5, this.slotSize - 5, '8-bit', count.toString(), 12);
+                countText.setOrigin(1, 1);
+                countText.setTint(0xffffff);
+                countText.setScrollFactor(0);
+                slot.add(countText);
             }
+
+            // Make fruit items clickable
+            if (this.isFruitItem(itemType)) {
+                itemIcon.setInteractive({ useHandCursor: true });
+                itemIcon.on('pointerdown', () => {
+                    this.consumeFruit(itemType);
+                });
+                // Add visual indicator that it's consumable
+                itemIcon.setTint(0x88ff88); // Light green tint for consumable items
+            } else {
+                itemIcon.removeInteractive();
+                itemIcon.clearTint();
+            }
+
+            slotIndex++;
         });
     }
 
-    public update(): void {
-        // Update inventory display if visible
-        if (this.isVisible && this.playerInventory) {
-            this.updateInventoryDisplay();
-        }
-    }
-
     private isFruitItem(itemType: string): boolean {
-        const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'fruit'];
+        const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'tree-of-life-fruit', 'fruit'];
         return fruitTypes.includes(itemType);
     }
 
@@ -290,6 +247,8 @@ export class InventoryUI {
                 return 25; // High healing (rare)
             case 'cherry':
                 return 12; // Medium healing
+            case 'tree-of-life-fruit':
+                return 50; // Special healing from Tree of Life
             case 'fruit':
                 return 10; // Default healing
             default:
@@ -300,30 +259,38 @@ export class InventoryUI {
     private showHealthRestoreFeedback(amount: number): void {
         if (!this.player) return;
 
-        // Create floating text showing health restoration
-        const healText = this.scene.add.bitmapText(
-            this.player.x + Phaser.Math.Between(-20, 20),
-            this.player.y - 30,
-            'pixel-green',
-            `+${amount} HP`,
+        // Create floating text above player
+        const feedbackText = this.scene.add.bitmapText(
+            this.player.x, 
+            this.player.y - 50, 
+            '8-bit', 
+            `+${amount} HP`, 
             16
         );
-        healText.setOrigin(0.5);
+        feedbackText.setOrigin(0.5);
+        feedbackText.setTint(0x00ff00);
+        feedbackText.setScrollFactor(1);
 
-        // Animate the text floating up and fading out
+        // Animate the text
         this.scene.tweens.add({
-            targets: healText,
-            y: healText.y - 30,
+            targets: feedbackText,
+            y: feedbackText.y - 30,
             alpha: 0,
-            duration: 1500,
+            duration: 1000,
             ease: 'Power2',
             onComplete: () => {
-                healText.destroy();
+                feedbackText.destroy();
             }
         });
     }
 
+    public isInventoryVisible(): boolean {
+        return this.isVisible;
+    }
+
     public destroy(): void {
-        this.inventoryContainer.destroy();
+        if (this.inventoryContainer) {
+            this.inventoryContainer.destroy();
+        }
     }
 }

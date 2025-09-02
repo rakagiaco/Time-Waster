@@ -120,11 +120,51 @@ export function listen(scene: GameScene, listener: any): boolean {
         Math.pow(playerX - listener.x, 2) + Math.pow(playerY - listener.y, 2)
     );
 
-    const isInRange = distance <= listener.detectionDistance;
+    let effectiveDetectionDistance = listener.detectionDistance;
+    
+    // Check for stealth mechanics based on lighting conditions
+    if ((scene as any).dayNightCycle) {
+        const dayNightCycle = (scene as any).dayNightCycle;
+        const isNight = dayNightCycle.isCurrentlyNight();
+        const darknessIntensity = dayNightCycle.getDarknessIntensity();
+        
+        if (isNight && darknessIntensity > 0.3) {
+            // Reduce detection distance at night
+            effectiveDetectionDistance = listener.detectionDistance * (1 - darknessIntensity * 0.6);
+            
+            // Check if player is in flashlight or tree light
+            let playerInLight = false;
+            
+            // Check flashlight
+            if ((scene as any).flashlight && (scene as any).flashlight.isLightActive()) {
+                if ((scene as any).flashlight.isPointInLight(playerX, playerY)) {
+                    playerInLight = true;
+                    // Restore full detection when in flashlight
+                    effectiveDetectionDistance = listener.detectionDistance;
+                }
+            }
+            
+            // Check tree lights
+            if (!playerInLight && (scene as any).treeLightEmission && (scene as any).treeLightEmission.isLightActive()) {
+                if ((scene as any).treeLightEmission.isPointInTreeLight(playerX, playerY)) {
+                    playerInLight = true;
+                    // Restore partial detection when in tree light
+                    effectiveDetectionDistance = listener.detectionDistance * 0.8;
+                }
+            }
+            
+            // If player is in darkness and not in any light, detection is much harder
+            if (!playerInLight) {
+                effectiveDetectionDistance = Math.max(effectiveDetectionDistance * 0.3, 50); // Minimum 50 pixel detection
+            }
+        }
+    }
+
+    const isInRange = distance <= effectiveDetectionDistance;
     
     // Debug logging (can be removed later)
     if (isInRange) {
-        console.log(`Enemy ${listener.entity_type} detected player at distance ${distance.toFixed(1)} (range: ${listener.detectionDistance})`);
+        console.log(`Enemy ${listener.entity_type} detected player at distance ${distance.toFixed(1)} (effective range: ${effectiveDetectionDistance.toFixed(1)})`);
     }
 
     return isInRange;

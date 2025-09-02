@@ -6,11 +6,18 @@ import { Item } from '../../prefabs/Item';
 import { Tree } from '../../prefabs/Tree';
 import { DebugManager } from '../../debug/DebugManager';
 import { InventoryUI } from '../../ui/InventoryUI';
+import { DayNightCycle } from '../../systems/DayNightCycle';
+import { Flashlight } from '../../systems/Flashlight';
+import { TreeLightEmission } from '../../systems/TreeLightEmission';
+import { Pathfinding } from '../../systems/Pathfinding';
+import { PauseMenu } from '../../ui/PauseMenu';
+import { SaveSystem } from '../../systems/SaveSystem';
 
 
 interface WorldData {
     qobj?: any;
     inv?: any;
+    loadSaveData?: boolean;
 }
 
 export class World extends Phaser.Scene {
@@ -29,6 +36,13 @@ export class World extends Phaser.Scene {
     private minimapPlayerDot!: Phaser.GameObjects.Graphics;
     private debugManager!: DebugManager;
     private inventoryUI!: InventoryUI;
+    
+    // Day/Night and Lighting Systems
+    private dayNightCycle!: DayNightCycle;
+    private flashlight!: Flashlight;
+    private treeLightEmission!: TreeLightEmission;
+    private pathfinding!: Pathfinding;
+    private pauseMenu!: PauseMenu;
 
     constructor() {
         super('worldScene');
@@ -47,6 +61,12 @@ export class World extends Phaser.Scene {
             this.createTilemap();
 
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
+
+            // Load save data if requested
+            if (data.loadSaveData) {
+                console.log('Loading save data...');
+                this.loadSaveData();
+            }
 
             //     // Wait a frame to ensure animations are fully loaded
             //     this.time.delayedCall(100, () => {
@@ -94,7 +114,6 @@ export class World extends Phaser.Scene {
             // Setup inventory UI
             console.log('Setting up inventory UI...');
             this.inventoryUI = new InventoryUI(this);
-            this.inventoryUI.setPlayerInventory(this.player.p1Inventory);
             this.inventoryUI.setPlayer(this.player);
             console.log('Inventory UI setup complete');
 
@@ -102,6 +121,61 @@ export class World extends Phaser.Scene {
             console.log('Setting up custom cursor...');
             this.input.setDefaultCursor('url(/img/cursor.png), pointer');
             console.log('Custom cursor setup complete');
+
+            // Setup Day/Night Cycle
+            console.log('Setting up day/night cycle...');
+            this.dayNightCycle = new DayNightCycle(this);
+            
+            // Listen for day/night changes
+            this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
+                if (this.flashlight) {
+                    if (data.isDay) {
+                        this.flashlight.deactivate();
+                    } else {
+                        this.flashlight.activate();
+                    }
+                }
+                
+                if (this.treeLightEmission) {
+                    if (data.isDay) {
+                        this.treeLightEmission.deactivate();
+                    } else {
+                        this.treeLightEmission.activate();
+                    }
+                }
+            });
+            
+            console.log('Day/night cycle setup complete');
+
+            // Setup Flashlight
+            console.log('Setting up flashlight...');
+            this.flashlight = new Flashlight(this, this.player);
+            this.player.flashlight = this.flashlight; // Connect flashlight to player
+            console.log('Flashlight setup complete');
+
+            // Setup Tree Light Emission
+            console.log('Setting up tree light emission...');
+            this.treeLightEmission = new TreeLightEmission(this);
+            this.trees.forEach(tree => {
+                this.treeLightEmission.addTreeLight(tree);
+            });
+            console.log('Tree light emission setup complete');
+
+            // Setup Pathfinding System
+            console.log('Setting up pathfinding system...');
+            this.pathfinding = new Pathfinding(this);
+            this.pathfinding.setObstacles(this.trees);
+            console.log('Pathfinding system setup complete');
+
+            // Setup Collision Detection
+            console.log('Setting up collision detection...');
+            this.setupCollisionDetection();
+            console.log('Collision detection setup complete');
+
+            // Setup Pause Menu
+            console.log('Setting up pause menu...');
+            this.pauseMenu = new PauseMenu(this);
+            console.log('Pause menu setup complete');
 
             //             console.log('=== WORLD SCENE SETUP COMPLETE ===');
             //         } catch (error) {
@@ -120,6 +194,8 @@ export class World extends Phaser.Scene {
     }
 
     update(): void {
+        const delta = this.game.loop.delta;
+
         // Update player (only if it exists)
         if (this.player) {
             try {
@@ -165,6 +241,21 @@ export class World extends Phaser.Scene {
         //     }
         // });
 
+        // Update Day/Night Cycle
+        if (this.dayNightCycle) {
+            this.dayNightCycle.update(delta);
+        }
+
+        // Update Flashlight
+        if (this.flashlight) {
+            this.flashlight.update(delta);
+        }
+
+        // Update Tree Light Emission
+        if (this.treeLightEmission) {
+            this.treeLightEmission.update(delta);
+        }
+
         // Update minimap to follow player
         this.updateMinimap();
 
@@ -174,10 +265,7 @@ export class World extends Phaser.Scene {
             this.debugManager.update();
         }
 
-        // Update inventory UI
-        if (this.inventoryUI) {
-            this.inventoryUI.update();
-        }
+        // Inventory UI doesn't need update calls - it's event-driven
     }
 
     private createTilemap(): void {
@@ -259,6 +347,9 @@ export class World extends Phaser.Scene {
             // Create quest giver near spawn point (500, 400) with slight offset
             const questGiver = new Ally(this, 600, 500);
             questGiver.entity_type = 'Narvark'; // Name the quest giver
+            
+            // Set Narvark as static (no movement, no interaction detection)
+            questGiver.setStatic(true);
             
             // Update the name tag with the correct name
             if (questGiver.entity_text) {
@@ -376,6 +467,9 @@ export class World extends Phaser.Scene {
             
             // BIOME 4: Cherry Blossom Grove (tree-3) - Southwest region
             this.createCherryBlossomGrove();
+            
+            // SPECIAL: Tree of Life - Top left corner
+            this.createTreeOfLife();
             
             console.log(`Trees created successfully, total count: ${this.trees.length}`);
 
@@ -499,6 +593,116 @@ export class World extends Phaser.Scene {
         console.log(`Cherry Blossom Grove created with ${cherryPositions.length} trees`);
     }
 
+    private createTreeOfLife(): void {
+        console.log('Creating Tree of Life (Top Left)...');
+        
+        // Create the Tree of Life in the top left corner of the map
+        const treeOfLife = new Tree(this, 200, 200, 'tree-2-second');
+        
+        // Make it extra special - larger scale and unique properties
+        treeOfLife.setScale(2.5); // Much larger than normal trees
+        treeOfLife.setDepth(10); // Ensure it's visible above other objects
+        
+        // Add special visual effects
+        this.addTreeOfLifeEffects(treeOfLife);
+        
+        // Add the tree to our trees array
+        this.trees.push(treeOfLife);
+        
+        console.log('Tree of Life created successfully');
+    }
+    
+    private addTreeOfLifeEffects(tree: Tree): void {
+        // Create a glowing aura around the tree
+        const aura = this.add.graphics();
+        aura.fillStyle(0x00ff00, 0.3); // Green glow
+        aura.fillCircle(tree.x, tree.y, 80);
+        aura.setDepth(tree.depth - 1);
+        
+        // Animate the aura
+        this.tweens.add({
+            targets: aura,
+            alpha: 0.1,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Create floating particles around the tree
+        for (let i = 0; i < 6; i++) {
+            const particle = this.add.graphics();
+            particle.fillStyle(0x90EE90, 0.8); // Light green
+            particle.fillCircle(0, 0, 2);
+            
+            // Position particles in a circle around the tree
+            const angle = (i / 6) * Math.PI * 2;
+            const radius = 60;
+            const x = tree.x + Math.cos(angle) * radius;
+            const y = tree.y + Math.sin(angle) * radius;
+            
+            particle.setPosition(x, y);
+            particle.setDepth(tree.depth + 1);
+            
+            // Animate particles floating up and down
+            this.tweens.add({
+                targets: particle,
+                y: y - 20,
+                duration: 3000 + Math.random() * 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+        }
+        
+        // Create the title text
+        this.createTreeOfLifeTitle(tree);
+    }
+    
+    private createTreeOfLifeTitle(tree: Tree): void {
+        // Create the main title
+        const title = this.add.bitmapText(
+            tree.x, 
+            tree.y - 120, 
+            '8-bit', 
+            'TREE OF LIFE', 
+            32
+        ).setOrigin(0.5);
+        
+        title.setDepth(tree.depth + 2);
+        title.setTint(0x00ff00); // Green color
+        
+        // Add a subtle glow effect to the title
+        this.tweens.add({
+            targets: title,
+            alpha: 0.7,
+            duration: 1500,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Create a subtitle
+        const subtitle = this.add.bitmapText(
+            tree.x, 
+            tree.y - 90, 
+            '8-bit', 
+            'Ancient & Sacred', 
+            16
+        ).setOrigin(0.5);
+        
+        subtitle.setDepth(tree.depth + 2);
+        subtitle.setTint(0x90EE90); // Light green color
+        
+        // Add floating animation to the subtitle
+        this.tweens.add({
+            targets: subtitle,
+            y: subtitle.y - 5,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+    }
+
     private setupMinimap(): void {
         const minimapSize = 150;
         const minimapX = 20;
@@ -577,7 +781,19 @@ export class World extends Phaser.Scene {
             cameraZoom: this.cameras.main.zoom,
             worldBounds: { width: this.tilemap.widthInPixels, height: this.tilemap.heightInPixels },
             activeAnimations: this.getActiveAnimations(),
-            inputKeys: this.getInputKeyStates()
+            inputKeys: this.getInputKeyStates(),
+            // Day/Night Cycle Info
+            timeOfDay: this.dayNightCycle ? this.dayNightCycle.getTimeOfDay() : 'Unknown',
+            currentTime: this.dayNightCycle ? this.dayNightCycle.getCurrentTime() : 0,
+            darknessIntensity: this.dayNightCycle ? this.dayNightCycle.getDarknessIntensity() : 0,
+            flashlightActive: this.flashlight ? this.flashlight.isLightActive() : false,
+            treeLightsActive: this.treeLightEmission ? this.treeLightEmission.isLightActive() : false,
+            // Enemy Night Stats
+            enemiesEnhanced: this.enemies.filter(enemy => (enemy as any).nightStatsApplied).length,
+            totalEnemies: this.enemies.length,
+            // Pathfinding Stats
+            enemiesWithPaths: this.enemies.filter(enemy => (enemy as any).currentPath && (enemy as any).currentPath.length > 0).length,
+            totalObstacles: this.trees.length
         };
 
         this.debugManager.updateDebugInfo(debugInfo);
@@ -683,6 +899,52 @@ export class World extends Phaser.Scene {
                 0x8B4513
             );
         });
+
+        // Draw pathfinding paths for enemies
+        this.enemies.forEach((enemy) => {
+            const enemyPath = (enemy as any).currentPath;
+            if (enemyPath && enemyPath.length > 0) {
+                this.debugManager.drawPath(enemyPath, 0x00ff00);
+            }
+        });
+    }
+
+    private setupCollisionDetection(): void {
+        // Player collision with trees
+        this.physics.add.collider(this.player, this.trees);
+        
+        // Enemy collision with trees
+        this.enemies.forEach(enemy => {
+            this.physics.add.collider(enemy, this.trees);
+        });
+        
+        // Enemy collision with player
+        this.enemies.forEach(enemy => {
+            this.physics.add.collider(enemy, this.player);
+        });
+        
+        // Ally collision with trees
+        this.allies.forEach(ally => {
+            this.physics.add.collider(ally, this.trees);
+        });
+        
+        // Ally collision with player
+        this.allies.forEach(ally => {
+            this.physics.add.collider(ally, this.player);
+        });
+        
+        console.log('Collision detection configured for all entities');
+    }
+
+    private loadSaveData(): void {
+        const saveData = SaveSystem.loadGame();
+        if (saveData) {
+            console.log('Applying save data...');
+            SaveSystem.applySaveData(this, saveData);
+            console.log('Save data applied successfully');
+        } else {
+            console.log('No save data found or failed to load');
+        }
     }
 
     // private setupInput(): void {
@@ -719,4 +981,12 @@ export class World extends Phaser.Scene {
     // getMiniMapCamera(): Phaser.Cameras.Scene2D.Camera {
     //     return this.miniMapCamera;
     // }
+
+    public getPauseMenu(): PauseMenu {
+        return this.pauseMenu;
+    }
+
+    public getInventoryUI(): InventoryUI {
+        return this.inventoryUI;
+    }
 }

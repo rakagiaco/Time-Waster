@@ -74,6 +74,7 @@ export class Loader extends Phaser.Scene {
         this.load.image('pinecone', '/img/fruit.png') // Using fruit.png as placeholder for pinecone
         this.load.image('ancient-fruit', '/img/fruit.png') // Using fruit.png as placeholder for ancient-fruit
         this.load.image('cherry', '/img/fruit.png') // Using fruit.png as placeholder for cherry
+        this.load.image('tree-of-life-fruit', '/img/fruit.png') // Special fruit from Tree of Life
         this.load.image('fullscreen', '/img/fullscreen.png')
         this.load.image('mysterious herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
