@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { Loader } from './scenes/general/Loader';
+import { Loader} from './scenes/general/Loader';
 import { Menu } from './scenes/general/Menu';
 import { World } from './scenes/game/World';
 import { Credits } from './scenes/general/Credits';
