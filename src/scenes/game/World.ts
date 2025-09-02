@@ -18,6 +18,8 @@ export class World extends Phaser.Scene {
     private tilemap!: Phaser.Tilemaps.Tilemap;
     private tileset!: Phaser.Tilemaps.Tileset | null;
     private groundLayer!: Phaser.Tilemaps.TilemapLayer | null;
+    private objlayer!: Phaser.Tilemaps.ObjectLayer | null
+
     private miniMapCamera!: Phaser.Cameras.Scene2D.Camera;
 
     constructor() {
@@ -43,10 +45,10 @@ export class World extends Phaser.Scene {
             //         try {
             //             console.log('=== CREATING GAME OBJECTS ===');
 
-            //             // Create enemies
-            //             console.log('Creating enemies...');
-            //             this.createEnemies();
-            //             console.log('Enemies created successfully, count:', this.enemies.length);
+            // Create enemies
+            console.log('Creating enemies...');
+            this.createEnemies();
+            console.log('Enemies created successfully, count:', this.enemies.length);
 
             //             // Create allies
             //             console.log('Creating allies...');
@@ -131,29 +133,29 @@ export class World extends Phaser.Scene {
 
         if (this.tileset) {
             this.groundLayer = this.tilemap.createLayer('Background', this.tileset, 0, 0);
-
+            this.objlayer = this.tilemap.getObjectLayer('Player/NPC')
             // Note: No object layer exists in this tilemap, so we skip collision setup
             // The tilemap only has a "Background" layer and object layers for spawn points
         }
     }
 
-    // private createEnemies(): void {
-    //     try {
-    //         console.log('Creating enemy 1...');
-    //         this.enemies.push(new Enemy(this, 200, 200));
-    //         console.log('Enemy 1 created successfully');
-
-    //         console.log('Creating enemy 2...');
-    //         this.enemies.push(new Enemy(this, 800, 600));
-    //         console.log('Enemy 2 created successfully');
-
-    //         console.log('Creating enemy 3...');
-    //         this.enemies.push(new Enemy(this, 400, 800));
-    //         console.log('Enemy 3 created successfully');
-    //     } catch (error) {
-    //         console.error('Error creating enemies:', error);
-    //     }
-    // }
+    private createEnemies(): void {
+        if (this.objlayer) {
+            this.objlayer.objects.forEach(element => {
+                if (element.name === 'boss_spawn') {
+                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1').setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim') as Enemy)
+                } else if (element.name === 'enemy_spawn') {
+                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1-anim').setScale(1.25).anims.play('enemy-idle-anim') as Enemy)
+                } else if (element.name === 'enemy_spawn_2') {
+                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-2-anim').setScale(1.25).anims.play('enemy2-idle-anim') as Enemy)
+                }
+                // add this back in
+                // } else if (element.name === 'bush_1') {
+                //     this.bushes.push(new Item(this, element.x, element.y, 'bush-1', 0, 'mysterious herb', true, false, { sound: 'collect-herb', volume: 0.1 }).setScale(2).setSize(35, 30).anims.play('bush-1-anim'))
+                // }
+            })
+        }
+    }
 
     // private createAllies(): void {
     //     try {
