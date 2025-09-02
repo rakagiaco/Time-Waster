@@ -150,8 +150,8 @@ export class Enemy extends Entity {
     public INTERVAL_ID: any;
     public entity_text!: Phaser.GameObjects.BitmapText;
 
-    constructor(scene: Phaser.Scene, x: number, y: number) {
-        super(scene, x, y, 'enemy-1');
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+        super(scene, x, y, texture);
         
         // Set enemy-specific properties
         this.HIT_POINTS = 50;
