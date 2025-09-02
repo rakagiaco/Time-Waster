@@ -273,6 +273,7 @@ export class World extends Phaser.Scene {
         }
     }
 
+    // no clankers allowed in this function please
     private createEnemies(): void {
         // Create enemies from object layer spawn points
         if (this.objlayer) {
@@ -286,52 +287,7 @@ export class World extends Phaser.Scene {
                 }
             })
         }
-
-        // Add enemies scattered across outer sectors and middle of the map
-        console.log('Creating enemies across the map...');
-
-        // Upper left sector
-        this.createEnemyWithName(this, 800, 800, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 1000, 600, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 600, 1000, 'enemy-1-anim', 'Nepian Scout');
-
-        // Upper right sector
-        this.createEnemyWithName(this, 3000, 800, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 3200, 600, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2800, 1000, 'enemy-2-anim', 'Nepian Observer');
-
-        // Lower left sector
-        this.createEnemyWithName(this, 800, 2800, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 1000, 3000, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 600, 3200, 'enemy-1-anim', 'Nepian Scout');
-
-        // Lower right quadrant - existing groups
-        this.createEnemyWithName(this, 2000, 2500, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2200, 2500, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2400, 2500, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2000, 2800, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 2200, 2800, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 2400, 2800, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 2000, 3100, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2200, 3100, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2400, 3100, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2000, 3400, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 2200, 3400, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 2400, 3400, 'enemy-2-anim', 'Nepian Observer');
-
-        // Middle area enemies
-        this.createEnemyWithName(this, 1800, 1800, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2200, 2000, 'enemy-2-anim', 'Nepian Observer');
-        this.createEnemyWithName(this, 1600, 2200, 'enemy-1-anim', 'Nepian Scout');
-        this.createEnemyWithName(this, 2000, 1800, 'enemy-2-anim', 'Nepian Observer');
-
-        console.log('Enemies created successfully, total count:', this.enemies.length);
-    }
-
-    private createEnemyWithName(scene: Phaser.Scene, x: number, y: number, texture: string, name: string): void {
-        const enemy = new Enemy(scene, x, y, texture).setScale(1.25).anims.play(texture.replace('-anim', '-idle-anim')) as Enemy;
-        enemy.entity_type = name;
-        this.enemies.push(enemy);
+        
     }
 
     private createAllies(): void {
@@ -716,7 +672,7 @@ export class World extends Phaser.Scene {
         minimapRing.strokeCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, (minimapSize / 2) + 5)
         minimapRing.setScrollFactor(0).setDepth(1000) // Fix the ring in place on the screen
         this.miniMapCamera.ignore(minimapRing)
-        
+
         // Apply mask to minimap camera to make it circular
         this.miniMapCamera.setMask(this.minimapMask.createGeometryMask());
 

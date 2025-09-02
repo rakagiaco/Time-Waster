@@ -42,41 +42,41 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
         this.healthBar.fillRect(this.x, this.y, GameConfig.UI.HEALTH_BAR_WIDTH, GameConfig.UI.HEALTH_BAR_HEIGHT);
     }
 
-    // protected updateHealthBar(): void {
-    //     // Store health data in the entity for the helper function to access
-    //     this.setData('hitPoints', this.HIT_POINTS);
-    //     this.setData('maxHitPoints', this.MAX_HIT_POINTS);
+    protected updateHealthBar(): void {
+        // Store health data in the entity for the helper function to access
+        this.setData('hitPoints', this.HIT_POINTS);
+        this.setData('maxHitPoints', this.MAX_HIT_POINTS);
 
-    //     console.log(`updateHealthBar called: health=${this.HIT_POINTS}/${this.MAX_HIT_POINTS}, healthBar exists=${!!this.healthBar}, healthBarText exists=${!!this.healthBarText}`);
+        console.log(`updateHealthBar called: health=${this.HIT_POINTS}/${this.MAX_HIT_POINTS}, healthBar exists=${!!this.healthBar}, healthBarText exists=${!!this.healthBarText}`);
 
-    //     // Update health bar position and visual representation
-    //     if (this.healthBar && this.healthBarText) {
-    //         // Position health bar slightly under the entity
-    //         const barX = this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2;
-    //         const barY = this.y + 20; // Slightly under the entity
+        // Update health bar position and visual representation
+        if (this.healthBar && this.healthBarText) {
+            // Position health bar slightly under the entity
+            const barX = this.x - GameConfig.UI.HEALTH_BAR_WIDTH / 2;
+            const barY = this.y + 20; // Slightly under the entity
             
-    //         this.healthBar.setPosition(barX, barY);
-    //         this.healthBarText.setPosition(this.x, barY - 5);
+            this.healthBar.setPosition(barX, barY);
+            this.healthBarText.setPosition(this.x, barY - 5);
             
-    //         // Update health bar visual representation
-    //         this.healthBar.clear();
+            // Update health bar visual representation
+            this.healthBar.clear();
             
-    //         // Calculate health percentage
-    //         const healthPercentage = this.HIT_POINTS / this.MAX_HIT_POINTS;
-    //         const currentWidth = GameConfig.UI.HEALTH_BAR_WIDTH * healthPercentage;
+            // Calculate health percentage
+            const healthPercentage = this.HIT_POINTS / this.MAX_HIT_POINTS;
+            const currentWidth = GameConfig.UI.HEALTH_BAR_WIDTH * healthPercentage;
             
-    //         // Draw background (red)
-    //         this.healthBar.fillStyle(0xff0000, 1);
-    //         this.healthBar.fillRect(0, 0, GameConfig.UI.HEALTH_BAR_WIDTH, GameConfig.UI.HEALTH_BAR_HEIGHT);
+            // Draw background (red)
+            this.healthBar.fillStyle(0xff0000, 1);
+            this.healthBar.fillRect(0, 0, GameConfig.UI.HEALTH_BAR_WIDTH, GameConfig.UI.HEALTH_BAR_HEIGHT);
             
-    //         // Draw current health (green)
-    //         this.healthBar.fillStyle(0x00ff00, 1);
-    //         this.healthBar.fillRect(0, 0, currentWidth, GameConfig.UI.HEALTH_BAR_HEIGHT);
+            // Draw current health (green)
+            this.healthBar.fillStyle(0x00ff00, 1);
+            this.healthBar.fillRect(0, 0, currentWidth, GameConfig.UI.HEALTH_BAR_HEIGHT);
             
-    //         // Update text
-    //         this.healthBarText.setText(`${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
-    //     }
-    // }
+            // Update text
+            this.healthBarText.setText(`${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
+        }
+    }
 
     public takeDamage(amount: number): void {
         console.log(`Entity taking damage: ${amount}, current health: ${this.HIT_POINTS}`);
