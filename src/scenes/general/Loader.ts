@@ -55,12 +55,15 @@ export class Loader extends Phaser.Scene {
         this.load.spritesheet('player-light-attack-anim', 'spritesheets/player/player-light-attack-anim.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('player-heavy-attack-anim', 'spritesheets/player/player-heavy-attack-anim.png', { frameWidth: 32, frameHeight: 32 });
         this.load.spritesheet('attack-heavy-cooldown', 'spritesheets/player/attack-heavy-cooldown.png', { frameWidth: 47, frameHeight: 16 });
-        this.load.spritesheet('enemy-1-death', 'spritesheets/enemy-1.png', { frameWidth: 32, frameHeight: 50 });
-        this.load.spritesheet('enemy-2-death', 'spritesheets/enemy-2.png', { frameWidth: 32, frameHeight: 50 });
+        this.load.spritesheet('enemy-1-death', 'spritesheets/enemy-1-death.png', { frameWidth: 32, frameHeight: 50 });
+        this.load.spritesheet('enemy-2-death', 'spritesheets/enemy-2-death.png', { frameWidth: 32, frameHeight: 50 });
         this.load.spritesheet('enemy-2-lootable', 'spritesheets/enemy-2-lootable.png', { frameWidth: 32, frameHeight: 50 });
         this.load.spritesheet('boss-1', 'spritesheets/boss-1.png', { frameWidth: 32, frameHeight: 50 });
         this.load.spritesheet('boss-death', 'spritesheets/boss-death.png', { frameWidth: 32, frameHeight: 50 });
         this.load.spritesheet('boss-lootable', 'spritesheets/boss-lootable.png', { frameWidth: 32, frameHeight: 32 });
+        
+        // Load player spritesheet
+        this.load.spritesheet('player', 'spritesheets/player/player.png', { frameWidth: 32, frameHeight: 32 });
 
         // Load player atlas
         this.load.atlas('player', 'spritesheets/player/player.png', 'spritesheets/player/player-walk-anims.json');
@@ -70,11 +73,11 @@ export class Loader extends Phaser.Scene {
         this.load.image('cursor-2', 'img/cursor-2.png');
         this.load.image('cursor', 'img/cursor.png');
         this.load.image('enemy-1', 'img/enemy-1.png');
-        this.load.image('Frozen Heart', 'img/frozen-heart.png');
+        this.load.image('frozen-heart', 'img/frozen-heart.png');
         this.load.image('fruit', 'img/fruit.png');
         this.load.image('fullscreen', 'img/fullscreen.png');
-        this.load.image('mysterious herb', 'img/mysterious-herb.png');
-        this.load.image('lesser nepian blood', 'img/nepian-blood.png');
+        this.load.image('mysterious-herb', 'img/mysterious-herb.png');
+        this.load.image('nepian-blood', 'img/nepian-blood.png');
         this.load.image('new-game-button', 'img/new-game-button.png');
         this.load.image('npc-1', 'img/npc-1.png');
         this.load.image('rect', 'img/rect.png');
@@ -146,41 +149,43 @@ export class Loader extends Phaser.Scene {
             repeat: -1
         });
 
-        // Tree animations with loop
-        for (let i = 0; i < 6; i++) {
+        // Tree animations with loop (tree-1 has 31 frames, so 7 animations of 4-5 frames each)
+        for (let i = 0; i < 7; i++) {
+            const startFrame = i * 4;
+            const endFrame = Math.min(startFrame + 3, 30); // Don't exceed 30 (31 frames total)
             this.anims.create({
                 key: `tree-1-anim-${i}`,
-                frames: this.anims.generateFrameNumbers('tree-1', { start: i * 4, end: (i * 4) + 3 }),
+                frames: this.anims.generateFrameNumbers('tree-1', { start: startFrame, end: endFrame }),
                 frameRate: GameConfig.ANIMATION.TREE_FRAMERATE,
                 repeat: -1
             });
         }
 
-        // Player animations
+        // Player animations (2 frames per direction)
         this.anims.create({
             key: 'player-walk-down',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: -1
         });
 
         this.anims.create({
             key: 'player-walk-up',
-            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 7 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 5 }),
             frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: -1
         });
 
         this.anims.create({
             key: 'player-walk-left',
-            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 11 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 2, end: 3 }),
             frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: -1
         });
 
         this.anims.create({
             key: 'player-walk-right',
-            frames: this.anims.generateFrameNumbers('player', { start: 12, end: 15 }),
+            frames: this.anims.generateFrameNumbers('player', { start: 2, end: 3 }),
             frameRate: GameConfig.ANIMATION.PLAYER_WALK_FRAMERATE,
             repeat: -1
         });
@@ -200,54 +205,62 @@ export class Loader extends Phaser.Scene {
             repeat: 0
         });
 
-        // Enemy animations
+        // Enemy animations (check actual frame counts)
         this.anims.create({
             key: 'enemy-1-walk',
-            frames: this.anims.generateFrameNumbers('enemy-1-anim', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('enemy-1-anim', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.ENEMY_FRAME_RATE,
             repeat: -1
         });
 
         this.anims.create({
             key: 'enemy-2-walk',
-            frames: this.anims.generateFrameNumbers('enemy-2-anim', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('enemy-2-anim', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.ENEMY_FRAME_RATE,
             repeat: -1
         });
 
-        // Boss animations
+        // Boss animations (check actual frame counts)
         this.anims.create({
             key: 'boss-1-walk',
-            frames: this.anims.generateFrameNumbers('boss-1', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('boss-1', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.BOSS_FRAME_RATE,
             repeat: -1
         });
 
         this.anims.create({
             key: 'boss-aoe-anim',
-            frames: this.anims.generateFrameNumbers('boss-aoe', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('boss-aoe', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.BOSS_AOE_FRAME_RATE,
             repeat: 0
         });
 
-        // Death animations
+        // NPC animation
+        this.anims.create({
+            key: 'npc-1',
+            frames: this.anims.generateFrameNumbers('npc-1', { start: 0, end: 0 }),
+            frameRate: 1,
+            repeat: -1
+        });
+
+        // Death animations (check actual frame counts)
         this.anims.create({
             key: 'enemy-1-death',
-            frames: this.anims.generateFrameNumbers('enemy-1-death', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('enemy-1-death', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.DEATH_FRAME_RATE,
             repeat: 0
         });
 
         this.anims.create({
             key: 'enemy-2-death',
-            frames: this.anims.generateFrameNumbers('enemy-2-death', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('enemy-2-death', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.DEATH_FRAME_RATE,
             repeat: 0
         });
 
         this.anims.create({
             key: 'boss-death',
-            frames: this.anims.generateFrameNumbers('boss-death', { start: 0, end: 3 }),
+            frames: this.anims.generateFrameNumbers('boss-death', { start: 0, end: 1 }),
             frameRate: GameConfig.ANIMATION.BOSS_DEATH_FRAMERATE,
             repeat: 0
         });

@@ -8,8 +8,14 @@ import { listen } from '../../lib/HelperFunc';
 class AllyIdleState extends State {
     enter(_scene: Phaser.Scene, ally: Ally): void {
         ally.setVelocity(0, 0);
-        ally.anims.play('npc-1', true);
-        ally.anims.stop();
+        
+        // Check if animation exists before playing
+        if (ally.anims.exists('npc-1')) {
+            ally.anims.play('npc-1', true);
+            ally.anims.stop();
+        } else {
+            console.warn('Animation "npc-1" not found');
+        }
     }
 
     execute(scene: Phaser.Scene, ally: Ally): void {

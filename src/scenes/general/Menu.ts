@@ -57,7 +57,7 @@ export class Menu extends Phaser.Scene {
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
                 console.log('Credits button clicked');
-                this.scene.start('creditsScene');
+                this.scene.start('Credits');
             });
 
         // Freeplay button

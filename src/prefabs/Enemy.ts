@@ -9,7 +9,13 @@ import { Item } from './Item';
 class EnemyPatrolState extends State {
     enter(_scene: Phaser.Scene, enemy: Enemy): void {
         enemy.setVelocity(0, 0);
-        enemy.anims.play('enemy-1-walk', true);
+        
+        // Check if animation exists before playing
+        if (enemy.anims.exists('enemy-1-walk')) {
+            enemy.anims.play('enemy-1-walk', true);
+        } else {
+            console.warn('Animation "enemy-1-walk" not found');
+        }
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -25,7 +31,12 @@ class EnemyPatrolState extends State {
 
 class EnemyPursuingState extends State {
     enter(_scene: Phaser.Scene, enemy: Enemy): void {
-        enemy.anims.play('enemy-1-walk', true);
+        // Check if animation exists before playing
+        if (enemy.anims.exists('enemy-1-walk')) {
+            enemy.anims.play('enemy-1-walk', true);
+        } else {
+            console.warn('Animation "enemy-1-walk" not found');
+        }
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -59,7 +70,13 @@ class EnemyAttackingState extends State {
 
 class EnemyDeadState extends State {
     enter(scene: Phaser.Scene, enemy: Enemy): void {
-        enemy.anims.play('enemy-1-death', true);
+        // Check if animation exists before playing
+        if (enemy.anims.exists('enemy-1-death')) {
+            enemy.anims.play('enemy-1-death', true);
+        } else {
+            console.warn('Animation "enemy-1-death" not found');
+        }
+        
         enemy.setVelocity(0, 0);
         
         // Set death timer
@@ -190,9 +207,9 @@ export class Enemy extends Entity {
             let x: any = undefined;
             
             if (this.entity_type === 'Electro Lord Kealthis') { // the boss
-                x = new Item(this.scene, this.x, this.y, 'Frozen Heart').setAlpha(0);
+                x = new Item(this.scene, this.x, this.y, 'frozen-heart').setAlpha(0);
             } else if (this.entity_type === 'Nepian Observer' && this.is_lootable) {
-                x = new Item(this.scene, this.x, this.y, 'lesser nepian blood').setScale(0.5).setAlpha(0);
+                x = new Item(this.scene, this.x, this.y, 'nepian-blood').setScale(0.5).setAlpha(0);
             }
             
             // Cast scene to GameScene to access custom properties

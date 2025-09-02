@@ -96,9 +96,9 @@ export class World extends Phaser.Scene {
 
     private createItems(): void {
         // Create collectible items
-        this.items.push(new Item(this, 150, 150, 'mysterious herb'));
+        this.items.push(new Item(this, 150, 150, 'mysterious-herb'));
         this.items.push(new Item(this, 750, 550, 'fruit'));
-        this.items.push(new Item(this, 350, 750, 'lesser nepian blood'));
+        this.items.push(new Item(this, 350, 750, 'nepian-blood'));
     }
 
     private setupMinimap(): void {

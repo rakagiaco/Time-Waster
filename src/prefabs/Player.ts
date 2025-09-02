@@ -10,8 +10,14 @@ import { keyUp, keyDown, keyLeft, keyRight, keyAttackLight, keyAttackHeavy, keyS
 class PlayerIdleState extends State {
     enter(_scene: Phaser.Scene, player: Player): void {
         player.setVelocity(0, 0);
-        player.anims.play('player-walk-down', true);
-        player.anims.stop();
+        
+        // Check if animation exists before playing
+        if (player.anims.exists('player-walk-down')) {
+            player.anims.play('player-walk-down', true);
+            player.anims.stop();
+        } else {
+            console.warn('Animation "player-walk-down" not found');
+        }
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
@@ -116,7 +122,13 @@ class PlayerAttackingLightState extends State {
 class PlayerAttackingHeavyState extends State {
     enter(scene: Phaser.Scene, player: Player): void {
         player.attackHeavyCooldown = true;
-        player.anims.play('player-heavy-attack', true);
+        
+        // Check if animation exists before playing
+        if (player.anims.exists('player-heavy-attack')) {
+            player.anims.play('player-heavy-attack', true);
+        } else {
+            console.warn('Animation "player-heavy-attack" not found');
+        }
         
         // Play attack sound
         scene.sound.play('attack-heavy', { volume: 0.5 });
