@@ -252,7 +252,7 @@ export class World extends Phaser.Scene {
 
             // Update music manager with time of day
             if (this.musicManager) {
-                this.musicManager.updateTimeOfDay(this.dayNightCycle.getIsNight());
+                this.musicManager.updateTimeOfDay(this.dayNightCycle.isCurrentlyNight());
             }
         }
 

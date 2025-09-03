@@ -41,7 +41,6 @@ export class DayNightCycle {
 
     // Visual rendering components
     private overlay: Phaser.GameObjects.Graphics | null = null;      // Main camera darkness overlay
-    private minimapOverlay: Phaser.GameObjects.Graphics | null = null; // Minimap camera darkness overlay
     private timeText: Phaser.GameObjects.BitmapText | null = null;   // Time display
 
     // Development and testing tools  
@@ -206,30 +205,8 @@ export class DayNightCycle {
         return this.overlay;
     }
 
-    public isCurrentlyDay(): boolean {
-        return this.isDay;
-    }
-
     public isCurrentlyNight(): boolean {
         return !this.isDay;
-    }
-
-    /**
-     * Get whether it's currently day time
-     */
-    public getIsDay(): boolean {
-        return this.isDay;
-    }
-
-    /**
-     * Get whether it's currently night time
-     */
-    public getIsNight(): boolean {
-        return !this.isDay;
-    }
-
-    public isInTransition(): boolean {
-        return this.isTransitioning;
     }
 
     public getCurrentTime(): number {
@@ -243,12 +220,6 @@ export class DayNightCycle {
 
     public getDarknessIntensity(): number {
         return this.darknessIntensity
-    }
-
-    // Debug methods
-    public toggleDebugMode(): void {
-        this.debugMode = !this.debugMode;
-        console.log(`Day/Night debug mode: ${this.debugMode ? 'ON' : 'OFF'}`);
     }
 
     public setToPeakDay(): void {
@@ -267,22 +238,13 @@ export class DayNightCycle {
     }
 
     public setDarknessIntensity(intensity: number): void {
-        // This method is used by save system, but we calculate darkness based on time
-        // So we need to reverse-engineer what time would produce this darkness
-        if (intensity <= 0) {
-            this.setTime(0.5); // Noon
-        } else {
-            this.setTime(0.0); // Midnight
-        }
-        console.log(`Set darkness intensity to ${intensity} (approximated time)`);
+        this.darknessIntensity = intensity
+        console.log(`Set darkness intensity to ${intensity}`);
     }
 
     public destroy(): void {
         if (this.overlay) {
             this.overlay.destroy();
-        }
-        if (this.minimapOverlay) {
-            this.minimapOverlay.destroy();
         }
         if (this.timeText) {
             this.timeText.destroy();
