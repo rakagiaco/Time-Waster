@@ -447,35 +447,47 @@ export class DebugManager {
     }
 
     private toggleToPeakDay(): void {
-        console.log('toggleToPeakDay called');
+        console.log('🌅 Debug: Toggle to Peak Day button clicked');
         
-        // Try multiple ways to access the day/night cycle
+        // Method 1: Scene-level event
+        this.scene.events.emit('debug-setToPeakDay');
+        
+        // Method 2: Global game-level event (works across all scenes)
+        this.scene.game.events.emit('debug-setToPeakDay');
+        
+        // Method 3: Registry-based global signal
+        this.scene.registry.set('debugCommand', { type: 'setToPeakDay', timestamp: Date.now() });
+        
+        // Method 4: Direct access as backup
         const worldScene = this.scene as any;
-        
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakDay();
-            console.log('Debug: Set to peak day via scene.dayNightCycle');
-        } else {
-            // Try accessing through scene events
-            this.scene.events.emit('debug-setToPeakDay');
-            console.log('Debug: Attempted to set peak day via events');
+            console.log('🌅 Debug: Set to peak day via direct access');
         }
+        
+        console.log('🌅 Debug: All peak day triggers fired');
     }
 
     private toggleToPeakNight(): void {
-        console.log('toggleToPeakNight called');
+        console.log('🌙 Debug: Toggle to Peak Night button clicked');
         
-        // Try multiple ways to access the day/night cycle
+        // Method 1: Scene-level event
+        this.scene.events.emit('debug-setToPeakNight');
+        
+        // Method 2: Global game-level event (works across all scenes)
+        this.scene.game.events.emit('debug-setToPeakNight');
+        
+        // Method 3: Registry-based global signal
+        this.scene.registry.set('debugCommand', { type: 'setToPeakNight', timestamp: Date.now() });
+        
+        // Method 4: Direct access as backup
         const worldScene = this.scene as any;
-        
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakNight();
-            console.log('Debug: Set to peak night via scene.dayNightCycle');
-        } else {
-            // Try accessing through scene events
-            this.scene.events.emit('debug-setToPeakNight');
-            console.log('Debug: Attempted to set peak night via events');
+            console.log('🌙 Debug: Set to peak night via direct access');
         }
+        
+        console.log('🌙 Debug: All peak night triggers fired');
     }
 
     public destroy(): void {

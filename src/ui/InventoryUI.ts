@@ -517,7 +517,7 @@ export class InventoryUI {
         );
         countText.setOrigin(0.5);
         countText.setTint(0xFFFFFF);
-        countText.setScrollFactor(0);
+                countText.setScrollFactor(0);
         countContainer.add(countText);
         
         return countContainer;
@@ -582,7 +582,7 @@ export class InventoryUI {
                 // Hide tooltip immediately when attempting to consume
                 this.hideItemTooltip();
                 
-                this.consumeFruit(itemType);
+                    this.consumeFruit(itemType);
                 
                 // Add click animation regardless (visual feedback for interaction)
                 this.scene.tweens.add({

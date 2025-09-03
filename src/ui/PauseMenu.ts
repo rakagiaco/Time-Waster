@@ -273,8 +273,8 @@ export class PauseMenu {
                     (worldScene.dayNightCycle.isCurrentlyNight() ? 1 : 0) : 0,
                     
                 // Flashlight state
-                flashlightActive: worldScene.flashlight ? 
-                    worldScene.flashlight.isLightActive() : false,
+                lanternActive: worldScene.lantern ? 
+                    worldScene.lantern.isLit() : false,
                     
                 // Tree light emission state
                 treeLightActive: worldScene.treeLightEmission ? 
@@ -357,7 +357,7 @@ export class PauseMenu {
             'Space - Light Attack',
             'Ctrl - Heavy Attack',
             'E - Pickup Items',
-            'F - Toggle Flashlight',
+            'F - Toggle Lantern',
             'I - Inventory'
         ];
         

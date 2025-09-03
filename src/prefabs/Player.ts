@@ -4,6 +4,7 @@ import { Inventory } from './Inventory';
 import { Item } from './Item';
 import { StateMachine, State } from '../lib/StateMachine';
 import { updatePlayerMovement } from '../lib/HelperFunc';
+import { Lantern } from '../systems/Lantern';
 import GameConfig from '../config/GameConfig';
 
 
@@ -16,7 +17,7 @@ export let keyAttackHeavy: Phaser.Input.Keyboard.Key;
 export let keyInventory: Phaser.Input.Keyboard.Key;
 export let keySprint: Phaser.Input.Keyboard.Key;
 export let keyInteract: Phaser.Input.Keyboard.Key;
-export let keyFlashlight: Phaser.Input.Keyboard.Key;
+export let keyLantern: Phaser.Input.Keyboard.Key;
 
 // Player States
 class PlayerIdleState extends State {
@@ -53,9 +54,9 @@ class PlayerIdleState extends State {
             player.performProximityPickup();
         }
 
-        // Check for flashlight toggle input
-        if (keyFlashlight && keyFlashlight.isDown) {
-            player.toggleFlashlight();
+        // Check for lantern toggle input (single press only)
+        if (keyLantern && Phaser.Input.Keyboard.JustDown(keyLantern)) {
+            player.toggleLantern();
         }
     }
 }
@@ -98,9 +99,9 @@ class PlayerWalkingState extends State {
             player.performProximityPickup();
         }
 
-        // Check for flashlight toggle input
-        if (keyFlashlight && keyFlashlight.isDown) {
-            player.toggleFlashlight();
+        // Check for lantern toggle input (single press only)
+        if (keyLantern && Phaser.Input.Keyboard.JustDown(keyLantern)) {
+            player.toggleLantern();
         }
     }
 }
@@ -203,7 +204,7 @@ export class Player extends Entity {
     public pickupCooldown: boolean = false;
     public invincibilityFrames: boolean = false;
     public invincibilityTimer: number = 0;
-    public flashlight: any = null; // Will be set by World scene
+    public lantern: Lantern | null = null; // Will be set by World scene
     public isKnockedBack: boolean = false;
     public knockbackTimer: number = 0;
     public lanternSprite: Phaser.GameObjects.Graphics | null = null;
@@ -356,7 +357,7 @@ export class Player extends Entity {
             keyInventory = (keyboard as any).addKey('I');
             keySprint = (keyboard as any).addKey('SHIFT');
             keyInteract = (keyboard as any).addKey('E');
-            keyFlashlight = (keyboard as any).addKey('F');
+            keyLantern = (keyboard as any).addKey('F');
 
             console.log('Input keys initialized successfully');
         }
@@ -639,10 +640,10 @@ export class Player extends Entity {
         }
     }
 
-    public toggleFlashlight(): void {
-        if (this.flashlight) {
-            this.flashlight.toggle();
-            console.log(`Flashlight ${this.flashlight.isLightActive() ? 'ON' : 'OFF'}`);
+    public toggleLantern(): void {
+        if (this.lantern) {
+            this.lantern.toggle();
+            console.log(`Lantern ${this.lantern.isLit() ? 'LIT' : 'EXTINGUISHED'}`);
         }
     }
 

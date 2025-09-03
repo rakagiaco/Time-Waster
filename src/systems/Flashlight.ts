@@ -43,11 +43,11 @@ export class Flashlight {
     }
 
     private setupLight(): void {
-        // Create light mask that will punch holes in the darkness
+        // Create light mask that will cut holes in the darkness overlay
         this.lightMask = this.scene.add.graphics();
         this.lightMask.setDepth(1001); // Above darkness overlay (depth 1000)
-        this.lightMask.setScrollFactor(0);
-        this.lightMask.setBlendMode(Phaser.BlendModes.ERASE); // This erases from darkness overlay
+        this.lightMask.setScrollFactor(0); // Fixed to screen like darkness overlay
+        this.lightMask.setBlendMode(Phaser.BlendModes.ERASE); // This erases darkness overlay
         
         // Create light glow effect for ambiance
         this.lightOverlay = this.scene.add.graphics();
@@ -62,23 +62,10 @@ export class Flashlight {
     }
 
     public update(delta: number): void {
-        if (!this.isActive) return;
-        
-        // Flashlight works when it's dark (darkness intensity > 0.1)
-        if (this.darknessIntensity < 0.1) {
-            // Hide light graphics during day but keep flashlight active
-            if (this.lightMask) this.lightMask.setVisible(false);
-            if (this.lightOverlay) this.lightOverlay.setVisible(false);
-            return;
-        } else {
-            // Show light graphics during night
-            if (this.lightMask) this.lightMask.setVisible(true);
-            if (this.lightOverlay) this.lightOverlay.setVisible(true);
-        }
-        
+        // Always update flicker timer for smooth animation
         this.flickerTimer += delta * this.config.flickerSpeed;
         
-        // Update light position to follow player
+        // Always update position and effect - let updateLightEffect handle visibility logic
         this.updateLightPosition();
         this.updateLightEffect();
     }
@@ -86,15 +73,15 @@ export class Flashlight {
     private updateLightPosition(): void {
         if (!this.lightMask || !this.lightOverlay) return;
         
+        // Convert player world position to screen coordinates for screen-fixed graphics
         const camera = this.scene.cameras.main;
         const playerScreenX = this.player.x - camera.scrollX;
         const playerScreenY = this.player.y - camera.scrollY;
         
-        // Update light mask position
+        // Position light graphics at player's screen position (since they're screen-fixed)
         this.lightMask.x = playerScreenX;
         this.lightMask.y = playerScreenY;
         
-        // Update light overlay position
         this.lightOverlay.x = playerScreenX;
         this.lightOverlay.y = playerScreenY;
     }
@@ -104,35 +91,39 @@ export class Flashlight {
         
         // Calculate flicker effect
         const flicker = Math.sin(this.flickerTimer) * this.config.flickerIntensity;
-        const currentRadius = this.baseRadius + (flicker * this.baseRadius);
+        const currentRadius = this.baseRadius * (1 + flicker);
         
-        // Clear previous graphics
+        // Always clear previous graphics first
         this.lightMask.clear();
         this.lightOverlay.clear();
         
-        // Create the mask that erases darkness (punch hole in darkness overlay)
-        this.lightMask.fillStyle(0xffffff, 1); // White color will erase darkness when using ERASE blend mode
-        this.lightMask.fillCircle(0, 0, currentRadius);
-        
-        // Add a soft edge to the light mask for realistic falloff
-        const falloffSteps = 8;
-        for (let i = 0; i < falloffSteps; i++) {
-            const alpha = 1 - (i / falloffSteps);
-            const radius = currentRadius * (1 + (i * 0.1));
-            this.lightMask.fillStyle(0xffffff, alpha * 0.5);
-            this.lightMask.fillCircle(0, 0, radius);
+        // Only draw light if flashlight is active AND there's darkness to cut through
+        if (!this.isActive || this.darknessIntensity <= 0.1) {
+            return; // Don't draw anything - let darkness overlay show through
         }
         
-        // Create atmospheric light glow (visible light effect)
-        const glowIntensity = Math.min(0.4, this.darknessIntensity * 0.6);
+        // Dynamic light intensity based on darkness level
+        // The darker it is, the more effective the flashlight should be
+        const lightEffectiveness = Math.min(1.0, this.darknessIntensity * 1.2);
+        
+        // Create main light circle that erases darkness
+        this.lightMask.fillStyle(0xffffff, lightEffectiveness);
+        this.lightMask.fillCircle(0, 0, currentRadius);
+        
+        // Add gradual falloff that responds to darkness intensity
+        const falloffSteps = 4;
+        for (let i = 1; i <= falloffSteps; i++) {
+            const falloffRadius = currentRadius + (i * 8);
+            const falloffAlpha = lightEffectiveness * (1.0 - (i / (falloffSteps + 1)));
+            this.lightMask.fillStyle(0xffffff, falloffAlpha);
+            this.lightMask.fillCircle(0, 0, falloffRadius);
+        }
+        
+        // Create subtle atmospheric glow (not too bright)
+        const glowIntensity = Math.min(0.15, this.darknessIntensity * 0.2);
         if (glowIntensity > 0) {
-            // Inner bright glow
             this.lightOverlay.fillStyle(this.config.color, glowIntensity);
-            this.lightOverlay.fillCircle(0, 0, currentRadius * 0.7);
-            
-            // Outer soft glow
-            this.lightOverlay.fillStyle(this.config.color, glowIntensity * 0.3);
-            this.lightOverlay.fillCircle(0, 0, currentRadius * 1.2);
+            this.lightOverlay.fillCircle(0, 0, currentRadius * 0.6);
         }
     }
 

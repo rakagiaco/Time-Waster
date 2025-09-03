@@ -42,7 +42,7 @@ export interface SaveData {
         currentTime: number;
         darknessIntensity: number;
         enemiesEnhanced: number;
-        flashlightActive: boolean;
+        lanternActive: boolean;
         treeLightActive: boolean;
         playerStamina: boolean;
         attackLightCooldown: boolean;
@@ -108,7 +108,7 @@ export class SaveSystem {
                     currentTime: gameState.currentTime || 0.5,
                     darknessIntensity: gameState.darknessIntensity || 0,
                     enemiesEnhanced: gameState.enemiesEnhanced || 0,
-                    flashlightActive: gameState.flashlightActive || false,
+                    lanternActive: gameState.lanternActive || false,
                     treeLightActive: gameState.treeLightActive || false,
                     playerStamina: gameState.playerStamina || false,
                     attackLightCooldown: gameState.attackLightCooldown || false,
@@ -262,10 +262,10 @@ export class SaveSystem {
                 console.log(`Time of day restored: ${saveData.gameState.timeOfDay} (${saveData.gameState.currentTime})`);
             }
             
-            // Restore flashlight state
-            if (scene.flashlight && saveData.gameState.flashlightActive) {
-                scene.flashlight.setActive(true);
-                console.log('Flashlight state restored: active');
+            // Restore lantern state
+            if (scene.lantern && saveData.gameState.lanternActive) {
+                scene.lantern.setActive(true);
+                console.log('Lantern state restored: active');
             }
             
             // Restore tree light emission state

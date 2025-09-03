@@ -7,7 +7,7 @@ import { Tree } from '../../prefabs/Tree';
 import { DebugManager } from '../../debug/DebugManager';
 import { InventoryUI } from '../../ui/InventoryUI';
 import { DayNightCycle } from '../../systems/DayNightCycle';
-import { Flashlight } from '../../systems/Flashlight';
+import { Lantern } from '../../systems/Lantern';
 import { TreeLightEmission } from '../../systems/TreeLightEmission';
 import { Pathfinding } from '../../systems/Pathfinding';
 import { PauseMenu } from '../../ui/PauseMenu';
@@ -38,7 +38,7 @@ export class World extends Phaser.Scene {
 
     // Day/Night and Lighting Systems
     private dayNightCycle!: DayNightCycle;
-    private flashlight!: Flashlight;
+    private lantern!: Lantern;
     private treeLightEmission!: TreeLightEmission;
     private pathfinding!: Pathfinding;
     private pauseMenu!: PauseMenu;
@@ -137,12 +137,9 @@ export class World extends Phaser.Scene {
 
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
-                if (this.flashlight) {
-                    if (data.isDay) {
-                        this.flashlight.deactivate();
-                    } else {
-                        this.flashlight.activate();
-                    }
+                if (this.lantern) {
+                    // Lantern can be used day or night, but effectiveness varies
+                    // No auto-activation based on day/night
                 }
 
                 if (this.treeLightEmission) {
@@ -156,26 +153,56 @@ export class World extends Phaser.Scene {
 
             console.log('Day/night cycle setup complete');
             
-            // Setup debug event listeners for day/night control
+            // Setup debug event listeners for day/night control (multiple methods)
+            
+            // Method 1: Scene-level events
             this.events.on('debug-setToPeakDay', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakDay();
-                    console.log('Debug event: Set to peak day');
+                    console.log('🌅 Debug event (scene): Set to peak day');
                 }
             });
             
             this.events.on('debug-setToPeakNight', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakNight();
-                    console.log('Debug event: Set to peak night');
+                    console.log('🌙 Debug event (scene): Set to peak night');
+                }
+            });
+            
+            // Method 2: Global game events
+            this.game.events.on('debug-setToPeakDay', () => {
+                if (this.dayNightCycle) {
+                    this.dayNightCycle.setToPeakDay();
+                    console.log('🌅 Debug event (global): Set to peak day');
+                }
+            });
+            
+            this.game.events.on('debug-setToPeakNight', () => {
+                if (this.dayNightCycle) {
+                    this.dayNightCycle.setToPeakNight();
+                    console.log('🌙 Debug event (global): Set to peak night');
+                }
+            });
+            
+            // Method 3: Registry change listener
+            this.registry.events.on('changedata-debugCommand', (_parent: any, _key: string, data: any) => {
+                if (data && this.dayNightCycle) {
+                    if (data.type === 'setToPeakDay') {
+                        this.dayNightCycle.setToPeakDay();
+                        console.log('🌅 Debug event (registry): Set to peak day');
+                    } else if (data.type === 'setToPeakNight') {
+                        this.dayNightCycle.setToPeakNight();
+                        console.log('🌙 Debug event (registry): Set to peak night');
+                    }
                 }
             });
 
-            // Setup Flashlight
-            console.log('Setting up flashlight...');
-            this.flashlight = new Flashlight(this, this.player);
-            this.player.flashlight = this.flashlight; // Connect flashlight to player
-            console.log('Flashlight setup complete');
+            // Setup Lantern
+            console.log('Setting up lantern...');
+            this.lantern = new Lantern(this, this.player);
+            this.player.lantern = this.lantern; // Connect lantern to player
+            console.log('Lantern setup complete');
 
             // Setup Tree Light Emission
             console.log('Setting up tree light emission...');
@@ -262,9 +289,9 @@ export class World extends Phaser.Scene {
             this.dayNightCycle.update(delta);
         }
 
-        // Update Flashlight
-        if (this.flashlight) {
-            this.flashlight.update(delta);
+        // Update Lantern
+        if (this.lantern) {
+            this.lantern.update(delta);
         }
 
         // Update Tree Light Emission
@@ -514,7 +541,7 @@ export class World extends Phaser.Scene {
             timeOfDay: this.dayNightCycle ? this.dayNightCycle.getTimeOfDay() : 'Unknown',
             currentTime: this.dayNightCycle ? this.dayNightCycle.getCurrentTime() : 0,
             darknessIntensity: this.dayNightCycle ? this.dayNightCycle.getDarknessIntensity() : 0,
-            flashlightActive: this.flashlight ? this.flashlight.isLightActive() : false,
+            lanternActive: this.lantern ? this.lantern.isLit() : false,
             treeLightsActive: this.treeLightEmission ? this.treeLightEmission.isLightActive() : false,
             // Enemy Night Stats
             enemiesEnhanced: this.enemies.filter(enemy => (enemy as any).nightStatsApplied).length,

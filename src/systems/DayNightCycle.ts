@@ -88,6 +88,7 @@ export class DayNightCycle {
         this.overlay = this.scene.add.graphics();
         this.overlay.setDepth(1000);
         this.overlay.setScrollFactor(0); // Fixed to camera
+        this.overlay.setBlendMode(Phaser.BlendModes.NORMAL); // Normal blend so ERASE can work on it
         
         // Create minimap overlay for darkness (positioned like ring, not camera-relative)
         this.minimapOverlay = this.scene.add.graphics();
@@ -185,16 +186,16 @@ export class DayNightCycle {
         const nightStart = 21;   // 9 PM - full darkness
         
         if (currentHour >= nightStart || currentHour < dawnStart) {
-            // Full night (9 PM to 5 AM)
-            darknessIntensity = 0.85; // Deep darkness but not completely black
+            // Full night (9 PM to 5 AM) - almost impossible to see
+            darknessIntensity = 0.95; // Very dark, nearly black
         } else if (currentHour >= duskStart && currentHour < nightStart) {
             // Dusk transition (7 PM to 9 PM)
             const duskProgress = (currentHour - duskStart) / (nightStart - duskStart);
-            darknessIntensity = duskProgress * 0.85;
+            darknessIntensity = duskProgress * 0.95;
         } else if (currentHour >= dawnStart && currentHour < dayStart) {
             // Dawn transition (5 AM to 7 AM)
             const dawnProgress = (currentHour - dawnStart) / (dayStart - dawnStart);
-            darknessIntensity = 0.85 * (1 - dawnProgress);
+            darknessIntensity = 0.95 * (1 - dawnProgress);
         } else {
             // Full day (7 AM to 7 PM)
             darknessIntensity = 0;
@@ -221,7 +222,7 @@ export class DayNightCycle {
         
         // Draw darkness overlay if there's any darkness
         if (darknessIntensity > 0) {
-            this.overlay.fillStyle(0x000033, darknessIntensity); // Dark blue-black for night
+            this.overlay.fillStyle(0x000000, darknessIntensity); // Pure black for maximum darkness
             this.overlay.fillRect(0, 0, width, height);
         }
     }
@@ -243,7 +244,7 @@ export class DayNightCycle {
         
         // Draw circular darkness overlay to fill entire ring area
         if (darknessIntensity > 0) {
-            this.minimapOverlay.fillStyle(0x000033, darknessIntensity); // Same dark blue-black
+            this.minimapOverlay.fillStyle(0x000000, darknessIntensity); // Pure black for consistency
             this.minimapOverlay.fillCircle(centerX, centerY, outerRadius);
         }
     }
