@@ -1,3 +1,11 @@
+/**
+ * Medieval Scroll-Style Pause Menu
+ * 
+ * Complete redesign using scroll aesthetics with custom graphics and proper
+ * camera-relative positioning. Features hand-drawn scroll appearance with
+ * medieval-themed buttons and typography.
+ */
+
 import Phaser from 'phaser';
 import { SaveSystem } from '../systems/SaveSystem';
 
@@ -5,7 +13,7 @@ export class PauseMenu {
     private scene: Phaser.Scene;
     private isVisible: boolean = false;
     private menuContainer: Phaser.GameObjects.Container | null = null;
-    private menuButtons: Phaser.GameObjects.Image[] = [];
+
     private controlsDisplay: Phaser.GameObjects.Container | null = null;
     private showingControls: boolean = false;
 
@@ -61,27 +69,14 @@ export class PauseMenu {
         const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2;
 
-        // Create menu container
+        // Create menu container with proper camera positioning
         this.menuContainer = this.scene.add.container(0, 0);
         this.menuContainer.setScrollFactor(0);
         this.menuContainer.setDepth(10001);
         this.menuContainer.setVisible(true);
 
-        // Create scroll-like background
-        const scrollBackground = this.scene.add.graphics();
-        scrollBackground.fillStyle(0x8B4513, 0.95); // Brown parchment color
-        scrollBackground.fillRoundedRect(centerX - 200, centerY - 250, 400, 500, 20);
-        
-        // Add scroll texture effect
-        scrollBackground.lineStyle(3, 0x654321, 1);
-        scrollBackground.strokeRoundedRect(centerX - 200, centerY - 250, 400, 500, 20);
-        
-        // Add scroll roll effect at top and bottom
-        scrollBackground.fillStyle(0x654321, 1);
-        scrollBackground.fillRoundedRect(centerX - 220, centerY - 270, 440, 40, 20);
-        scrollBackground.fillRoundedRect(centerX - 220, centerY + 210, 440, 40, 20);
-
-        scrollBackground.setScrollFactor(0);
+        // Enhanced scroll background with medieval aesthetics
+        const scrollBackground = this.createScrollBackground(centerX, centerY);
         this.menuContainer.add(scrollBackground);
 
         // Create title
@@ -91,60 +86,156 @@ export class PauseMenu {
         title.setScrollFactor(0);
         this.menuContainer.add(title);
 
-        // Create menu buttons using the same approach as main menu
-        const buttonY = centerY - 100;
-        const buttonSpacing = 60;
+        // Create custom scroll-themed buttons
+        const buttonY = centerY - 120;
+        const buttonSpacing = 70;
 
-        // Continue button
-        const continueBtn = this.scene.add.image(centerX, buttonY, 'continue-game-button')
-            .setOrigin(0.5)
-            .setScale(1.2)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.sound.play('click', { volume: 0.5 });
-                this.hide();
-            });
+        // Continue button with custom scroll graphics
+        const continueBtn = this.createScrollButton(centerX, buttonY, 'CONTINUE', () => {
+            this.scene.sound.play('click', { volume: 0.5 });
+            this.hide();
+        });
         this.menuContainer.add(continueBtn);
-        this.menuButtons.push(continueBtn);
 
-        // Save Game button (using new-game-button but with different text)
-        const saveBtn = this.scene.add.image(centerX, buttonY + buttonSpacing, 'new-game-button')
-            .setOrigin(0.5)
-            .setScale(1.2)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.sound.play('click', { volume: 0.5 });
-                this.saveGame();
-            });
+        // Save Game button
+        const saveBtn = this.createScrollButton(centerX, buttonY + buttonSpacing, 'SAVE GAME', () => {
+            this.scene.sound.play('click', { volume: 0.5 });
+            this.saveGame();
+        });
         this.menuContainer.add(saveBtn);
-        this.menuButtons.push(saveBtn);
 
         // Controls button
-        const controlsBtn = this.scene.add.image(centerX, buttonY + (buttonSpacing * 2), 'credits-button')
-            .setOrigin(0.5)
-            .setScale(1.2)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.sound.play('click', { volume: 0.5 });
-                this.showControls();
-            });
+        const controlsBtn = this.createScrollButton(centerX, buttonY + (buttonSpacing * 2), 'CONTROLS', () => {
+            this.scene.sound.play('click', { volume: 0.5 });
+            this.showControls();
+        });
         this.menuContainer.add(controlsBtn);
-        this.menuButtons.push(controlsBtn);
 
-        // Exit to Menu button
-        const exitBtn = this.scene.add.image(centerX, buttonY + (buttonSpacing * 3), 'menu-button')
-            .setOrigin(0.5)
-            .setScale(1.2)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.sound.play('click', { volume: 0.5 });
-                this.exitToMenu();
-            });
+        // Main Menu button
+        const exitBtn = this.createScrollButton(centerX, buttonY + (buttonSpacing * 3), 'MAIN MENU', () => {
+            this.scene.sound.play('click', { volume: 0.5 });
+            this.exitToMenu();
+        });
         this.menuContainer.add(exitBtn);
-        this.menuButtons.push(exitBtn);
 
         // Add save info if available
         this.addSaveInfo(centerX, centerY + 200);
+    }
+
+    /**
+     * Creates an enhanced medieval scroll background with detailed graphics
+     */
+    private createScrollBackground(centerX: number, centerY: number): Phaser.GameObjects.Graphics {
+        const scroll = this.scene.add.graphics();
+        
+        // Main parchment body with aged paper texture
+        scroll.fillStyle(0xF5DEB3, 0.95); // Wheat/aged paper color
+        scroll.fillRoundedRect(centerX - 220, centerY - 280, 440, 560, 15);
+        
+        // Add darker edges for depth and aging effect
+        scroll.fillStyle(0xD2B48C, 0.8); // Tan color for edges
+        scroll.fillRoundedRect(centerX - 215, centerY - 275, 430, 550, 12);
+        
+        // Inner scroll area
+        scroll.fillStyle(0xFAF0E6, 0.9); // Linen color for main area
+        scroll.fillRoundedRect(centerX - 200, centerY - 260, 400, 520, 10);
+        
+        // Scroll rod at top - wooden appearance
+        scroll.fillStyle(0x8B4513, 1); // Saddle brown
+        scroll.fillRoundedRect(centerX - 240, centerY - 300, 480, 20, 10);
+        scroll.fillStyle(0xA0522D, 1); // Sienna highlight
+        scroll.fillRoundedRect(centerX - 240, centerY - 298, 480, 8, 4);
+        
+        // Scroll rod at bottom
+        scroll.fillStyle(0x8B4513, 1);
+        scroll.fillRoundedRect(centerX - 240, centerY + 280, 480, 20, 10);
+        scroll.fillStyle(0xA0522D, 1);
+        scroll.fillRoundedRect(centerX - 240, centerY + 282, 480, 8, 4);
+        
+        // Decorative corner flourishes
+        this.addScrollDecorations(scroll, centerX, centerY);
+        
+        // Border outline
+        scroll.lineStyle(2, 0x8B4513, 0.8);
+        scroll.strokeRoundedRect(centerX - 200, centerY - 260, 400, 520, 10);
+        
+        scroll.setScrollFactor(0);
+        return scroll;
+    }
+
+    /**
+     * Creates a custom scroll-themed button with hover effects
+     */
+    private createScrollButton(x: number, y: number, text: string, callback: () => void): Phaser.GameObjects.Container {
+        const button = this.scene.add.container(x, y);
+        button.setScrollFactor(0);
+        
+        // Button background - scroll fragment appearance
+        const buttonBg = this.scene.add.graphics();
+        buttonBg.fillStyle(0xF5DEB3, 0.9); // Matching scroll color
+        buttonBg.fillRoundedRect(-80, -20, 160, 40, 8);
+        
+        // Button border
+        buttonBg.lineStyle(2, 0x8B4513, 0.8);
+        buttonBg.strokeRoundedRect(-80, -20, 160, 40, 8);
+        
+        // Decorative corner dots
+        buttonBg.fillStyle(0x8B4513, 1);
+        buttonBg.fillCircle(-70, -10, 2);
+        buttonBg.fillCircle(70, -10, 2);
+        buttonBg.fillCircle(-70, 10, 2);
+        buttonBg.fillCircle(70, 10, 2);
+        
+        // Button text using game font
+        const buttonText = this.scene.add.bitmapText(0, 0, '8-bit', text, 16);
+        buttonText.setOrigin(0.5);
+        buttonText.setTint(0x654321); // Dark brown text
+        buttonText.setScrollFactor(0);
+        
+        button.add([buttonBg, buttonText]);
+        
+        // Make interactive with hover effects
+        button.setSize(160, 40);
+        button.setInteractive({ useHandCursor: true });
+        
+        // Hover effects
+        button.on('pointerover', () => {
+            button.setScale(1.05);
+            buttonText.setTint(0x8B0000); // Dark red on hover
+        });
+        
+        button.on('pointerout', () => {
+            button.setScale(1.0);
+            buttonText.setTint(0x654321); // Back to brown
+        });
+        
+        button.on('pointerdown', callback);
+        
+        return button;
+    }
+
+    /**
+     * Adds decorative flourishes to scroll corners
+     */
+    private addScrollDecorations(scroll: Phaser.GameObjects.Graphics, centerX: number, centerY: number): void {
+        // Top corners - small decorative curves
+        scroll.lineStyle(3, 0x8B4513, 0.6);
+        scroll.beginPath();
+        scroll.arc(centerX - 160, centerY - 220, 15, 0, Math.PI * 0.5);
+        scroll.strokePath();
+        
+        scroll.beginPath();
+        scroll.arc(centerX + 160, centerY - 220, 15, Math.PI * 0.5, Math.PI);
+        scroll.strokePath();
+        
+        // Bottom corners
+        scroll.beginPath();
+        scroll.arc(centerX - 160, centerY + 220, 15, Math.PI * 1.5, Math.PI * 2);
+        scroll.strokePath();
+        
+        scroll.beginPath();
+        scroll.arc(centerX + 160, centerY + 220, 15, Math.PI, Math.PI * 1.5);
+        scroll.strokePath();
     }
 
     private addSaveInfo(centerX: number, centerY: number): void {
@@ -160,7 +251,52 @@ export class PauseMenu {
     private saveGame(): void {
         try {
             const worldScene = this.scene as any;
-            SaveSystem.saveGame(worldScene);
+            
+            // Get all required game objects from the world scene
+            const player = worldScene.player;
+            const enemies = worldScene.enemies || [];
+            const trees = worldScene.trees || [];
+            const items = worldScene.items || [];
+            
+            // Gather comprehensive game state information
+            const gameState = {
+                // Day/Night cycle information
+                timeOfDay: worldScene.dayNightCycle ? 
+                    (worldScene.dayNightCycle.isCurrentlyNight() ? 'night' : 'day') : 'day',
+                currentTime: worldScene.dayNightCycle ? 
+                    worldScene.dayNightCycle.getCurrentTime() : 0.25,
+                darknessIntensity: worldScene.dayNightCycle ? 
+                    worldScene.dayNightCycle.getDarknessIntensity() : 0,
+                    
+                // Enemy enhancement tracking (night bonuses)
+                enemiesEnhanced: worldScene.dayNightCycle ? 
+                    (worldScene.dayNightCycle.isCurrentlyNight() ? 1 : 0) : 0,
+                    
+                // Flashlight state
+                flashlightActive: worldScene.flashlight ? 
+                    worldScene.flashlight.isLightActive() : false,
+                    
+                // Tree light emission state
+                treeLightActive: worldScene.treeLightEmission ? 
+                    worldScene.treeLightEmission.isLightActive() : false,
+                    
+                // Player stamina and cooldowns
+                playerStamina: player.sprintCooldown || false,
+                attackLightCooldown: player.attackLightCooldown || false,
+                attackHeavyCooldown: player.attackHeavyCooldown || false,
+                
+                // Camera position for restoration
+                cameraX: worldScene.cameras.main.scrollX,
+                cameraY: worldScene.cameras.main.scrollY
+            };
+            
+            // Call SaveSystem with proper parameters
+            const success = SaveSystem.saveGame(player, enemies, trees, items, gameState);
+            
+            if (!success) {
+                console.error('Failed to save game');
+                return;
+            }
             
             // Show save feedback
             const saveFeedback = this.scene.add.bitmapText(
@@ -189,8 +325,11 @@ export class PauseMenu {
     private showControls(): void {
         this.showingControls = true;
         
-        // Hide menu buttons
-        this.menuButtons.forEach(btn => btn.setVisible(false));
+        // Hide menu buttons (note: this will need updating after we fix the button storage)
+        // For now, hide the entire menu container to avoid issues
+        if (this.menuContainer) {
+            this.menuContainer.setVisible(false);
+        }
         
         // Create controls display
         this.controlsDisplay = this.scene.add.container(0, 0);
@@ -200,16 +339,8 @@ export class PauseMenu {
         const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2;
         
-        // Controls background - use scroll-like background instead of black
-        const controlsBg = this.scene.add.graphics();
-        controlsBg.fillStyle(0x8B4513, 0.95); // Brown parchment color
-        controlsBg.fillRoundedRect(centerX - 300, centerY - 200, 600, 400, 20);
-        
-        // Add scroll texture effect
-        controlsBg.lineStyle(3, 0x654321, 1);
-        controlsBg.strokeRoundedRect(centerX - 300, centerY - 200, 600, 400, 20);
-        
-        controlsBg.setScrollFactor(0);
+        // Enhanced controls scroll background
+        const controlsBg = this.createControlsScrollBackground(centerX, centerY);
         this.controlsDisplay.add(controlsBg);
         
         // Controls title
@@ -219,43 +350,88 @@ export class PauseMenu {
         controlsTitle.setScrollFactor(0);
         this.controlsDisplay.add(controlsTitle);
         
-        // Controls list
-        const controls = [
+        // Controls organized in two columns to fit better
+        const leftControls = [
             'WASD - Move',
-            'Shift - Sprint',
+            'Shift - Sprint', 
             'Space - Light Attack',
             'Ctrl - Heavy Attack',
             'E - Pickup Items',
             'F - Toggle Flashlight',
-            'I - Inventory',
+            'I - Inventory'
+        ];
+        
+        const rightControls = [
             'P - Pause Menu',
             'F1 - Debug Panel',
-            'F2 - Collision Boxes',
+            'F2 - Collision Boxes', 
             'F3 - Show Paths',
             'F4 - Peak Day',
             'F5 - Peak Night'
         ];
         
-        controls.forEach((control, index) => {
-            const controlText = this.scene.add.bitmapText(centerX, centerY - 100 + (index * 25), '8-bit', control, 16);
-            controlText.setOrigin(0.5);
-            controlText.setTint(0x000000); // Black text for better contrast on brown background
+        // Left column
+        leftControls.forEach((control, index) => {
+            const controlText = this.scene.add.bitmapText(centerX - 120, centerY - 120 + (index * 22), '8-bit', control, 14);
+            controlText.setOrigin(0, 0.5);
+            controlText.setTint(0x000000);
             controlText.setScrollFactor(0);
-            this.controlsDisplay.add(controlText);
+            this.controlsDisplay?.add(controlText);
         });
         
-        // Back button
-        const backBtn = this.scene.add.image(centerX, centerY + 150, 'menu-button')
-            .setOrigin(0.5)
-            .setScale(1.2)
-            .setInteractive({ useHandCursor: true })
-            .on('pointerdown', () => {
-                this.scene.sound.play('click', { volume: 0.5 });
-                this.hideControls();
-            });
-        this.controlsDisplay.add(backBtn);
+        // Right column  
+        rightControls.forEach((control, index) => {
+            const controlText = this.scene.add.bitmapText(centerX + 20, centerY - 120 + (index * 22), '8-bit', control, 14);
+            controlText.setOrigin(0, 0.5);
+            controlText.setTint(0x000000);
+            controlText.setScrollFactor(0);
+            this.controlsDisplay?.add(controlText);
+        });
         
-        this.menuContainer!.add(this.controlsDisplay);
+        // Back button using scroll style
+        const backBtn = this.createScrollButton(centerX, centerY + 180, 'BACK', () => {
+            this.scene.sound.play('click', { volume: 0.5 });
+            this.hideControls();
+        });
+        this.controlsDisplay.add(backBtn);
+    }
+
+    /**
+     * Creates an enhanced scroll background specifically for the controls display
+     */
+    private createControlsScrollBackground(centerX: number, centerY: number): Phaser.GameObjects.Graphics {
+        const scroll = this.scene.add.graphics();
+        
+        // Larger scroll for controls - main parchment body
+        scroll.fillStyle(0xF5DEB3, 0.95); // Wheat/aged paper color
+        scroll.fillRoundedRect(centerX - 280, centerY - 220, 560, 440, 15);
+        
+        // Add darker edges for depth
+        scroll.fillStyle(0xD2B48C, 0.8); // Tan color for edges
+        scroll.fillRoundedRect(centerX - 275, centerY - 215, 550, 430, 12);
+        
+        // Inner scroll area
+        scroll.fillStyle(0xFAF0E6, 0.9); // Linen color for main area
+        scroll.fillRoundedRect(centerX - 260, centerY - 200, 520, 400, 10);
+        
+        // Scroll rod at top - wooden appearance
+        scroll.fillStyle(0x8B4513, 1); // Saddle brown
+        scroll.fillRoundedRect(centerX - 300, centerY - 240, 600, 20, 10);
+        scroll.fillStyle(0xA0522D, 1); // Sienna highlight
+        scroll.fillRoundedRect(centerX - 300, centerY - 238, 600, 8, 4);
+        
+        // Scroll rod at bottom
+        scroll.fillStyle(0x8B4513, 1);
+        scroll.fillRoundedRect(centerX - 300, centerY + 220, 600, 20, 10);
+        scroll.fillStyle(0xA0522D, 1);
+        scroll.fillRoundedRect(centerX - 300, centerY + 222, 600, 8, 4);
+        
+        // Border outline
+        scroll.lineStyle(2, 0x8B4513, 0.8);
+        scroll.strokeRoundedRect(centerX - 260, centerY - 200, 520, 400, 10);
+        
+        scroll.setScrollFactor(0);
+        return scroll;
     }
 
     private hideControls(): void {
@@ -264,8 +440,10 @@ export class PauseMenu {
             this.controlsDisplay = null;
         }
         
-        // Show menu buttons again
-        this.menuButtons.forEach(btn => btn.setVisible(true));
+        // Show menu container again
+        if (this.menuContainer) {
+            this.menuContainer.setVisible(true);
+        }
         this.showingControls = false;
     }
 
@@ -279,7 +457,6 @@ export class PauseMenu {
             this.menuContainer.destroy();
             this.menuContainer = null;
         }
-        this.menuButtons = [];
         this.showingControls = false;
     }
 

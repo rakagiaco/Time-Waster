@@ -61,7 +61,21 @@ export class World extends Phaser.Scene {
 
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
-            // Load save data if requested
+            // Setup Day/Night Cycle (check for save data first to set correct initial time)
+            console.log('Setting up day/night cycle...');
+            let initialTime = undefined; // Default to peak day (0.25)
+            
+            if (data.loadSaveData) {
+                const saveData = SaveSystem.loadGame();
+                if (saveData && saveData.gameState) {
+                    initialTime = saveData.gameState.currentTime;
+                    console.log(`Found saved time in save data: ${initialTime}`);
+                }
+            }
+            
+            this.dayNightCycle = new DayNightCycle(this, undefined, initialTime);
+
+            // Load save data if requested (this will restore all other game state)
             if (data.loadSaveData) {
                 console.log('Loading save data...');
                 this.loadSaveData();
@@ -116,9 +130,7 @@ export class World extends Phaser.Scene {
             this.input.setDefaultCursor('url(/img/cursor.png), pointer');
             console.log('Custom cursor setup complete');
 
-            // Setup Day/Night Cycle
-            console.log('Setting up day/night cycle...');
-            this.dayNightCycle = new DayNightCycle(this);
+            // Day/Night Cycle already created earlier to allow save data restoration
 
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
@@ -453,10 +465,10 @@ export class World extends Phaser.Scene {
         this.minimapMask.fillStyle(0xffffff, 0); // Transparent mask
         this.minimapMask.fillCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, minimapSize / 2);
 
-        const minimapRing = this.add.graphics().lineStyle(5, 0x000000, 1); // thickness=4, black color, full alpha
-        minimapRing.strokeCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, (minimapSize / 2) + 5)
-        minimapRing.setScrollFactor(0).setDepth(1000) // Fix the ring in place on the screen
-        this.miniMapCamera.ignore(minimapRing)
+        // Create medieval-themed minimap ring with ornate compass design
+        const minimapRing = this.createMedievalMinimapRing(minimapX, minimapY, minimapSize);
+        minimapRing.setScrollFactor(0).setDepth(1000); // Fix the ring in place on the screen
+        this.miniMapCamera.ignore(minimapRing);
 
         // Apply mask to minimap camera to make it circular
         this.miniMapCamera.setMask(this.minimapMask.createGeometryMask());
@@ -643,6 +655,110 @@ export class World extends Phaser.Scene {
         } else {
             console.log('No save data found or failed to load');
         }
+    }
+
+    /**
+     * Creates an ornate medieval-themed minimap ring with compass design
+     */
+    private createMedievalMinimapRing(minimapX: number, minimapY: number, minimapSize: number): Phaser.GameObjects.Graphics {
+        const ring = this.add.graphics();
+        const centerX = minimapX + minimapSize / 2;
+        const centerY = minimapY + minimapSize / 2;
+        const outerRadius = (minimapSize / 2) + 8;
+        const innerRadius = (minimapSize / 2) + 2;
+        
+        // Outer ornate ring - bronze/brass color with metallic feel
+        ring.lineStyle(6, 0x8B4513, 1); // Dark brown/bronze
+        ring.strokeCircle(centerX, centerY, outerRadius);
+        
+        // Inner decorative ring - lighter bronze
+        ring.lineStyle(2, 0xCD853F, 1); // Light bronze
+        ring.strokeCircle(centerX, centerY, outerRadius - 3);
+        
+        // Main border ring - dark metallic
+        ring.lineStyle(3, 0x2F4F4F, 1); // Dark slate gray
+        ring.strokeCircle(centerX, centerY, innerRadius + 1);
+        
+        // Compass cardinal points (N, S, E, W)
+        const cardinalRadius = outerRadius + 12;
+        ring.fillStyle(0x8B4513, 1); // Bronze color
+        
+        // North point
+        ring.beginPath();
+        ring.moveTo(centerX, centerY - cardinalRadius);
+        ring.lineTo(centerX - 4, centerY - cardinalRadius + 8);
+        ring.lineTo(centerX + 4, centerY - cardinalRadius + 8);
+        ring.closePath();
+        ring.fillPath();
+        
+        // South point
+        ring.beginPath();
+        ring.moveTo(centerX, centerY + cardinalRadius);
+        ring.lineTo(centerX - 4, centerY + cardinalRadius - 8);
+        ring.lineTo(centerX + 4, centerY + cardinalRadius - 8);
+        ring.closePath();
+        ring.fillPath();
+        
+        // East point
+        ring.beginPath();
+        ring.moveTo(centerX + cardinalRadius, centerY);
+        ring.lineTo(centerX + cardinalRadius - 8, centerY - 4);
+        ring.lineTo(centerX + cardinalRadius - 8, centerY + 4);
+        ring.closePath();
+        ring.fillPath();
+        
+        // West point
+        ring.beginPath();
+        ring.moveTo(centerX - cardinalRadius, centerY);
+        ring.lineTo(centerX - cardinalRadius + 8, centerY - 4);
+        ring.lineTo(centerX - cardinalRadius + 8, centerY + 4);
+        ring.closePath();
+        ring.fillPath();
+        
+        // Decorative corner ornaments (NE, NW, SE, SW)
+        const cornerRadius = outerRadius + 6;
+        const cornerAngle = Math.PI / 4; // 45 degrees
+        ring.fillStyle(0xCD853F, 1); // Light bronze
+        
+        // Corner ornaments - small diamonds
+        const corners = [
+            { angle: cornerAngle, name: 'NE' },
+            { angle: -cornerAngle, name: 'SE' },
+            { angle: Math.PI - cornerAngle, name: 'NW' },
+            { angle: Math.PI + cornerAngle, name: 'SW' }
+        ];
+        
+        corners.forEach(corner => {
+            const x = centerX + Math.cos(corner.angle) * cornerRadius;
+            const y = centerY + Math.sin(corner.angle) * cornerRadius;
+            
+            ring.beginPath();
+            ring.moveTo(x, y - 3);
+            ring.lineTo(x + 3, y);
+            ring.lineTo(x, y + 3);
+            ring.lineTo(x - 3, y);
+            ring.closePath();
+            ring.fillPath();
+        });
+        
+        // Add subtle texture lines for aged metal effect
+        ring.lineStyle(1, 0x696969, 0.6); // Dim gray
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI * 2) / 8;
+            const startRadius = innerRadius + 2;
+            const endRadius = outerRadius - 2;
+            const startX = centerX + Math.cos(angle) * startRadius;
+            const startY = centerY + Math.sin(angle) * startRadius;
+            const endX = centerX + Math.cos(angle) * endRadius;
+            const endY = centerY + Math.sin(angle) * endRadius;
+            
+            ring.beginPath();
+            ring.moveTo(startX, startY);
+            ring.lineTo(endX, endY);
+            ring.strokePath();
+        }
+        
+        return ring;
     }
 
     // private setupInput(): void {

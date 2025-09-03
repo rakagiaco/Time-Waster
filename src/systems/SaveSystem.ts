@@ -42,6 +42,13 @@ export interface SaveData {
         currentTime: number;
         darknessIntensity: number;
         enemiesEnhanced: number;
+        flashlightActive: boolean;
+        treeLightActive: boolean;
+        playerStamina: boolean;
+        attackLightCooldown: boolean;
+        attackHeavyCooldown: boolean;
+        cameraX: number;
+        cameraY: number;
     };
     metadata: {
         saveDate: number;
@@ -98,9 +105,16 @@ export class SaveSystem {
                 })),
                 gameState: {
                     timeOfDay: gameState.timeOfDay || 'day',
-                    currentTime: gameState.currentTime || 0,
+                    currentTime: gameState.currentTime || 0.25,
                     darknessIntensity: gameState.darknessIntensity || 0,
-                    enemiesEnhanced: gameState.enemiesEnhanced || 0
+                    enemiesEnhanced: gameState.enemiesEnhanced || 0,
+                    flashlightActive: gameState.flashlightActive || false,
+                    treeLightActive: gameState.treeLightActive || false,
+                    playerStamina: gameState.playerStamina || false,
+                    attackLightCooldown: gameState.attackLightCooldown || false,
+                    attackHeavyCooldown: gameState.attackHeavyCooldown || false,
+                    cameraX: gameState.cameraX || 0,
+                    cameraY: gameState.cameraY || 0
                 },
                 metadata: {
                     saveDate: Date.now(),
@@ -238,12 +252,43 @@ export class SaveSystem {
                 });
             }
 
-            // Apply game state
+            // Apply comprehensive game state
+            console.log('Restoring game state:', saveData.gameState);
+            
+            // Restore day/night cycle
             if (scene.dayNightCycle) {
                 scene.dayNightCycle.setTime(saveData.gameState.currentTime);
+                scene.dayNightCycle.setDarknessIntensity(saveData.gameState.darknessIntensity);
+                console.log(`Time of day restored: ${saveData.gameState.timeOfDay} (${saveData.gameState.currentTime})`);
+            }
+            
+            // Restore flashlight state
+            if (scene.flashlight && saveData.gameState.flashlightActive) {
+                scene.flashlight.setActive(true);
+                console.log('Flashlight state restored: active');
+            }
+            
+            // Restore tree light emission state
+            if (scene.treeLightEmission && saveData.gameState.treeLightActive) {
+                scene.treeLightEmission.setActive(true);
+                console.log('Tree lights restored: active');
+            }
+            
+            // Restore player cooldowns and stamina
+            if (scene.player) {
+                scene.player.sprintCooldown = saveData.gameState.playerStamina;
+                scene.player.attackLightCooldown = saveData.gameState.attackLightCooldown;
+                scene.player.attackHeavyCooldown = saveData.gameState.attackHeavyCooldown;
+                console.log('Player cooldowns restored');
+            }
+            
+            // Restore camera position
+            if (scene.cameras.main) {
+                scene.cameras.main.setScroll(saveData.gameState.cameraX, saveData.gameState.cameraY);
+                console.log(`Camera position restored: (${saveData.gameState.cameraX}, ${saveData.gameState.cameraY})`);
             }
 
-            console.log('Save data applied successfully');
+            console.log('Save data applied successfully with full game state restoration');
         } catch (error) {
             console.error('Failed to apply save data:', error);
         }

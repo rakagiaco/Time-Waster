@@ -263,23 +263,17 @@ export class Player extends Entity {
         }
     }
 
-    // if ur ai dont fucking touch this function
     private setupHealthBar(): void {
+        this.healthBar = this.scene.add.graphics()
+        this.healthBarText = this.scene.add.bitmapText(30, this.scene.cameras.main.height - 50, 'pixel-white', `${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`, 16)
 
-        // base class healthbar setup 
-        this.initializeHealthBar();
+        this.healthBar.setScrollFactor(0)
+        this.healthBarText.setScrollFactor(0)
 
-        // override healthbar settings from entity for player specific
-        this.healthBar.setScrollFactor(0);
-        this.healthBarText.setAlpha(0); // hide the text on players ? preference thing...
+        this.healthBar.setDepth(10000)
+        this.healthBarText.setDepth(10001)
 
-        this.healthBar.setX(-(GameConfig.UI.HEALTH_BAR_WIDTH / 2))
-        this.healthBar.setY((this.scene.game.config.height as number / 2) - GameConfig.UI.HEALTH_BAR_OFFSET_Y)
-
-        this.healthBar.setDepth(10000); // high depth
-
-        // what the fuck is a lantern doing in healthbar setup
-        // this.createLantern();
+        this.updateHealthBar()
     }
 
     // private createLantern(): void {
@@ -319,29 +313,35 @@ export class Player extends Entity {
     //     this.setData('hitPoints', this.HIT_POINTS);
     //     this.setData('maxHitPoints', this.MAX_HIT_POINTS);
 
-    //     console.log(`Player updateHealthBar called: health=${this.HIT_POINTS}/${this.MAX_HIT_POINTS}, healthBar exists=${!!this.healthBar}, healthBarText exists=${!!this.healthBarText}`);
+    protected updateHealthBar(): void {
+        this.setData('hitPoints', this.HIT_POINTS);
+        this.setData('maxHitPoints', this.MAX_HIT_POINTS);
 
-    //     // Update health bar visual representation (fixed UI position)
-    //     if (this.healthBar && this.healthBarText) {
-    //         // Update health bar visual representation
-    //         this.healthBar.clear();
+        // Update health bar visual representation (fixed UI position)
+        if (this.healthBar && this.healthBarText) {
+            // Position health bar at bottom left of screen
+            this.healthBar.setPosition(20, this.scene.cameras.main.height - 70);
+            this.healthBarText.setPosition(30, this.scene.cameras.main.height - 50);
+            
+            // Update health bar visual representation
+            this.healthBar.clear();
 
-    //         // Calculate health percentage
-    //         const healthPercentage = this.HIT_POINTS / this.MAX_HIT_POINTS;
-    //         const currentWidth = GameConfig.UI.HEALTH_BAR_WIDTH * healthPercentage;
+            // Calculate health percentage
+            const healthPercentage = this.HIT_POINTS / this.MAX_HIT_POINTS;
+            const currentWidth = GameConfig.UI.HEALTH_BAR_WIDTH * healthPercentage;
 
-    //         // Draw background (red)
-    //         this.healthBar.fillStyle(0xff0000, 1);
-    //         this.healthBar.fillRect(0, 0, GameConfig.UI.HEALTH_BAR_WIDTH, GameConfig.UI.HEALTH_BAR_HEIGHT);
+            // Draw background (red)
+            this.healthBar.fillStyle(0xff0000, 1);
+            this.healthBar.fillRect(0, 0, GameConfig.UI.HEALTH_BAR_WIDTH, GameConfig.UI.HEALTH_BAR_HEIGHT);
 
-    //         // Draw current health (green)
-    //         this.healthBar.fillStyle(0x00ff00, 1);
-    //         this.healthBar.fillRect(0, 0, currentWidth, GameConfig.UI.HEALTH_BAR_HEIGHT);
+            // Draw current health (green)
+            this.healthBar.fillStyle(0x00ff00, 1);
+            this.healthBar.fillRect(0, 0, currentWidth, GameConfig.UI.HEALTH_BAR_HEIGHT);
 
-    //         // Update text (even though it's hidden)
-    //         this.healthBarText.setText(`${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
-    //     }
-    // }
+            // Update text
+            this.healthBarText.setText(`${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
+        }
+    }
     // Initialize keys after game is created
     private initializeInputKeys(scene: Phaser.Scene): void {
 

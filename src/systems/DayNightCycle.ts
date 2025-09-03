@@ -52,8 +52,9 @@ export class DayNightCycle {
      * 
      * @param scene - The Phaser scene to attach visual elements to
      * @param config - Optional configuration overrides for timing
+     * @param initialTime - Optional initial time position (0-1) for save game restoration
      */
-    constructor(scene: Phaser.Scene, config?: Partial<DayNightConfig>) {
+    constructor(scene: Phaser.Scene, config?: Partial<DayNightConfig>, initialTime?: number) {
         this.scene = scene;
         
         // Merge default configuration with any provided overrides
@@ -64,6 +65,17 @@ export class DayNightCycle {
             transitionDuration: 2 * 60 * 1000,  // 2 minutes for dawn/dusk
             ...config
         };
+        
+        // Set initial time (for save game restoration or custom start time)
+        if (initialTime !== undefined) {
+            this.currentTime = initialTime;
+            console.log(`DayNightCycle initialized with saved time: ${initialTime}`);
+        } else {
+            console.log(`DayNightCycle initialized with default time: ${this.currentTime}`);
+        }
+        
+        // Update day/night state based on current time
+        this.updateDayNightState();
         
         // Initialize visual components and controls
         this.setupVisualElements();
