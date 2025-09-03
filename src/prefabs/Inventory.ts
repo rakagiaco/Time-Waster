@@ -1,5 +1,6 @@
 export class Inventory {
     private items: Map<string, number> = new Map();
+    private readonly maxStackSize: number = 12;
 
     constructor() {
         // Initialize empty inventory
@@ -7,8 +8,18 @@ export class Inventory {
 
     public add(itemType: string, amount: number): boolean {
         const currentAmount = this.items.get(itemType) || 0;
-        this.items.set(itemType, currentAmount + amount);
+        const newAmount = Math.min(currentAmount + amount, this.maxStackSize);
+        this.items.set(itemType, newAmount);
         return true;
+    }
+
+    public canAdd(itemType: string, amount: number): boolean {
+        const currentAmount = this.items.get(itemType) || 0;
+        return currentAmount + amount <= this.maxStackSize;
+    }
+
+    public getMaxStackSize(): number {
+        return this.maxStackSize;
     }
 
     public remove(itemType: string, amount: number): boolean {
@@ -62,13 +73,5 @@ export class Inventory {
 
     public getSize(): number {
         return this.items.size;
-    }
-
-    public getInventoryData(): { type: string; count: number }[] {
-        const data: { type: string; count: number }[] = [];
-        this.items.forEach((count, type) => {
-            data.push({ type, count });
-        });
-        return data;
     }
 }

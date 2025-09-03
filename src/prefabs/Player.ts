@@ -572,6 +572,9 @@ export class Player extends Entity {
     public heal(amount: number): void {
         this.HIT_POINTS = Math.min(this.HIT_POINTS + amount, this.MAX_HIT_POINTS);
         console.log(`Player healed for ${amount} HP. Current HP: ${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
+        
+        // Update the health bar display immediately after healing
+        this.updateHealthBar();
     }
 
     public getQuestStatus(): any {
