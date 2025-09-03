@@ -38,49 +38,53 @@ export class DayNightCycle {
     private currentTime: number = 0.5;                    // Current cycle position (0-1) - 12 PM (noon/midday start)
     private isDay: boolean = true;                         // Current day/night state
     private isTransitioning: boolean = false;             // Whether in transition period
-    
+
     // Visual rendering components
     private overlay: Phaser.GameObjects.Graphics | null = null;      // Main camera darkness overlay
     private minimapOverlay: Phaser.GameObjects.Graphics | null = null; // Minimap camera darkness overlay
     private timeText: Phaser.GameObjects.BitmapText | null = null;   // Time display
-    
+
     // Development and testing tools  
     private debugMode: boolean = false;                   // Debug mode toggle
     private debugTimeOverride: number | null = null;      // Manual time override
+
+    private darknessIntensity: number = 0;               // Current darkness intensity (0-1)
 
     /**
      * Creates a new day/night cycle system
      * 
      * @param scene - The Phaser scene to attach visual elements to
-     * @param config - Optional configuration overrides for timing
      * @param initialTime - Optional initial time position (0-1) for save game restoration
      */
-    constructor(scene: Phaser.Scene, config?: Partial<DayNightConfig>, initialTime?: number) {
+    constructor(scene: Phaser.Scene, initialTime?: number) {
         this.scene = scene;
-        
-        // Merge default configuration with any provided overrides
+
         this.config = {
             cycleDuration: 24 * 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
             dayDuration: 12 * 60 * 1000,         // 12 minutes of daylight
             nightDuration: 12 * 60 * 1000,       // 12 minutes of darkness
             transitionDuration: 2 * 60 * 1000,   // 2 minutes for dawn/dusk
-            ...config
         };
-        
+
+        // comment this in for 1 minute cycles fo testing
+        // this.config = {
+        //     cycleDuration: 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
+        //     dayDuration: 60 * 1000,         // 12 minutes of daylight
+        //     nightDuration: 60 * 1000,       // 12 minutes of darkness
+        //     transitionDuration: 60 * 1000,   // 2 minutes for dawn/dusk
+        // };
+
         // Set initial time (for save game restoration or custom start time)
         if (initialTime !== undefined) {
             this.currentTime = initialTime;
             console.log(`DayNightCycle initialized with saved time: ${initialTime}`);
         } else {
+            this.currentTime = 0.5
             console.log(`DayNightCycle initialized with default time: ${this.currentTime}`);
         }
-        
-        // Update day/night state based on current time
-        this.updateDayNightState();
-        
+
         // Initialize visual components and controls
         this.setupVisualElements();
-        this.setupDebugControls();
     }
 
     private setupVisualElements(): void {
@@ -89,33 +93,18 @@ export class DayNightCycle {
         this.overlay.setDepth(1000);
         this.overlay.setScrollFactor(0); // Fixed to camera
         this.overlay.setBlendMode(Phaser.BlendModes.NORMAL); // Normal blend so ERASE can work on it
-        
-        // Create minimap overlay for darkness (positioned like ring, not camera-relative)
-        this.minimapOverlay = this.scene.add.graphics();
-        this.minimapOverlay.setDepth(999); // Just below ring (depth 1000) but above camera content
-        this.minimapOverlay.setScrollFactor(0); // Fixed to screen like the ring
-        
+
         // Create time display
         this.timeText = this.scene.add.bitmapText(
-            this.scene.cameras.main.width - 200, 
-            20, 
-            '8-bit', 
-            '', 
+            this.scene.cameras.main.width - 200,
+            20,
+            '8-bit',
+            '',
             16
         ).setOrigin(1, 0);
         this.timeText.setDepth(1001);
         this.timeText.setScrollFactor(0);
-        this.timeText.setTint(0xffffff);
         this.timeText.setScale(2)
-    }
-
-    private setupDebugControls(): void {
-        // Add debug key controls
-        this.scene.input.keyboard?.on('keydown-F2', () => {
-            this.toggleDebugMode();
-        });
-        
-        // F3 and F4 day/night toggles are now handled by DebugManager
     }
 
     public update(delta: number): void {
@@ -128,147 +117,114 @@ export class DayNightCycle {
                 this.currentTime = 0;
             }
         }
-        
+
         this.updateDayNightState();
-        this.updateVisuals();
         this.updateTimeDisplay();
     }
 
     private updateDayNightState(): void {
         const wasDay = this.isDay;
-        
+
         // Convert current time (0-1) to hours (0-24)
         const currentHour = this.currentTime * 24;
-        
+
         // Define day/night periods (matching visual system)
         const dawnStart = 5;     // 5 AM - dawn begins
         const dayStart = 7;      // 7 AM - full daylight
         const duskStart = 19;    // 7 PM - dusk begins  
         const nightStart = 21;   // 9 PM - full darkness
-        
+
         // Determine if it's day or night
         if (currentHour >= dayStart && currentHour < duskStart) {
             this.isDay = true;
             this.isTransitioning = false;
+            this.darknessIntensity = 0;
         } else if (currentHour >= nightStart || currentHour < dawnStart) {
             this.isDay = false;
             this.isTransitioning = false;
+            this.darknessIntensity = 0.95; // Very dark, nearly black
         } else {
             // In transition periods (dawn or dusk)
             this.isTransitioning = true;
-            // Consider transition as day if closer to day, night if closer to night
-            if (currentHour >= dawnStart && currentHour < dayStart) {
-                this.isDay = false; // Dawn - transitioning from night to day
-            } else {
-                this.isDay = true; // Dusk - transitioning from day to night
+            if (currentHour >= duskStart && currentHour < nightStart) {
+                // Dusk transition (7 PM to 9 PM)
+                const duskProgress = (currentHour - duskStart) / (nightStart - duskStart);
+                this.darknessIntensity = duskProgress * 0.95;
+                this.isDay = true
+            } else if (currentHour >= dawnStart && currentHour < dayStart) {
+                // Dawn transition (5 AM to 7 AM)
+                const dawnProgress = (currentHour - dawnStart) / (dayStart - dawnStart);
+                this.darknessIntensity = 0.95 * (1 - dawnProgress);
+                this.isDay = false;
             }
         }
-        
+
+        this.updateMainCameraOverlay();
+        this.scene.events.emit('darknessIntensityChange', this.darknessIntensity);
+
         // Notify scene of day/night change
         if (wasDay !== this.isDay) {
             this.scene.events.emit('dayNightChange', { isDay: this.isDay, isTransitioning: this.isTransitioning });
         }
     }
 
-    private updateVisuals(): void {
+    private updateMainCameraOverlay(): void {
         if (!this.overlay) return;
-        
-        // Calculate darkness intensity based on time of day
-        let darknessIntensity = 0;
-        
-        // Convert current time (0-1) to hours (0-24)
-        const currentHour = this.currentTime * 24;
-        
-        // Define day/night periods
-        const dawnStart = 5;     // 5 AM - dawn begins
-        const dayStart = 7;      // 7 AM - full daylight
-        const duskStart = 19;    // 7 PM - dusk begins  
-        const nightStart = 21;   // 9 PM - full darkness
-        
-        if (currentHour >= nightStart || currentHour < dawnStart) {
-            // Full night (9 PM to 5 AM) - almost impossible to see
-            darknessIntensity = 0.95; // Very dark, nearly black
-        } else if (currentHour >= duskStart && currentHour < nightStart) {
-            // Dusk transition (7 PM to 9 PM)
-            const duskProgress = (currentHour - duskStart) / (nightStart - duskStart);
-            darknessIntensity = duskProgress * 0.95;
-        } else if (currentHour >= dawnStart && currentHour < dayStart) {
-            // Dawn transition (5 AM to 7 AM)
-            const dawnProgress = (currentHour - dawnStart) / (dayStart - dawnStart);
-            darknessIntensity = 0.95 * (1 - dawnProgress);
-        } else {
-            // Full day (7 AM to 7 PM)
-            darknessIntensity = 0;
-        }
-        
-        // Update main camera overlay
-        this.updateMainCameraOverlay(darknessIntensity);
-        
-        // Update minimap overlay
-        this.updateMinimapOverlay(darknessIntensity);
-        
-        // Emit darkness intensity for other systems (flashlight, tree lights)
-        this.scene.events.emit('darknessIntensityChange', darknessIntensity);
-    }
 
-    private updateMainCameraOverlay(darknessIntensity: number): void {
-        if (!this.overlay) return;
-        
         const camera = this.scene.cameras.main;
         const width = camera.width;
         const height = camera.height;
-        
-        this.overlay.clear();
-        
-        // Draw darkness overlay if there's any darkness
-        if (darknessIntensity > 0) {
-            this.overlay.fillStyle(0x000000, darknessIntensity); // Pure black for maximum darkness
-            this.overlay.fillRect(0, 0, width, height);
-        }
-    }
 
-    private updateMinimapOverlay(darknessIntensity: number): void {
-        if (!this.minimapOverlay) return;
-        
-        // Use exact same values as minimap setup (hardcoded to match ring positioning)
-        const minimapSize = 175;
-        const minimapX = 20;
-        const minimapY = 20;
-        
-        // Calculate circle center and radius to match medieval ring exactly
-        const centerX = minimapX + minimapSize / 2;
-        const centerY = minimapY + minimapSize / 2;
-        const outerRadius = (minimapSize / 2) + 8; // Match outer radius of medieval ring
-        
-        this.minimapOverlay.clear();
-        
-        // Draw circular darkness overlay to fill entire ring area
-        if (darknessIntensity > 0) {
-            this.minimapOverlay.fillStyle(0x000000, darknessIntensity); // Pure black for consistency
-            this.minimapOverlay.fillCircle(centerX, centerY, outerRadius);
+        this.overlay.clear();
+
+        // Draw darkness overlay if there's any darkness
+        if (this.darknessIntensity > 0) {
+            this.overlay.fillStyle(0x000000, this.darknessIntensity); // Pure black for maximum darkness
+            this.overlay.fillRect(0, 0, width, height);
         }
     }
 
     private updateTimeDisplay(): void {
         if (!this.timeText) return;
-        
+
         const hours = Math.floor(this.currentTime * 24);
         const minutes = Math.floor((this.currentTime * 24 * 60) % 60);
         const timeString = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
-        
+
         const period = this.isDay ? 'DAY' : 'NIGHT';
         const color = this.isDay ? 0xffff00 : 0x4444ff;
-        
+
         this.timeText.setText(`${timeString} - ${period}`);
         this.timeText.setTint(color);
     }
 
     // Public methods
+    public getOverlay(): Phaser.GameObjects.Graphics {
+        if (!this.overlay) {
+            throw new Error("DayNightCycle overlay not initialized");
+        }
+        return this.overlay;
+    }
+
     public isCurrentlyDay(): boolean {
         return this.isDay;
     }
 
     public isCurrentlyNight(): boolean {
+        return !this.isDay;
+    }
+
+    /**
+     * Get whether it's currently day time
+     */
+    public getIsDay(): boolean {
+        return this.isDay;
+    }
+
+    /**
+     * Get whether it's currently night time
+     */
+    public getIsNight(): boolean {
         return !this.isDay;
     }
 
@@ -286,30 +242,7 @@ export class DayNightCycle {
     }
 
     public getDarknessIntensity(): number {
-        // Convert current time (0-1) to hours (0-24)
-        const currentHour = this.currentTime * 24;
-        
-        // Define day/night periods (matching visual system)
-        const dawnStart = 5;     // 5 AM - dawn begins
-        const dayStart = 7;      // 7 AM - full daylight
-        const duskStart = 19;    // 7 PM - dusk begins  
-        const nightStart = 21;   // 9 PM - full darkness
-        
-        if (currentHour >= nightStart || currentHour < dawnStart) {
-            // Full night (9 PM to 5 AM)
-            return 0.85;
-        } else if (currentHour >= duskStart && currentHour < nightStart) {
-            // Dusk transition (7 PM to 9 PM)
-            const duskProgress = (currentHour - duskStart) / (nightStart - duskStart);
-            return duskProgress * 0.85;
-        } else if (currentHour >= dawnStart && currentHour < dayStart) {
-            // Dawn transition (5 AM to 7 AM)
-            const dawnProgress = (currentHour - dawnStart) / (dayStart - dawnStart);
-            return 0.85 * (1 - dawnProgress);
-        } else {
-            // Full day (7 AM to 7 PM)
-            return 0;
-        }
+        return this.darknessIntensity
     }
 
     // Debug methods
@@ -342,42 +275,6 @@ export class DayNightCycle {
             this.setTime(0.0); // Midnight
         }
         console.log(`Set darkness intensity to ${intensity} (approximated time)`);
-    }
-
-    public setupMinimapCamera(): void {
-        // Called by World scene after minimap is created to configure camera ignores
-        const worldScene = this.scene as any;
-        if (worldScene.miniMapCamera && this.overlay && this.minimapOverlay) {
-            // Main camera sees main overlay but not minimap overlay
-            this.scene.cameras.main.ignore(this.minimapOverlay);
-            
-            // Minimap camera ignores both main overlay AND minimap overlay (like the ring)
-            worldScene.miniMapCamera.ignore(this.overlay);
-            worldScene.miniMapCamera.ignore(this.minimapOverlay);
-            
-            console.log('Day/Night cycle: Configured camera overlays - minimap camera ignores both overlays');
-        }
-    }
-
-    /**
-     * Get current time of day (0-1)
-     */
-    public getCurrentTime(): number {
-        return this.currentTime;
-    }
-
-    /**
-     * Get whether it's currently day time
-     */
-    public getIsDay(): boolean {
-        return this.isDay;
-    }
-
-    /**
-     * Get whether it's currently night time
-     */
-    public getIsNight(): boolean {
-        return !this.isDay;
     }
 
     public destroy(): void {

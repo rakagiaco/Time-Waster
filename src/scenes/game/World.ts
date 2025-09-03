@@ -75,7 +75,7 @@ export class World extends Phaser.Scene {
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
             // Day/Night Cycle
-            this.dayNightCycle = new DayNightCycle(this, undefined, 1);
+            this.dayNightCycle = new DayNightCycle(this, undefined);
 
             // Music Manager
             this.musicManager = new MusicManager(this);
@@ -96,9 +96,6 @@ export class World extends Phaser.Scene {
             // minimap
             this.setupMinimap();
 
-            // Configure day/night overlays for both cameras
-            this.dayNightCycle.setupMinimapCamera();
-
             // Setup debug manager
             console.log('Setting up debug manager...');
             this.debugManager = new DebugManager(this);
@@ -109,13 +106,6 @@ export class World extends Phaser.Scene {
             this.inventoryUI = new InventoryUI(this);
             this.inventoryUI.setPlayer(this.player);
             console.log('Inventory UI setup complete');
-
-            // Setup custom cursor
-            console.log('Setting up custom cursor...');
-            this.input.setDefaultCursor('url(/img/cursor.png), pointer');
-            console.log('Custom cursor setup complete');
-
-            // Day/Night Cycle already created earlier to allow save data restoration
 
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
@@ -132,10 +122,6 @@ export class World extends Phaser.Scene {
                     }
                 }
             });
-
-            console.log('Day/night cycle setup complete');
-
-            // Setup debug event listeners for day/night control (multiple methods)
 
             // Method 1: Scene-level events
             this.events.on('debug-setToPeakDay', () => {
@@ -516,7 +502,7 @@ export class World extends Phaser.Scene {
         const minimapSize = 175;
         const minimapX = 20;
         const minimapY = 20;
-
+ 
         // Create circular minimap camera
         this.miniMapCamera = this.cameras.add(minimapX, minimapY, minimapSize, minimapSize);
         this.miniMapCamera.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
@@ -536,6 +522,8 @@ export class World extends Phaser.Scene {
         minimapRing.setScrollFactor(0).setDepth(1000); // Fix the ring in place on the screen
         this.miniMapCamera.ignore(minimapRing);
 
+        // ignore the day night cycle overlay
+        this.miniMapCamera.ignore(this.dayNightCycle.getOverlay());
         // Apply mask to minimap camera to make it circular
         this.miniMapCamera.setMask(this.minimapMask.createGeometryMask());
 
