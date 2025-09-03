@@ -288,7 +288,7 @@ export class Menu extends Phaser.Scene {
         // New Game button
         this.createMedievalButton(centerX, centerY + 50, 'NEW GAME', () => {
             console.log('New Game button clicked');
-            this.scene.start('worldScene');
+            this.scene.start('worldScene', { loadSaveData: false }); // Explicitly start fresh game
         });
         
         // Credits button  

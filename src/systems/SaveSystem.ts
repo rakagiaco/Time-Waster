@@ -105,7 +105,7 @@ export class SaveSystem {
                 })),
                 gameState: {
                     timeOfDay: gameState.timeOfDay || 'day',
-                    currentTime: gameState.currentTime || 0.25,
+                    currentTime: gameState.currentTime || 0.5,
                     darknessIntensity: gameState.darknessIntensity || 0,
                     enemiesEnhanced: gameState.enemiesEnhanced || 0,
                     flashlightActive: gameState.flashlightActive || false,

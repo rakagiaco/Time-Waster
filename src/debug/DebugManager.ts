@@ -254,14 +254,26 @@ export class DebugManager {
 
         this.debugContentElement.innerHTML = html;
         
-        // Set up button event listeners after a small delay to ensure DOM is updated
-        setTimeout(() => {
-            this.setupDebugButtons();
-        }, 100);
+        // Set up button listeners after HTML is updated
+        this.setupDebugButtons();
     }
     
     private setupDebugButtons(): void {
         console.log('Setting up debug buttons...');
+        
+        if (!this.debugContentElement) {
+            console.warn('Debug content element not available yet, skipping button setup');
+            return;
+        }
+        
+        // Wait a bit for the DOM to be fully updated
+        setTimeout(() => {
+            this.attachButtonListeners();
+        }, 200);
+    }
+    
+    private attachButtonListeners(): void {
+        console.log('Attaching button listeners...');
         
         const collisionBtn = document.getElementById('debug-collision-btn');
         const pathBtn = document.getElementById('debug-path-btn');
@@ -276,32 +288,34 @@ export class DebugManager {
         });
         
         if (collisionBtn) {
-            collisionBtn.addEventListener('click', () => {
-                console.log('Collision button clicked');
+            collisionBtn.onclick = () => {
+                console.log('Collision button clicked - DIRECT');
                 this.toggleCollisionBoxes();
-            });
+            };
         }
         
         if (pathBtn) {
-            pathBtn.addEventListener('click', () => {
-                console.log('Path button clicked');
+            pathBtn.onclick = () => {
+                console.log('Path button clicked - DIRECT');
                 this.togglePathVisualization();
-            });
+            };
         }
         
         if (dayBtn) {
-            dayBtn.addEventListener('click', () => {
-                console.log('Day button clicked');
+            dayBtn.onclick = () => {
+                console.log('Day button clicked - DIRECT');
                 this.toggleToPeakDay();
-            });
+            };
         }
         
         if (nightBtn) {
-            nightBtn.addEventListener('click', () => {
-                console.log('Night button clicked');
+            nightBtn.onclick = () => {
+                console.log('Night button clicked - DIRECT');
                 this.toggleToPeakNight();
-            });
+            };
         }
+        
+        console.log('All button listeners attached via onclick');
     }
 
     public drawCollisionBox(entity: Phaser.Physics.Arcade.Sprite, color: number = 0xff0000): void {
@@ -434,29 +448,33 @@ export class DebugManager {
 
     private toggleToPeakDay(): void {
         console.log('toggleToPeakDay called');
+        
+        // Try multiple ways to access the day/night cycle
         const worldScene = this.scene as any;
-        console.log('World scene:', worldScene);
-        console.log('DayNightCycle:', worldScene.dayNightCycle);
         
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakDay();
-            console.log('Debug: Set to peak day');
+            console.log('Debug: Set to peak day via scene.dayNightCycle');
         } else {
-            console.error('DayNightCycle not found in world scene');
+            // Try accessing through scene events
+            this.scene.events.emit('debug-setToPeakDay');
+            console.log('Debug: Attempted to set peak day via events');
         }
     }
 
     private toggleToPeakNight(): void {
         console.log('toggleToPeakNight called');
+        
+        // Try multiple ways to access the day/night cycle
         const worldScene = this.scene as any;
-        console.log('World scene:', worldScene);
-        console.log('DayNightCycle:', worldScene.dayNightCycle);
         
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakNight();
-            console.log('Debug: Set to peak night');
+            console.log('Debug: Set to peak night via scene.dayNightCycle');
         } else {
-            console.error('DayNightCycle not found in world scene');
+            // Try accessing through scene events
+            this.scene.events.emit('debug-setToPeakNight');
+            console.log('Debug: Attempted to set peak night via events');
         }
     }
 

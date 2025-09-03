@@ -264,7 +264,7 @@ export class PauseMenu {
                 timeOfDay: worldScene.dayNightCycle ? 
                     (worldScene.dayNightCycle.isCurrentlyNight() ? 'night' : 'day') : 'day',
                 currentTime: worldScene.dayNightCycle ? 
-                    worldScene.dayNightCycle.getCurrentTime() : 0.25,
+                    worldScene.dayNightCycle.getCurrentTime() : 0.5,
                 darknessIntensity: worldScene.dayNightCycle ? 
                     worldScene.dayNightCycle.getDarknessIntensity() : 0,
                     

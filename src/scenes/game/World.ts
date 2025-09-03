@@ -63,7 +63,7 @@ export class World extends Phaser.Scene {
 
             // Setup Day/Night Cycle (check for save data first to set correct initial time)
             console.log('Setting up day/night cycle...');
-            let initialTime = undefined; // Default to peak day (0.25)
+            let initialTime = undefined; // Default to noon (0.5)
             
             if (data.loadSaveData) {
                 const saveData = SaveSystem.loadGame();
@@ -113,6 +113,9 @@ export class World extends Phaser.Scene {
             console.log('Setting up minimap...');
             this.setupMinimap();
             console.log('Minimap setup complete');
+            
+            // Configure day/night overlays for both cameras
+            this.dayNightCycle.setupMinimapCamera();
 
             // Setup debug manager
             console.log('Setting up debug manager...');
@@ -152,6 +155,21 @@ export class World extends Phaser.Scene {
             });
 
             console.log('Day/night cycle setup complete');
+            
+            // Setup debug event listeners for day/night control
+            this.events.on('debug-setToPeakDay', () => {
+                if (this.dayNightCycle) {
+                    this.dayNightCycle.setToPeakDay();
+                    console.log('Debug event: Set to peak day');
+                }
+            });
+            
+            this.events.on('debug-setToPeakNight', () => {
+                if (this.dayNightCycle) {
+                    this.dayNightCycle.setToPeakNight();
+                    console.log('Debug event: Set to peak night');
+                }
+            });
 
             // Setup Flashlight
             console.log('Setting up flashlight...');
