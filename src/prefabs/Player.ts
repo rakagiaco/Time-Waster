@@ -35,7 +35,7 @@ class PlayerIdleState extends State {
     execute(_scene: Phaser.Scene, player: Player): void {
         // Check for movement input (with null checks)
         if ((keyUp && keyUp.isDown) || (keyDown && keyDown.isDown) || (keyLeft && keyLeft.isDown) || (keyRight && keyRight.isDown)) {
-            console.log("here")
+
             player.animsFSM.transition('walking');
         }
 
@@ -209,52 +209,32 @@ export class Player extends Entity {
     public lanternSprite: Phaser.GameObjects.Graphics | null = null;
 
 
-    constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
+    constructor(scene: Phaser.Scene, x: number, y: number, inventory?: [string, number][], questData?: { finished: boolean; currentQuest: number | null }) {
         super(scene, x, y, 'player');
         try {
-            console.log('=== PLAYER CONSTRUCTOR START ===');
-            console.log('Scene:', scene);
-            console.log('Position:', x, y);
-            console.log('Inventory:', inventory);
-            console.log('Quest data:', questData);
-
-            console.log('Player sprite created successfully');
-
             // Initialize inventory
-            console.log('Initializing inventory...');
             this.p1Inventory = new Inventory();
             if (inventory) {
                 this.p1Inventory.loadFromData(inventory);
             }
-            console.log('Inventory initialized successfully');
 
             // Initialize quest status
-            console.log('Initializing quest status...');
             this.questStatus = questData || { finished: false, currentQuest: null };
-            console.log('Quest status initialized successfully');
 
             // Setup state machine
-            console.log('Setting up state machine...');
             this.setupStateMachine();
-            console.log('State machine setup successfully');
 
             // Setup physics
-            console.log('Setting up physics...');
             this.setupPhysics();
-            console.log('Physics setup successfully');
 
             // Setup input
-            console.log('Setting up input...');
             this.initializeInputKeys(scene);
-            console.log('Input setup successfully');
 
             // health bar
             this.setupHealthBar()
 
             // player size
             this.setScale(GameConfig.SCALE.PLAYER)
-
-            console.log('=== PLAYER CONSTRUCTOR COMPLETE ===');
         } catch (error) {
             console.error('=== CRITICAL ERROR IN PLAYER CONSTRUCTOR ===');
             console.error('Error:', error);
@@ -265,8 +245,13 @@ export class Player extends Entity {
 
     private setupHealthBar(): void {
         // Initialize health bar after everything else is set up
-        console.log('Initializing health bar...');
         this.initializeHealthBar();
+
+        // Check if health bar was created successfully
+        if (!this.healthBar || !this.healthBarText) {
+            console.error('Failed to create health bar components');
+            return;
+        }
 
         // Position health bar as fixed UI element
         this.healthBar.setScrollFactor(0);
@@ -282,9 +267,8 @@ export class Player extends Entity {
         this.healthBarText.setDepth(10001);
         
         // Ensure health bar is not affected by any camera masks
-        this.healthBar.setMask(null);
-        this.healthBarText.setMask(null);
-        console.log('Health bar initialized successfully');
+        this.healthBar.setMask(undefined as any);
+        this.healthBarText.setMask(undefined as any);
         
         // Create lantern sprite
         this.createLantern();
@@ -327,7 +311,7 @@ export class Player extends Entity {
         this.setData('hitPoints', this.HIT_POINTS);
         this.setData('maxHitPoints', this.MAX_HIT_POINTS);
 
-        console.log(`Player updateHealthBar called: health=${this.HIT_POINTS}/${this.MAX_HIT_POINTS}, healthBar exists=${!!this.healthBar}, healthBarText exists=${!!this.healthBarText}`);
+
 
         // Update health bar visual representation (fixed UI position)
         if (this.healthBar && this.healthBarText) {
@@ -366,7 +350,7 @@ export class Player extends Entity {
             keyInteract = (keyboard as any).addKey('E');
             keyFlashlight = (keyboard as any).addKey('F');
 
-            console.log('Input keys initialized successfully');
+
         }
     }
 
@@ -579,14 +563,14 @@ export class Player extends Entity {
 
     public heal(amount: number): void {
         this.HIT_POINTS = Math.min(this.HIT_POINTS + amount, this.MAX_HIT_POINTS);
-        console.log(`Player healed for ${amount} HP. Current HP: ${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
+
     }
 
-    public getQuestStatus(): any {
+    public getQuestStatus(): { finished: boolean; currentQuest: number | null } {
         return this.questStatus;
     }
 
-    public setQuestStatus(status: any): void {
+    public setQuestStatus(status: { finished: boolean; currentQuest: number | null }): void {
         this.questStatus = status;
     }
 
@@ -632,7 +616,7 @@ export class Player extends Entity {
 
         // Show general pickup feedback if items were collected
         if (itemsCollected > 0) {
-            console.log(`Collected ${itemsCollected} items via proximity pickup`);
+
             
             // Update inventory UI if it exists
             const worldScene = this.scene as any;
@@ -640,14 +624,14 @@ export class Player extends Entity {
                 worldScene.inventoryUI.updateInventoryDisplay();
             }
         } else {
-            console.log('No items found in pickup range');
+
         }
     }
 
     public toggleFlashlight(): void {
         if (this.flashlight) {
             this.flashlight.toggle();
-            console.log(`Flashlight ${this.flashlight.isLightActive() ? 'ON' : 'OFF'}`);
+
         }
     }
 

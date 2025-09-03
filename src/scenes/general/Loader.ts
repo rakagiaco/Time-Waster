@@ -427,4 +427,6 @@ export class Loader extends Phaser.Scene {
 
         this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv })
     }
+
+
 }

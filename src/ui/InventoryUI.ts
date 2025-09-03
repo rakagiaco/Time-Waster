@@ -19,22 +19,30 @@ export class InventoryUI {
     private inventoryHeight: number = 0;
     private playerInventory: any; // Reference to player's inventory
     private player: Player | null = null; // Reference to player for health restoration
+    private draggedItem: any = null;
+    private draggedSlotIndex: number = -1;
 
     constructor(scene: Phaser.Scene) {
+        console.log('InventoryUI constructor called'); // Debug logging
         this.scene = scene;
         this.setupInventory();
         this.setupKeybinds();
+        console.log('InventoryUI constructor complete'); // Debug logging
     }
 
     private setupInventory(): void {
-        // Calculate inventory dimensions
+        // Calculate inventory dimensions with proper spacing
         const cols = 9;
         const rows = 4;
-        const titleHeight = 30; // Space for title
-        const padding = 20; // Padding around slots
+        const titleHeight = 30;
+        const padding = 15; // Increased padding for better containment
         
-        this.inventoryWidth = (cols * this.slotSize) + ((cols - 1) * this.slotSpacing) + (padding * 2);
-        this.inventoryHeight = titleHeight + (rows * this.slotSize) + ((rows - 1) * this.slotSpacing) + (padding * 2);
+        // Calculate total content width/height
+        const contentWidth = (cols * this.slotSize) + ((cols - 1) * this.slotSpacing);
+        const contentHeight = (rows * this.slotSize) + ((rows - 1) * this.slotSpacing);
+        
+        this.inventoryWidth = contentWidth + (padding * 2);
+        this.inventoryHeight = titleHeight + contentHeight + (padding * 2);
 
         // Create main inventory container
         this.inventoryContainer = this.scene.add.container(0, 0);
@@ -42,7 +50,7 @@ export class InventoryUI {
         this.inventoryContainer.setDepth(10000);
         this.inventoryContainer.setVisible(false);
 
-        // Create background
+        // Create background with proper bounds
         const background = this.scene.add.graphics();
         background.fillStyle(0x2a2a2a, 0.95);
         background.fillRoundedRect(0, 0, this.inventoryWidth, this.inventoryHeight, 8);
@@ -51,6 +59,8 @@ export class InventoryUI {
         background.setScrollFactor(0);
         this.inventoryContainer.add(background);
 
+
+
         // Create title
         const title = this.scene.add.bitmapText(this.inventoryWidth / 2, 15, '8-bit', 'INVENTORY', 20);
         title.setOrigin(0.5);
@@ -58,33 +68,54 @@ export class InventoryUI {
         title.setScrollFactor(0);
         this.inventoryContainer.add(title);
 
-        // Create inventory slots
-        this.createInventorySlots();
+        // Create inventory slots with proper positioning
+        this.createInventorySlots(padding, titleHeight + padding);
     }
 
-    private createInventorySlots(): void {
+        private createInventorySlots(startX: number, startY: number): void {
         const cols = 9;
         const rows = 4;
-        const startX = 10; // Reduced from 20
-        const startY = 30; // Reduced from 40
-        
+
         for (let row = 0; row < rows; row++) {
             for (let col = 0; col < cols; col++) {
+                const slotIndex = row * cols + col;
                 const slotX = startX + (col * (this.slotSize + this.slotSpacing));
                 const slotY = startY + (row * (this.slotSize + this.slotSpacing));
                 
-                // Create slot background
+                // Create slot background with proper bounds
                 const slotBg = this.scene.add.graphics();
                 slotBg.fillStyle(0x1a1a1a, 1);
-                slotBg.fillRect(slotX, slotY, this.slotSize, this.slotSize);
+                slotBg.fillRect(0, 0, this.slotSize, this.slotSize);
                 slotBg.lineStyle(1, 0x8B4513, 1);
-                slotBg.strokeRect(slotX, slotY, this.slotSize, this.slotSize);
+                slotBg.strokeRect(0, 0, this.slotSize, this.slotSize);
                 slotBg.setScrollFactor(0);
                 
-                // Create slot container
+                // Create slot container positioned at the calculated coordinates
                 const slotContainer = this.scene.add.container(slotX, slotY);
                 slotContainer.setScrollFactor(0);
                 slotContainer.add(slotBg);
+                
+                // Make slot interactive for drag and drop
+                slotContainer.setSize(this.slotSize, this.slotSize);
+                slotContainer.setInteractive({ useHandCursor: true });
+                
+                // Add click handler for item consumption
+                slotContainer.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+                    this.handleSlotClick(slotIndex, pointer);
+                });
+                
+                // Add drag handlers
+                slotContainer.on('dragstart', (pointer: Phaser.Input.Pointer) => {
+                    this.handleDragStart(slotIndex, pointer);
+                });
+                
+                slotContainer.on('drag', (pointer: Phaser.Input.Pointer) => {
+                    this.handleDrag(slotIndex, pointer);
+                });
+                
+                slotContainer.on('dragend', (pointer: Phaser.Input.Pointer) => {
+                    this.handleDragEnd(slotIndex, pointer);
+                });
                 
                 this.inventorySlots.push(slotContainer);
                 this.inventoryContainer.add(slotContainer);
@@ -93,24 +124,36 @@ export class InventoryUI {
     }
 
     private setupKeybinds(): void {
-        this.scene.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-            if (event.code === 'KeyI') {
-                this.toggle();
-            }
-            
-            // Handle ESC key with priority system
-            if (event.code === 'Escape') {
-                const worldScene = this.scene as any;
-                if (worldScene.getPauseMenu && worldScene.getPauseMenu().isMenuVisible()) {
-                    // Let pause menu handle ESC
-                    return;
-                }
-                this.hide();
-            }
+        console.log('Setting up inventory keybinds...'); // Debug logging
+        
+        if (!this.scene.input.keyboard) {
+            console.error('Keyboard input not available!'); // Debug logging
+            return;
+        }
+        
+        // Use Phaser's key system instead of generic keyboard events
+        const keyI = this.scene.input.keyboard.addKey('I');
+        const keyEsc = this.scene.input.keyboard.addKey('ESC');
+        
+        keyI.on('down', () => {
+            console.log('I key pressed, toggling inventory'); // Debug logging
+            this.toggle();
         });
+        
+        keyEsc.on('down', () => {
+            const worldScene = this.scene as any;
+            if (worldScene.getPauseMenu && worldScene.getPauseMenu().isMenuVisible()) {
+                // Let pause menu handle ESC
+                return;
+            }
+            this.hide();
+        });
+        
+        console.log('Inventory keybinds setup complete'); // Debug logging
     }
 
     public toggle(): void {
+        console.log('Inventory toggle called, current visibility:', this.isVisible); // Debug logging
         if (this.isVisible) {
             this.hide();
         } else {
@@ -119,12 +162,14 @@ export class InventoryUI {
     }
 
     public show(): void {
+        console.log('Inventory show called, current visibility:', this.isVisible); // Debug logging
         if (this.isVisible) return;
         
         this.isVisible = true;
         this.positionInventory();
         this.updateInventoryDisplay();
         this.inventoryContainer.setVisible(true);
+        console.log('Inventory should now be visible'); // Debug logging
     }
 
     public hide(): void {
@@ -160,8 +205,16 @@ export class InventoryUI {
             }
         });
 
-        // Get inventory data
-        const inventoryData = this.playerInventory.getInventoryData();
+        // Get inventory data with safety check
+        let inventoryData: [string, number][];
+        try {
+            const data = this.playerInventory.getInventoryData();
+            inventoryData = Array.isArray(data) ? data : [];
+        } catch (error) {
+            console.error('Error getting inventory data:', error);
+            inventoryData = [];
+        }
+        
         let slotIndex = 0;
 
         inventoryData.forEach(([itemType, count]) => {
@@ -291,6 +344,116 @@ export class InventoryUI {
     public destroy(): void {
         if (this.inventoryContainer) {
             this.inventoryContainer.destroy();
+        }
+    }
+
+    private handleSlotClick(slotIndex: number, pointer: Phaser.Input.Pointer): void {
+        if (!this.playerInventory) return;
+        
+        try {
+            const inventoryData = this.playerInventory.getInventoryData();
+            if (!Array.isArray(inventoryData)) return;
+            
+            const item = inventoryData[slotIndex];
+            if (item && item[0] && item[1] > 0) {
+                // Consume item (heal player)
+                this.consumeItem(item[0], slotIndex);
+            }
+        } catch (error) {
+            console.error('Error handling slot click:', error);
+        }
+    }
+
+    private handleDragStart(slotIndex: number, pointer: Phaser.Input.Pointer): void {
+        if (!this.playerInventory) return;
+        
+        try {
+            const inventoryData = this.playerInventory.getInventoryData();
+            if (!Array.isArray(inventoryData)) return;
+            
+            const item = inventoryData[slotIndex];
+            if (item && item[0] && item[1] > 0) {
+                this.draggedItem = item;
+                this.draggedSlotIndex = slotIndex;
+                
+                // Enable dragging on the slot
+                const slot = this.inventorySlots[slotIndex];
+                if (slot) {
+                    slot.setInteractive({ draggable: true });
+                }
+            }
+        } catch (error) {
+            console.error('Error handling drag start:', error);
+        }
+    }
+
+    private handleDrag(slotIndex: number, pointer: Phaser.Input.Pointer): void {
+        // Visual feedback during drag
+        if (this.draggedItem && this.inventorySlots[slotIndex]) {
+            const slot = this.inventorySlots[slotIndex];
+            slot.setAlpha(0.7);
+        }
+    }
+
+    private handleDragEnd(slotIndex: number, pointer: Phaser.Input.Pointer): void {
+        if (!this.playerInventory || !this.draggedItem) return;
+        
+        try {
+            // Reset visual feedback
+            this.inventorySlots.forEach(slot => slot.setAlpha(1));
+            
+            // If dropped on a different slot, swap items
+            if (slotIndex !== this.draggedSlotIndex && slotIndex >= 0 && slotIndex < this.slotCount) {
+                this.swapItems(this.draggedSlotIndex, slotIndex);
+            }
+            
+            // Reset drag state
+            this.draggedItem = null;
+            this.draggedSlotIndex = -1;
+            
+            // Update display
+            this.updateInventoryDisplay();
+        } catch (error) {
+            console.error('Error handling drag end:', error);
+        }
+    }
+
+    private swapItems(fromSlot: number, toSlot: number): void {
+        if (!this.playerInventory) return;
+        
+        try {
+            const inventoryData = this.playerInventory.getInventoryData();
+            if (!Array.isArray(inventoryData)) return;
+            
+            // Swap items
+            const temp = inventoryData[fromSlot];
+            inventoryData[fromSlot] = inventoryData[toSlot];
+            inventoryData[toSlot] = temp;
+            
+            // Update inventory
+            this.playerInventory.setInventoryData(inventoryData);
+        } catch (error) {
+            console.error('Error swapping items:', error);
+        }
+    }
+
+    private consumeItem(itemType: string, slotIndex: number): void {
+        if (!this.player || !this.playerInventory) return;
+        
+        try {
+            // Remove one item from inventory
+            this.playerInventory.removeItem(itemType, 1);
+            
+            // Heal player (assuming fruits heal)
+            if (itemType === 'fruit') {
+                this.player.heal(10); // Heal 10 HP
+                console.log('Consumed fruit, healed 10 HP');
+            }
+            
+            // Update display
+            this.updateInventoryDisplay();
+        } catch (error) {
+            console.error('Error consuming item:', error);
         }
     }
 }

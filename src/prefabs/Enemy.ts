@@ -662,7 +662,7 @@ export class Enemy extends Entity {
         
         // Add slight vertical movement for more natural patrol
         const verticalMovement = Math.sin(this.patrolTimer * 0.001) * 10;
-        this.setVelocity(this.VELOCITY * 0.7 * this.patrolDirection, verticalMovement);
+        this.setVelocity(this.VELOCITY * 0.7 * this.patrolDirection, this.VELOCITY * 0.3 + verticalMovement);
     }
 
     public pursuePlayer(): void {

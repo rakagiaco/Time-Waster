@@ -44,6 +44,7 @@ export class PauseMenu {
 
         this.isVisible = true;
         this.createMenu();
+        this.positionMenu();
         // Don't pause the scene, just slow down time
         this.scene.physics.world.timeScale = 0.1;
     }
@@ -61,42 +62,47 @@ export class PauseMenu {
         const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2;
 
+        // Define menu dimensions
+        const menuWidth = 400;
+        const menuHeight = 500;
+        const padding = 20;
+
         // Create menu container
         this.menuContainer = this.scene.add.container(0, 0);
         this.menuContainer.setScrollFactor(0);
         this.menuContainer.setDepth(10001);
         this.menuContainer.setVisible(true);
 
-        // Create scroll-like background
+        // Create scroll-like background with proper bounds
         const scrollBackground = this.scene.add.graphics();
         scrollBackground.fillStyle(0x8B4513, 0.95); // Brown parchment color
-        scrollBackground.fillRoundedRect(centerX - 200, centerY - 250, 400, 500, 20);
+        scrollBackground.fillRoundedRect(0, 0, menuWidth, menuHeight, 20);
         
         // Add scroll texture effect
         scrollBackground.lineStyle(3, 0x654321, 1);
-        scrollBackground.strokeRoundedRect(centerX - 200, centerY - 250, 400, 500, 20);
+        scrollBackground.strokeRoundedRect(0, 0, menuWidth, menuHeight, 20);
         
         // Add scroll roll effect at top and bottom
         scrollBackground.fillStyle(0x654321, 1);
-        scrollBackground.fillRoundedRect(centerX - 220, centerY - 270, 440, 40, 20);
-        scrollBackground.fillRoundedRect(centerX - 220, centerY + 210, 440, 40, 20);
+        scrollBackground.fillRoundedRect(-20, -20, menuWidth + 40, 40, 20);
+        scrollBackground.fillRoundedRect(-20, menuHeight - 20, menuWidth + 40, 40, 20);
 
         scrollBackground.setScrollFactor(0);
         this.menuContainer.add(scrollBackground);
 
         // Create title
-        const title = this.scene.add.bitmapText(centerX, centerY - 200, '8-bit', 'PAUSE MENU', 32);
+        const title = this.scene.add.bitmapText(menuWidth / 2, 50, '8-bit', 'PAUSE MENU', 32);
         title.setOrigin(0.5);
         title.setTint(0x8B0000);
         title.setScrollFactor(0);
         this.menuContainer.add(title);
 
-        // Create menu buttons using the same approach as main menu
-        const buttonY = centerY - 100;
+        // Create menu buttons with proper relative positioning
+        const buttonStartY = 120;
         const buttonSpacing = 60;
 
         // Continue button
-        const continueBtn = this.scene.add.image(centerX, buttonY, 'continue-game-button')
+        const continueBtn = this.scene.add.image(menuWidth / 2, buttonStartY, 'continue-game-button')
             .setOrigin(0.5)
             .setScale(1.2)
             .setInteractive({ useHandCursor: true })
@@ -107,8 +113,8 @@ export class PauseMenu {
         this.menuContainer.add(continueBtn);
         this.menuButtons.push(continueBtn);
 
-        // Save Game button (using new-game-button but with different text)
-        const saveBtn = this.scene.add.image(centerX, buttonY + buttonSpacing, 'new-game-button')
+        // Save Game button (using new-game-button with text overlay)
+        const saveBtn = this.scene.add.image(menuWidth / 2, buttonStartY + buttonSpacing, 'new-game-button')
             .setOrigin(0.5)
             .setScale(1.2)
             .setInteractive({ useHandCursor: true })
@@ -119,8 +125,15 @@ export class PauseMenu {
         this.menuContainer.add(saveBtn);
         this.menuButtons.push(saveBtn);
 
-        // Controls button
-        const controlsBtn = this.scene.add.image(centerX, buttonY + (buttonSpacing * 2), 'credits-button')
+        // Add "SAVE GAME" text overlay
+        const saveText = this.scene.add.bitmapText(menuWidth / 2, buttonStartY + buttonSpacing, '8-bit', 'SAVE GAME', 16);
+        saveText.setOrigin(0.5);
+        saveText.setTint(0x000000);
+        saveText.setScrollFactor(0);
+        this.menuContainer.add(saveText);
+
+        // Controls button (using credits-button with text overlay)
+        const controlsBtn = this.scene.add.image(menuWidth / 2, buttonStartY + (buttonSpacing * 2), 'credits-button')
             .setOrigin(0.5)
             .setScale(1.2)
             .setInteractive({ useHandCursor: true })
@@ -131,8 +144,15 @@ export class PauseMenu {
         this.menuContainer.add(controlsBtn);
         this.menuButtons.push(controlsBtn);
 
+        // Add "CONTROLS" text overlay
+        const controlsText = this.scene.add.bitmapText(menuWidth / 2, buttonStartY + (buttonSpacing * 2), '8-bit', 'CONTROLS', 16);
+        controlsText.setOrigin(0.5);
+        controlsText.setTint(0x000000);
+        controlsText.setScrollFactor(0);
+        this.menuContainer.add(controlsText);
+
         // Exit to Menu button
-        const exitBtn = this.scene.add.image(centerX, buttonY + (buttonSpacing * 3), 'menu-button')
+        const exitBtn = this.scene.add.image(menuWidth / 2, buttonStartY + (buttonSpacing * 3), 'menu-button')
             .setOrigin(0.5)
             .setScale(1.2)
             .setInteractive({ useHandCursor: true })
@@ -144,7 +164,19 @@ export class PauseMenu {
         this.menuButtons.push(exitBtn);
 
         // Add save info if available
-        this.addSaveInfo(centerX, centerY + 200);
+        this.addSaveInfo(menuWidth / 2, menuHeight - 50);
+    }
+
+
+
+    private positionMenu(): void {
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2;
+        
+        this.menuContainer.setPosition(
+            centerX - 200, // Half of menu width (400/2)
+            centerY - 250  // Half of menu height (500/2)
+        );
     }
 
     private addSaveInfo(centerX: number, centerY: number): void {
@@ -160,7 +192,13 @@ export class PauseMenu {
     private saveGame(): void {
         try {
             const worldScene = this.scene as any;
-            SaveSystem.saveGame(worldScene);
+            SaveSystem.saveGame(
+                worldScene.player,
+                worldScene.enemies || [],
+                worldScene.trees || [],
+                worldScene.items || [],
+                { dayNightCycle: worldScene.dayNightCycle }
+            );
             
             // Show save feedback
             const saveFeedback = this.scene.add.bitmapText(
@@ -192,28 +230,29 @@ export class PauseMenu {
         // Hide menu buttons
         this.menuButtons.forEach(btn => btn.setVisible(false));
         
-        // Create controls display
+        // Create controls display with proper container approach
         this.controlsDisplay = this.scene.add.container(0, 0);
         this.controlsDisplay.setScrollFactor(0);
         this.controlsDisplay.setDepth(10002);
         
-        const centerX = this.scene.cameras.main.width / 2;
-        const centerY = this.scene.cameras.main.height / 2;
+        // Define controls menu dimensions (smaller than pause menu)
+        const controlsWidth = 350;
+        const controlsHeight = 400;
         
-        // Controls background - use scroll-like background instead of black
+        // Controls background with proper bounds
         const controlsBg = this.scene.add.graphics();
         controlsBg.fillStyle(0x8B4513, 0.95); // Brown parchment color
-        controlsBg.fillRoundedRect(centerX - 300, centerY - 200, 600, 400, 20);
+        controlsBg.fillRoundedRect(0, 0, controlsWidth, controlsHeight, 20);
         
         // Add scroll texture effect
         controlsBg.lineStyle(3, 0x654321, 1);
-        controlsBg.strokeRoundedRect(centerX - 300, centerY - 200, 600, 400, 20);
+        controlsBg.strokeRoundedRect(0, 0, controlsWidth, controlsHeight, 20);
         
         controlsBg.setScrollFactor(0);
         this.controlsDisplay.add(controlsBg);
         
         // Controls title
-        const controlsTitle = this.scene.add.bitmapText(centerX, centerY - 150, '8-bit', 'CONTROLS', 24);
+        const controlsTitle = this.scene.add.bitmapText(controlsWidth / 2, 30, '8-bit', 'CONTROLS', 24);
         controlsTitle.setOrigin(0.5);
         controlsTitle.setTint(0x8B0000); // Dark red for better contrast on brown
         controlsTitle.setScrollFactor(0);
@@ -237,7 +276,7 @@ export class PauseMenu {
         ];
         
         controls.forEach((control, index) => {
-            const controlText = this.scene.add.bitmapText(centerX, centerY - 100 + (index * 25), '8-bit', control, 16);
+            const controlText = this.scene.add.bitmapText(controlsWidth / 2, 80 + (index * 25), '8-bit', control, 16);
             controlText.setOrigin(0.5);
             controlText.setTint(0x000000); // Black text for better contrast on brown background
             controlText.setScrollFactor(0);
@@ -245,7 +284,7 @@ export class PauseMenu {
         });
         
         // Back button
-        const backBtn = this.scene.add.image(centerX, centerY + 150, 'menu-button')
+        const backBtn = this.scene.add.image(controlsWidth / 2, controlsHeight - 50, 'menu-button')
             .setOrigin(0.5)
             .setScale(1.2)
             .setInteractive({ useHandCursor: true })
@@ -255,7 +294,20 @@ export class PauseMenu {
             });
         this.controlsDisplay.add(backBtn);
         
+        // Position the controls display
+        this.positionControlsDisplay();
+        
         this.menuContainer!.add(this.controlsDisplay);
+    }
+
+    private positionControlsDisplay(): void {
+        const centerX = this.scene.cameras.main.width / 2;
+        const centerY = this.scene.cameras.main.height / 2;
+        
+        this.controlsDisplay.setPosition(
+            centerX - 175, // Half of controls width (350/2)
+            centerY - 200  // Half of controls height (400/2)
+        );
     }
 
     private hideControls(): void {

@@ -51,8 +51,6 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
         this.setData('hitPoints', this.HIT_POINTS);
         this.setData('maxHitPoints', this.MAX_HIT_POINTS);
 
-        console.log(`updateHealthBar called: health=${this.HIT_POINTS}/${this.MAX_HIT_POINTS}, healthBar exists=${!!this.healthBar}, healthBarText exists=${!!this.healthBarText}`);
-
         // Update health bar position and visual representation
         if (this.healthBar && this.healthBarText) {
             // Position health bar slightly under the entity

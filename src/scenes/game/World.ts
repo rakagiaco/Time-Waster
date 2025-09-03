@@ -15,8 +15,8 @@ import { SaveSystem } from '../../systems/SaveSystem';
 
 
 interface WorldData {
-    qobj?: any;
-    inv?: any;
+    qobj?: { finished: boolean; currentQuest: number | null };
+    inv?: [string, number][];
     loadSaveData?: boolean;
 }
 
@@ -46,16 +46,10 @@ export class World extends Phaser.Scene {
 
     constructor() {
         super('worldScene');
-        console.log('=== WORLD SCENE CONSTRUCTOR ===');
-        console.log('Scene key:', 'worldScene');
-        console.log('==============================');
     }
 
     create(data: WorldData): void {
         try {
-            console.log('=== WORLD SCENE CREATE ===');
-            console.log('Scene key:', this.scene.key);
-            console.log('Data received:', data);
 
             // Create tilemap
             this.createTilemap();
@@ -64,7 +58,6 @@ export class World extends Phaser.Scene {
 
             // Load save data if requested
             if (data.loadSaveData) {
-                console.log('Loading save data...');
                 this.loadSaveData();
             }
 
@@ -74,27 +67,20 @@ export class World extends Phaser.Scene {
             //             console.log('=== CREATING GAME OBJECTS ===');
 
             // Create enemies
-            console.log('Creating enemies...');
+
             this.createEnemies();
-            console.log('Enemies created successfully, count:', this.enemies.length);
+
 
             // Create allies
-            console.log('Creating allies...');
             this.createAllies();
-            console.log('Allies created successfully, count:', this.allies.length);
 
             // Create items
-            console.log('Creating items...');
             this.createItems();
-            console.log('Items created successfully, count:', this.items.length);
 
             // Create trees
-            console.log('Creating trees...');
             this.createTrees();
-            console.log('Trees created successfully, count:', this.trees.length);
 
-            //             // Setup camera
-            console.log('Setting up camera...');
+            // Setup camera
             this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.cameras.main.startFollow(this.player);
@@ -111,11 +97,13 @@ export class World extends Phaser.Scene {
             this.debugManager = new DebugManager(this);
             console.log('Debug manager setup complete');
 
-            // Setup inventory UI
+            // Setup inventory UI with a small delay to ensure keyboard is ready
             console.log('Setting up inventory UI...');
-            this.inventoryUI = new InventoryUI(this);
-            this.inventoryUI.setPlayer(this.player);
-            console.log('Inventory UI setup complete');
+            this.time.delayedCall(100, () => {
+                this.inventoryUI = new InventoryUI(this);
+                this.inventoryUI.setPlayer(this.player);
+                console.log('Inventory UI setup complete');
+            });
 
             // Setup custom cursor
             console.log('Setting up custom cursor...');
