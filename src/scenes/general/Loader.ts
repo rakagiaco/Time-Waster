@@ -1,44 +1,49 @@
+/**
+ * Asset Loader Scene
+ * 
+ * Handles loading of all game assets including sprites, audio, fonts, tilemaps,
+ * and quest data. Also manages save game state restoration and animation setup.
+ * 
+ * This scene runs before the main menu and ensures all resources are available
+ * before gameplay begins. It also creates all sprite animations used throughout
+ * the game.
+ */
 export class Loader extends Phaser.Scene {
+    quest: any;                 // Saved quest data from localStorage
+    existing_inv: any;          // Saved inventory data from localStorage
+
     constructor() {
-        super('Loader')
-    }
-    quest: any
-    existing_inv: any
-
-    init() {
-        this.quest = undefined
-        this.existing_inv = undefined
+        super('Loader');
     }
 
-    preload() {
+    /**
+     * Initialize scene state and clear any existing data
+     */
+    init(): void {
+        this.quest = undefined;
+        this.existing_inv = undefined;
+    }
 
-        // //formatting
-        // this.add.text(game.config.width / 2, game.config.height / 2, 'Loading...', {
-        //     fontFamily: 'Comic Sans MS',
-        //     fontSize: '28px',
-        //     color: '#0000FF',
-        //     align: 'right',
-        //     padding: { top: 5, bottom: 5 },
-        //     fixedWidth: 0,
-        // }).setOrigin(0.5)
-
-        // //loading bar -> credit Nathan Altice
-        // let loadingBar = this.add.graphics()
-        // this.load.on('progress', (value) => {
-        //     loadingBar.clear()
-        //     loadingBar.fillStyle(0x00FFFF, 1)
-        //     loadingBar.fillRect(game.config.width / 4, game.config.height / 2 + 100, 500, 25)
-        // })
-        // this.load.on('complete', () => {
-        //     loadingBar.destroy()
-        // })
+    /**
+     * Load all game assets including graphics, audio, fonts, and data files
+     * 
+     * Organized into sections for different asset types. Also handles
+     * loading save game data from localStorage if available.
+     */
+    preload(): void {
+        // Note: Loading screen code commented out but preserved for future use
+        // Can be uncommented to show loading progress to players
 
 
-        //load tilemap
-        this.load.image('base-tileset', '/tilesets/base_tileset.png')
-        this.load.tilemapTiledJSON('tilemapJSON', '/tilesets/main-tileset-1.json')
+        // =====================================================================
+        // TILEMAP AND WORLD ASSETS
+        // =====================================================================
+        this.load.image('base-tileset', '/tilesets/base_tileset.png');
+        this.load.tilemapTiledJSON('tilemapJSON', '/tilesets/main-tileset-1.json');
 
-        //load animated sprites
+        // =====================================================================
+        // ANIMATED SPRITE SHEETS
+        // =====================================================================
         this.load.spritesheet('water-pond', '/spritesheets/water-anims.png', { frameWidth: 32, frameHeight: 32 })
         this.load.spritesheet('tree-1', '/spritesheets/tree-1.png', { frameWidth: 64, frameHeight: 64 })
         this.load.spritesheet('tree-2', '/spritesheets/tree-2.png', { frameWidth: 64, frameHeight: 64 })
@@ -60,10 +65,14 @@ export class Loader extends Phaser.Scene {
         this.load.spritesheet('boss-death', '/spritesheets/boss-death.png', { frameWidth: 32, frameHeight: 50 })
         this.load.spritesheet('boss-lootable', '/spritesheets/boss-lootable.png', { frameWidth: 32, frameHeight: 50 })
 
-        //player atlas
-        this.load.atlas('player', '/spritesheets/player/player.png', '/spritesheets/player/player-walk-anims.json')
+        // =====================================================================
+        // PLAYER ATLAS AND ANIMATIONS
+        // =====================================================================
+        this.load.atlas('player', '/spritesheets/player/player.png', '/spritesheets/player/player-walk-anims.json');
 
-        //load images (tmp)
+        // =====================================================================
+        // STATIC IMAGES AND UI ELEMENTS
+        // =====================================================================
         this.load.image('continue-game-button', '/img/continue-game-button.png')
         this.load.image('cursor-2', '/img/cursor-2.png')
         this.load.image('cursor', '/img/cursor.png')
@@ -91,7 +100,9 @@ export class Loader extends Phaser.Scene {
         this.load.image('menu-button', '/img/menu-button.png')
         this.load.image('freeplay-button', '/img/freeplay-button.png')
 
-        //load quests
+        // =====================================================================
+        // QUEST DATA FILES
+        // =====================================================================
         this.load.json('quest-1', '/quests/quest-1.json')
         this.load.json('quest-2', '/quests/quest-2.json')
         this.load.json('quest-3', '/quests/quest-3.json')
@@ -100,7 +111,9 @@ export class Loader extends Phaser.Scene {
         this.load.json('quest-6', '/quests/quest-6.json')
         this.load.json('quest-7', '/quests/quest-7.json')
 
-        //load audio
+        // =====================================================================
+        // AUDIO FILES
+        // =====================================================================
         this.load.audio('click', '/audio/click.wav')
         this.load.audio('in-water', '/audio/in-water.mp3')
         this.load.audio('walking', '/audio/walking-dirt.mp3')
@@ -124,23 +137,35 @@ export class Loader extends Phaser.Scene {
         this.load.bitmapFont('pixel-black', '/font/pixel-black.png', '/font/pixel-black.xml')
         this.load.bitmapFont('pixel-white', '/font/pixel-white.png', '/font/pixel-white.xml')
 
-        //load existing gamestates...
+        // =====================================================================
+        // SAVE GAME DATA RESTORATION
+        // =====================================================================
+        
+        // Load saved quest progress from localStorage
         if (window.localStorage.getItem('existing_quest') != null) {
-            this.quest = window.localStorage.getItem('existing_quest')
-            this.quest = JSON.parse(this.quest)
-            // console.log(this.quest)   
+            this.quest = window.localStorage.getItem('existing_quest');
+            this.quest = JSON.parse(this.quest);
         }
 
+        // Load saved inventory data from localStorage
         if (window.localStorage.getItem('existing_inv') != null) {
-            this.existing_inv = window.localStorage.getItem('existing_inv')
-            const parse = JSON.parse(this.existing_inv)
-            this.existing_inv = new Map(parse)
-            // console.log(this.existing_inv)
+            this.existing_inv = window.localStorage.getItem('existing_inv');
+            const parse = JSON.parse(this.existing_inv);
+            this.existing_inv = new Map(parse);
         }
     }
 
-    create() {
-        //player anims----------------------------
+    /**
+     * Create all sprite animations and transition to main menu
+     * 
+     * Defines animation sequences for all game entities including player,
+     * enemies, environment objects, and UI elements. All animations are
+     * created here to ensure they're available when needed.
+     */
+    create(): void {
+        // =====================================================================
+        // PLAYER ANIMATIONS
+        // ====================================================================="
         this.anims.create({
             key: 'player-walk-up',
             frames: this.anims.generateFrameNames('player', {
@@ -210,7 +235,9 @@ export class Loader extends Phaser.Scene {
         })
 
 
-        //enemy anims----------------------------
+        // =====================================================================
+        // ENEMY ANIMATIONS
+        // =====================================================================
         this.anims.create({
             key: 'enemy-idle-anim',
             frames: this.anims.generateFrameNumbers('enemy-1-anim', { start: 0, end: 7 }),
@@ -268,7 +295,9 @@ export class Loader extends Phaser.Scene {
         })
 
 
-        //boss mechanic
+        // =====================================================================
+        // BOSS SPECIAL ANIMATIONS
+        // =====================================================================
         this.anims.create({
             key: 'boss-aoe-anim',
             frames: this.anims.generateFrameNumbers('boss-aoe', { start: 0, end: 15 }),
@@ -276,8 +305,11 @@ export class Loader extends Phaser.Scene {
             repeat: 1
         })
 
-        //sprite anims----------------------------
-        //quest icon
+        // =====================================================================
+        // ENVIRONMENT AND UI ANIMATIONS
+        // =====================================================================
+        
+        // Quest indicator animations
         this.anims.create({
             key: 'quest-icon',
             frames: this.anims.generateFrameNumbers('quest-icon', { start: 0, end: 3 }),
@@ -425,6 +457,7 @@ export class Loader extends Phaser.Scene {
             repeat: -1
         })
 
-        this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv })
+        // Start the main menu scene with loaded save data
+        this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv });
     }
 }

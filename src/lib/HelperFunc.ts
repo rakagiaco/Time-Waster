@@ -1,32 +1,56 @@
+/**
+ * Helper Functions Library
+ * 
+ * Collection of utility functions used throughout the game for common operations
+ * including UI management, movement calculations, collision detection, and
+ * game state management.
+ * 
+ * Original implementation by C.J. Moshy for 'Time Waster'
+ * Organized by functionality:
+ * - UI and Interface Management
+ * - Player Detection and AI
+ * - Movement and Physics
+ * - Quest System
+ * - Audio Management
+ * - Cleanup Utilities
+ */
+
 import { Scene } from 'phaser';
 import { GameScene, Player, GameItem } from '../types/GameTypes';
 import GameConfig from '../config/GameConfig';
 
+
+// =============================================================================
+// UI AND INTERFACE MANAGEMENT
+// =============================================================================
+
 /**
- * written by cj moshy for 'Time Waster'
- * set of functions that are called arbitratially or by multiple gameojbs
+ * Creates an interactive loot interface window for item pickup
+ * 
+ * Displays a modal window allowing the player to collect items from the world.
+ * Automatically handles inventory updates, quest progress, and audio feedback.
+ * All window elements are properly cleaned up on closure.
+ * 
+ * @param item - The collectible item to display
+ * @param contextScene - The scene to create the window in
+ * @param player - The player object for inventory and state management
+ * @param miniMapCamera - Camera to exclude window elements from minimap
  */
-
-
-//------CreateLootInterfaceWindow
-/**
-* Create a loot interface window for the given item, destroys all items associated with window upon closure of window
-* 
-* @param {GameItem} item The item to create loot window for
-* @param {GameScene} contextScene The scene to create the window on
-* @param {Player} player The player object
-* @param {Phaser.Cameras.Scene2D.Camera} miniMapCamera The minimap camera
-* @returns {void} 
-*/
 export function createLootInterfaceWindow(item: GameItem, contextScene: GameScene, player: Player, miniMapCamera: Phaser.Cameras.Scene2D.Camera): void {
+    let closeBTN: Phaser.GameObjects.BitmapText, itemImg: Phaser.GameObjects.Image;
+    
+    // Create modal window background
+    const window = contextScene.add.graphics().setDepth(2);
+    window.fillStyle(0x000000, 1); // Black background with full opacity
+    window.fillRect(
+        contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2 - 100, 
+        contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2 - 100, 
+        200, 200
+    );
 
-    let closeBTN: Phaser.GameObjects.BitmapText, itemImg: Phaser.GameObjects.Image
-    const window = contextScene.add.graphics().setDepth(2)
-    window.fillStyle(0x000000, 1) // Color and alpha (transparency)
-    window.fillRect(contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2 - 100, contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2 - 100, 200, 200)
-
-    player.windowOpen = true
-    player.animsFSM.transition('interacting')
+    // Update player state to prevent movement during interaction
+    player.windowOpen = true;
+    player.animsFSM.transition('interacting');
 
     closeBTN = contextScene.add.bitmapText(contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2 - 90, contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2 - 100, '8-bit-white', 'exit', 25)
     closeBTN.setInteractive().setDepth(2)
@@ -72,14 +96,21 @@ export function createLootInterfaceWindow(item: GameItem, contextScene: GameScen
 
 }
 
-//------listen
+// =============================================================================
+// PLAYER DETECTION AND AI
+// =============================================================================
+
 /**
-* Takes scene and object that wants to listen for player
-* 
-* @param {GameScene} scene The scene where the player resides
-* @param {any} listener The object seeking information on players current position
-* @returns {boolean} 
-*/
+ * Advanced player detection system with environmental awareness
+ * 
+ * Determines if a listener entity can detect the player based on distance,
+ * lighting conditions, and environmental factors. Supports dynamic detection
+ * ranges influenced by day/night cycles and light sources.
+ * 
+ * @param scene - The game scene containing the player
+ * @param listener - The entity attempting to detect the player
+ * @returns True if the player is within effective detection range
+ */
 export function listen(scene: GameScene, listener: any): boolean {
     // Get player from the scene - handle both old and new scene structures
     let player: any;
@@ -170,14 +201,20 @@ export function listen(scene: GameScene, listener: any): boolean {
     return isInRange;
 }
 
-//------CreateQuestObject
+// =============================================================================
+// QUEST SYSTEM
+// =============================================================================
+
 /**
-* Takes a quest json file and a player, creates quest based on the data and p1 inventory
-* 
-* @param {any} jsonData a json file, formatted specifically for the 'quest' structure
-* @param {any} player a player object for inventory refrence
-* @returns {any} 
-*/
+ * Creates a quest object from JSON data with inventory synchronization
+ * 
+ * Parses quest configuration files and creates standardized quest objects.
+ * Automatically syncs current progress with player inventory for collection quests.
+ * 
+ * @param jsonData - Quest configuration data from JSON file
+ * @param player - Player object with inventory access
+ * @returns Formatted quest object with current progress
+ */
 export function CreateQuestObject(jsonData: any, player: any): any {
     let returnObj = {
         "questnumber": jsonData.questdata.questnumber,
@@ -194,14 +231,16 @@ export function CreateQuestObject(jsonData: any, player: any): any {
     return returnObj
 }
 
-//------determineKnockbackDirection
 /**
-* Takes a player and entity and determines a knockback direction for the entity
-*
-* @param {any} toknock entity to knock
-* @param {any} knocker entity that is kocking back
-* @returns {Phaser.Math.Vector2}
-*/
+ * Calculates knockback direction vector between two entities
+ * 
+ * Determines the direction an entity should be knocked back when hit by another.
+ * Uses position comparison with small offset tolerance for consistent behavior.
+ * 
+ * @param toknock - Entity being knocked back
+ * @param knocker - Entity causing the knockback
+ * @returns Normalized direction vector for knockback force
+ */
 export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.Math.Vector2 {
     if (!toknock || !knocker || !toknock.getPosition || !knocker.getPosition) {
         console.warn('Invalid objects passed to determineKnockbackDirection');
@@ -230,25 +269,33 @@ export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.
     return returnVec
 }
 
-//------toggleCursor
 /**
-*plays cursor 'anim'
-*
-* @param {Scene} scene the scene where the cursor exists
-*/
+ * Provides visual feedback for UI interactions
+ * 
+ * Briefly changes the cursor sprite to indicate successful clicks or interactions.
+ * Uses a timed callback to restore the original cursor after a short duration.
+ * 
+ * @param scene - The scene to apply cursor changes to
+ */
 export function toggleCursor(scene: Scene): void {
     scene.input.setDefaultCursor('url(assets/img/cursor-2.png), pointer')
     scene.time.delayedCall(GameConfig.TIMING.CURSOR_ANIMATION_DURATION, () => { scene.input.setDefaultCursor('url(assets/img/cursor.png), pointer') })
 }
 
-//------updateMovement (Enemy AI)
+// =============================================================================
+// MOVEMENT AND PHYSICS
+// =============================================================================
+
 /**
-* Takes a  entity and context scene, and randomly updates that entitys movement
-*
-* @param {any} entity entity to update movement for
-* @param {Scene} scene the context scene
-* @returns {void}
-*/
+ * Random movement system for enemy AI patrol behavior
+ * 
+ * Generates randomized movement patterns for entities to create natural
+ * patrol behavior. Uses timed sequences of movement and pauses to prevent
+ * predictable or mechanical AI behavior.
+ * 
+ * @param entity - The entity to apply movement to
+ * @param scene - The scene for timer management
+ */
 export function updateMovement(entity: any, scene: Scene): void {
     var decider = Math.round(Math.random() * 4)
     switch (decider) {
@@ -283,46 +330,53 @@ export function updateMovement(entity: any, scene: Scene): void {
     }
 }
 
-//------updatePlayerMovement
 /**
-* Updates player movement based on input keys
-*
-* @param {any} player the player entity
-* @param {Phaser.Input.Keyboard.Key} keyUp up key
-* @param {Phaser.Input.Keyboard.Key} keyDown down key
-* @param {Phaser.Input.Keyboard.Key} keyLeft left key
-* @param {Phaser.Input.Keyboard.Key} keyRight right key
-* @param {boolean} isSprinting whether the player is sprinting
-* @returns {void}
-*/
+ * Handles smooth player movement with animation updates
+ * 
+ * Processes keyboard input to move the player character with proper
+ * diagonal movement normalization and directional animations. Supports
+ * both normal and sprint movement speeds.
+ * 
+ * @param player - The player entity to move
+ * @param keyUp - Up arrow/W key state
+ * @param keyDown - Down arrow/S key state  
+ * @param keyLeft - Left arrow/A key state
+ * @param keyRight - Right arrow/D key state
+ * @param isSprinting - Whether sprint modifier is active
+ */
 export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.Key, keyDown: Phaser.Input.Keyboard.Key, keyLeft: Phaser.Input.Keyboard.Key, keyRight: Phaser.Input.Keyboard.Key, isSprinting: boolean = false): void {
-    let velocity = isSprinting ? GameConfig.MOVEMENT.PLAYER_SPRINT_VELOCITY : GameConfig.MOVEMENT.PLAYER_BASE_VELOCITY;
+    // Determine movement speed based on sprint state
+    const velocity = isSprinting ? GameConfig.MOVEMENT.PLAYER_SPRINT_VELOCITY : GameConfig.MOVEMENT.PLAYER_BASE_VELOCITY;
 
     let vx = 0;
     let vy = 0;
 
+    // Process input keys for movement direction
     if (keyUp.isDown) vy -= velocity;
     if (keyDown.isDown) vy += velocity;
     if (keyLeft.isDown) vx -= velocity;
     if (keyRight.isDown) vx += velocity;
 
-    // Normalize diagonal movement
+    // Normalize diagonal movement to prevent faster diagonal speed
     if (vx !== 0 && vy !== 0) {
-        vx *= 0.707; // 1/√2
+        vx *= 0.707; // 1/√2 ≈ 0.707
         vy *= 0.707;
     }
 
+    // Apply calculated velocity to player
     player.setVelocity(vx, vy);
 
-    // Update animations based on movement
+    // Update directional animations based on primary movement axis
     if (vx !== 0 || vy !== 0) {
         if (Math.abs(vy) > Math.abs(vx)) {
+            // Vertical movement takes priority
             if (vy < 0) {
                 player.anims.play('player-walk-up', true);
             } else {
                 player.anims.play('player-walk-down', true);
             }
         } else {
+            // Horizontal movement takes priority
             if (vx < 0) {
                 player.anims.play('player-walk-left', true);
             } else {
@@ -332,15 +386,16 @@ export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.K
     }
 }
 
-//------pursuit
 /**
-* Takes a  entity and context scene, and commands the entity to pursue the player
-*
-* @param {Scene} scene the context scene
-* @param {any} entity entity to apply behavior to
-* @param {any} player the player to pursue
-* @returns {void}
-*/
+ * AI pursuit behavior for enemy entities
+ * 
+ * Calculates movement vector for an entity to pursue the player.
+ * Uses normalized direction vectors for consistent pursuit speed.
+ * 
+ * @param _scene - The game scene (unused but kept for interface consistency)
+ * @param entity - The entity that will pursue the player
+ * @param player - The player to pursue
+ */
 export function pursuit(_scene: Scene, entity: any, player: any): void {
     let x = player.getPosition()
     let x1 = x[0]
@@ -364,28 +419,38 @@ export function pursuit(_scene: Scene, entity: any, player: any): void {
     entity.setVelocity(entity.VELOCITY * vector.x, entity.VELOCITY * vector.y)
 }
 
-//------safeStopSound
+// =============================================================================
+// AUDIO MANAGEMENT
+// =============================================================================
+
 /**
-* Safely stops a sound if it's playing
-*
-* @param {Phaser.Sound.BaseSound} sound The sound to stop
-* @returns {void}
-*/
+ * Safely stops audio playback with proper state checking
+ * 
+ * Prevents errors by checking if sound exists and is currently playing
+ * before attempting to stop it. Essential for preventing audio-related crashes.
+ * 
+ * @param sound - The Phaser sound object to stop
+ */
 export function safeStopSound(sound: Phaser.Sound.BaseSound): void {
     if (sound && sound.isPlaying) {
         sound.stop()
     }
 }
 
-//------clearAllInterval
+// =============================================================================
+// CLEANUP UTILITIES
+// =============================================================================
+
 /**
-* Takes a scene and ensures all entities that have an interval id get it cleared
-*
-* @param {Scene} scene the context scene
-* @param {any[]} enemies array of enemies to clear intervals from
-* @param {any} player the player to clear intervals from
-* @returns {void}
-*/
+ * Comprehensive timer cleanup for all game entities
+ * 
+ * Ensures all active intervals and timers are properly cleared when changing
+ * scenes or resetting game state. Prevents memory leaks and timer conflicts.
+ * 
+ * @param _scene - The game scene (unused but kept for interface consistency)
+ * @param enemies - Array of enemy entities to clean up
+ * @param player - The player entity to clean up
+ */
 export function clearAllInterval(_scene: Scene, enemies: any[], player: any): void {
     enemies.forEach(element => {
         if (element.INTERVAL_ID) {

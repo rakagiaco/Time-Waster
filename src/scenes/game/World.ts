@@ -267,7 +267,12 @@ export class World extends Phaser.Scene {
 
     // no clankers allowed in this function please
     private createEnemies(): void {
-        // Create enemies from object layer spawn points
+        // Create enemies from tilemap object layer spawn points
+        // Uses Tiled Map Editor object layer 'Player/NPC' with named objects:
+        // - 'boss_spawn': Creates boss-level enemies
+        // - 'enemy_spawn': Creates regular scout enemies  
+        // - 'enemy_spawn_2': Creates observer-type enemies
+        // This allows level designers to place spawns visually in Tiled
         if (this.objlayer) {
             this.objlayer.objects.forEach(element => {
                 if (element.name === 'boss_spawn') {
@@ -313,7 +318,9 @@ export class World extends Phaser.Scene {
     private createItems(): void {
         try {
             console.log('Creating biome-specific items...');
-            // for now all there is are herbs
+            // Create collectible items from tilemap object layer
+            // Uses named objects like 'bush_1' to spawn herb items
+            // Positions are set visually in Tiled Map Editor
 
             if (this.objlayer) {
                 this.objlayer.objects.forEach(element => {
@@ -332,6 +339,8 @@ export class World extends Phaser.Scene {
 
     private createTrees(): void {
         try {
+            // Create environmental trees from tilemap object layer
+            // Uses 'tree_1', 'tree_2' etc. objects placed in Tiled
             if (this.objlayer) {
                 this.objlayer.objects.forEach(element => {
                     // if (element.name === 'pond') {

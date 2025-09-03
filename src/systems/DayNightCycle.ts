@@ -1,37 +1,71 @@
+/**
+ * Day/Night Cycle System
+ * 
+ * Manages dynamic lighting and time progression throughout the game world.
+ * Creates immersive environmental changes that affect gameplay mechanics
+ * including enemy behavior, visibility, and atmosphere.
+ * 
+ * Features:
+ * - Configurable cycle timing and transitions
+ * - Visual overlay system for darkness effects
+ * - Real-time display of current game time
+ * - Debug controls for testing different times
+ * - Integration with AI detection systems
+ */
+
 import Phaser from 'phaser';
 
+/**
+ * Configuration interface for day/night cycle timing
+ */
 export interface DayNightConfig {
-    cycleDuration: number; // Total cycle duration in milliseconds
-    dayDuration: number;   // Day duration in milliseconds
-    nightDuration: number; // Night duration in milliseconds
+    cycleDuration: number;      // Total cycle duration in milliseconds
+    dayDuration: number;        // Day duration in milliseconds  
+    nightDuration: number;      // Night duration in milliseconds
     transitionDuration: number; // Transition duration in milliseconds
 }
 
+/**
+ * Day/Night Cycle Management Class
+ * 
+ * Handles time progression, lighting changes, and environmental effects
+ * throughout the game world. Integrates with other systems for dynamic
+ * gameplay modifications based on time of day.
+ */
 export class DayNightCycle {
-    private scene: Phaser.Scene;
-    private config: DayNightConfig;
-    private currentTime: number = 0.25; // Start at 25% through cycle (6 AM - early day)
-    private isDay: boolean = true;
-    private isTransitioning: boolean = false;
+    private scene: Phaser.Scene;                          // Scene reference for rendering
+    private config: DayNightConfig;                       // Timing configuration
+    private currentTime: number = 0.25;                   // Current cycle position (0-1)
+    private isDay: boolean = true;                         // Current day/night state
+    private isTransitioning: boolean = false;             // Whether in transition period
     
-    // Visual elements
-    private overlay: Phaser.GameObjects.Graphics | null = null;
-    private timeText: Phaser.GameObjects.BitmapText | null = null;
+    // Visual rendering components
+    private overlay: Phaser.GameObjects.Graphics | null = null;      // Darkness overlay
+    private timeText: Phaser.GameObjects.BitmapText | null = null;   // Time display
     
-    // Debug controls
-    private debugMode: boolean = false;
-    private debugTimeOverride: number | null = null;
+    // Development and testing tools  
+    private debugMode: boolean = false;                   // Debug mode toggle
+    private debugTimeOverride: number | null = null;      // Manual time override
 
+    /**
+     * Creates a new day/night cycle system
+     * 
+     * @param scene - The Phaser scene to attach visual elements to
+     * @param config - Optional configuration overrides for timing
+     */
     constructor(scene: Phaser.Scene, config?: Partial<DayNightConfig>) {
         this.scene = scene;
+        
+        // Merge default configuration with any provided overrides
         this.config = {
-            cycleDuration: 24 * 60 * 1000, // 24 minutes in milliseconds
-            dayDuration: 12 * 60 * 1000,   // 12 minutes day
-            nightDuration: 12 * 60 * 1000, // 12 minutes night
-            transitionDuration: 2 * 60 * 1000, // 2 minutes transition
+            cycleDuration: 24 * 60 * 1000,      // 24 minutes total cycle
+            dayDuration: 12 * 60 * 1000,        // 12 minutes of daylight
+            nightDuration: 12 * 60 * 1000,      // 12 minutes of darkness
+            transitionDuration: 2 * 60 * 1000,  // 2 minutes for dawn/dusk
             ...config
         };
         
+        // Initialize visual components and controls
         this.setupVisualElements();
         this.setupDebugControls();
     }

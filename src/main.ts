@@ -1,69 +1,104 @@
+/**
+ * Time-Waster RPG Game - Main Entry Point
+ * 
+ * A comprehensive Phaser.js RPG game featuring quest systems, dynamic inventory,
+ * custom AI, and persistent save states. Built with TypeScript and Vite for 
+ * modern development workflow.
+ * 
+ * Original game created by C.J. Moshy for UCSC's CMPM 120
+ * Converted to TypeScript and modernized build system
+ * 
+ * Technical Features:
+ * - Physics engine with arcade physics
+ * - Advanced camera system with minimap
+ * - Rich text rendering with bitmap fonts
+ * - Smooth tweens and animations
+ * - Timer-based event system
+ * - Custom tilemap integration (Tiled Map Editor)
+ * 
+ * Game Features:
+ * - Scalable quest system with JSON configuration
+ * - Dynamic inventory management
+ * - Entity-component architecture for game objects
+ * - Intelligent AI with state machines
+ * - Local storage for game state persistence
+ * - Day/night cycle with lighting effects
+ * 
+ * Audio assets licensed under Pixabay License:
+ * https://pixabay.com/service/license-summary/
+ * Visual assets created in-house
+ */
+
 import Phaser from 'phaser';
-import { Loader} from './scenes/general/Loader';
+import { Loader } from './scenes/general/Loader';
 import { Menu } from './scenes/general/Menu';
 import { World } from './scenes/game/World';
 import { Credits } from './scenes/general/Credits';
 import { GameOver } from './scenes/general/GameOver';
 
-//created by C.J. Moshy for UCSC's CMPM 120
-
-// Technical Execution: Components used -> physics, cameras, text objects, tweens, timers, tilemaps
-// Polish and Style: code base is clean and organized, with good comments
-// Polish and Style: all visual assets made in house 
-
-// audio assets from Pixabay: https://pixabay.com/service/license-summary/ 
-
 /**
- *      Features
- * ---- easily scalable quest chain with json formatting support
- * ---- dynamic inventory
- * ---- general framework for creating 'entities' and 'items' -> ensures ease of use for future additions by using high level abstractions for gameobjects
- * ---- custom AI for enemy units
- * ---- local storage and gamestate saves
- * ---- custom tilemap made in tiled for unlimited map resizing and reworking
+ * Phaser Game Configuration
  * 
+ * Core configuration object that defines the game's rendering, physics,
+ * scaling, and scene management settings.
  */
-
 const config: Phaser.Types.Core.GameConfig = {
-    parent: 'gameContainer',
-    type: Phaser.WEBGL,
-    width: 1000,
-    height: 800,
+    parent: 'gameContainer',           // HTML element ID to mount the game
+    type: Phaser.WEBGL,               // Use WebGL for better performance
+    width: 1000,                      // Game canvas width in pixels
+    height: 800,                      // Game canvas height in pixels
+    
+    // Rendering configuration
     render: {
-        pixelArt: true,
+        pixelArt: true,               // Crisp pixel art rendering without smoothing
     },
+    
+    // Scaling and responsive design
     scale: {
-        mode: Phaser.Scale.FIT,
-        autoCenter: Phaser.Scale.CENTER_BOTH
+        mode: Phaser.Scale.FIT,       // Scale to fit container while maintaining aspect ratio
+        autoCenter: Phaser.Scale.CENTER_BOTH  // Center the game in the container
     },
+    
+    // Physics engine configuration
     physics: {
-        default: 'arcade',
+        default: 'arcade',            // Use Arcade Physics for simple 2D physics
         arcade: {
-            debug: false,
+            debug: false,             // Disable physics debug rendering in production
             gravity: {
-                x: 0,
-                y: 0
+                x: 0,                 // No horizontal gravity (top-down game)
+                y: 0                  // No vertical gravity (top-down game)
             }
         }
     },
+    
+    // Scene loading order - scenes are loaded in array order
     scene: [Loader, Menu, World, Credits, GameOver]
 };
 
+/**
+ * Global game instance - stores the main Phaser.Game object
+ */
 let game: Phaser.Game;
 
-// Add global error handler for uncaught errors
+/**
+ * Global Error Handling
+ * 
+ * Set up comprehensive error handling to catch and log any runtime errors
+ * or unhandled promise rejections for debugging purposes.
+ */
+
+// Catch uncaught JavaScript errors
 window.addEventListener('error', (event) => {
     console.error('=== GLOBAL ERROR ===');
     console.error('Error:', event.error);
     console.error('Message:', event.message);
     console.error('Filename:', event.filename);
-    console.error('Lineno:', event.lineno);
-    console.error('Colno:', event.colno);
+    console.error('Line:', event.lineno, 'Column:', event.colno);
     console.error('Stack:', event.error?.stack);
     console.error('===================');
 });
 
-// Add unhandled promise rejection handler
+// Catch unhandled Promise rejections
 window.addEventListener('unhandledrejection', (event) => {
     console.error('=== UNHANDLED PROMISE REJECTION ===');
     console.error('Reason:', event.reason);
@@ -71,44 +106,52 @@ window.addEventListener('unhandledrejection', (event) => {
     console.error('===================================');
 });
 
+/**
+ * Game Initialization
+ * 
+ * Initialize the Phaser game with comprehensive error handling and validation.
+ * Performs pre-flight checks for DOM elements and browser compatibility.
+ */
 try {
     console.log('=== PHASER GAME INITIALIZATION ===');
     console.log('Phaser version:', Phaser.VERSION);
-    console.log('Phaser object:', typeof Phaser);
-    console.log('Phaser.Game:', typeof Phaser.Game);
+    console.log('Phaser object type:', typeof Phaser);
+    console.log('Phaser.Game type:', typeof Phaser.Game);
     console.log('Game config:', config);
-    console.log('Available scenes:', Array.isArray(config.scene) ? config.scene.map((s: any) => 'Scene') : 'Scene');
+    console.log('Scene count:', Array.isArray(config.scene) ? config.scene.length : 0);
 
-    // Check if gameContainer exists
+    // Validate that the game container exists in the DOM
     const container = document.getElementById('gameContainer');
     if (!container) {
         throw new Error('Game container element "gameContainer" not found in DOM');
     }
     console.log('Game container found:', container);
 
-    // Check if WebGL is supported
+    // Check WebGL support and warn if unavailable
     if (!Phaser.WEBGL) {
-        console.warn('WebGL not available, falling back to Canvas');
+        console.warn('WebGL not available, falling back to Canvas rendering');
     }
 
+    // Create the main Phaser game instance
     console.log('Creating Phaser game...');
     game = new Phaser.Game(config);
     console.log('Phaser game created successfully');
 
-    // Add game event listeners for debugging
+    // Set up game event listeners for monitoring game lifecycle
     game.events.on('ready', () => {
-        console.log('Game ready event fired');
+        console.log('Game ready event fired - all systems initialized');
     });
 
     game.events.on('start', () => {
-        console.log('Game start event fired');
+        console.log('Game start event fired - gameplay begun');
     });
 
     game.events.on('error', (error: any) => {
-        console.error('Game error event:', error);
+        console.error('Game runtime error:', error);
     });
 
 } catch (error) {
+    // Handle critical initialization errors
     console.error('=== CRITICAL ERROR CREATING PHASER GAME ===');
     console.error('Error type:', error?.constructor?.name);
     console.error('Error message:', (error as any)?.message);
@@ -116,15 +159,15 @@ try {
     console.error('Full error object:', error);
     console.error('===========================================');
 
-    // Try to provide helpful debugging info
+    // Provide additional debugging information
     console.log('=== DEBUGGING INFO ===');
     console.log('Document ready state:', document.readyState);
-    console.log('Window load state:', window.performance?.navigation?.type);
+    console.log('Window performance navigation type:', window.performance?.navigation?.type);
     console.log('Available DOM elements:', {
         gameContainer: document.getElementById('gameContainer'),
         body: document.body,
         html: document.documentElement
     });
-    console.log('=====================');
+    console.log('======================');
 }
 

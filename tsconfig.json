@@ -1,40 +1,57 @@
 {
+  /**
+   * TypeScript Configuration for Time-Waster RPG Game
+   * 
+   * This configuration enables modern TypeScript features while maintaining
+   * compatibility with Phaser.js and Vite build system.
+   */
   "compilerOptions": {
+    // Target ES2020 for modern browser support
     "target": "ES2020",
     "useDefineForClassFields": true,
+    
+    // Library dependencies for DOM and modern JavaScript features
     "lib": [
       "ES2020",
-      "DOM",
+      "DOM", 
       "DOM.Iterable"
     ],
+    
+    // Module system configuration for Vite bundler
     "module": "ESNext",
-    "skipLibCheck": true,
     "moduleResolution": "bundler",
+    "skipLibCheck": true,
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,
     "noEmit": true,
     "jsx": "preserve",
+    
+    // Strict type checking for better code quality
     "strict": true,
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
+    
+    // Path mapping for cleaner imports
     "baseUrl": ".",
     "allowJs": true,
     "paths": {
-      "@/*": [
-        "src/*"
-      ]
+      "@/*": ["src/*"]
     },
-    "types": [
-      "vite/client"
-    ]
+    
+    // Type definitions for Vite client
+    "types": ["vite/client"]
   },
+  
+  // Include all TypeScript files in src directory
   "include": [
     "src/**/*.ts",
-    "src/**/*.d.ts",
+    "src/**/*.d.ts", 
     "vite.config.ts"
   ],
+  
+  // Exclude build artifacts and dependencies
   "exclude": [
     "node_modules",
     "dist"
