@@ -20,7 +20,7 @@ export class Lantern {
     private config: LanternConfig;
     
     // Visual elements
-    private lanternSprite: Phaser.GameObjects.Sprite | null = null;
+    private lanternSprite: Phaser.GameObjects.Graphics | null = null;
     private lightMask: Phaser.GameObjects.Graphics | null = null;
     private lightGlow: Phaser.GameObjects.Graphics | null = null;
     private isActive: boolean = false;
@@ -74,7 +74,7 @@ export class Lantern {
     private createPixelArtLantern(): void {
         if (!this.lanternSprite) return;
         
-        const g = this.lanternSprite as Phaser.GameObjects.Graphics;
+        const g = this.lanternSprite;
         g.clear();
         
         // Lantern body (dark metal frame)
@@ -107,7 +107,7 @@ export class Lantern {
     private updateFlameAnimation(): void {
         if (!this.lanternSprite) return;
         
-        const g = this.lanternSprite as Phaser.GameObjects.Graphics;
+        const g = this.lanternSprite;
         
         // Calculate flame flicker based on timer
         const flicker = Math.sin(this.flickerTimer * 8) * 0.3 + Math.sin(this.flickerTimer * 12) * 0.2;
@@ -261,7 +261,7 @@ export class Lantern {
         this.isActive = false;
         if (this.lanternSprite) {
             // Clear flame but keep lantern structure visible briefly
-            const g = this.lanternSprite as Phaser.GameObjects.Graphics;
+            const g = this.lanternSprite;
             g.clear();
             this.createPixelArtLantern(); // Redraw without flame
             

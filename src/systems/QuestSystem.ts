@@ -163,10 +163,7 @@ export class QuestSystem {
         return true;
     }
 
-    private completeQuest(questId: number): void {
-        // This method is now deprecated - use completeQuestAtNPC instead
-        console.warn('QuestSystem: completeQuest called directly - use completeQuestAtNPC instead');
-    }
+
 
     private getQuestReward(questId: number): any {
         // Define rewards for each quest

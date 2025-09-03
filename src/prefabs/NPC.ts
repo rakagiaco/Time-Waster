@@ -44,12 +44,12 @@ export class NPC {
     private interactionRange: number = 80;
     private isInteracting: boolean = false;
     private currentQuest: QuestData | null = null;
-    private questProgress: Map<string, number> = new Map();
+
     private completedQuests: Set<number> = new Set();
     
     // Dialogue system
     private currentDialogue: DialogueData | null = null;
-    private dialogueHistory: string[] = [];
+
     private hasHadInitialConversation: boolean = false;
     private questAccepted: boolean = false;
     
@@ -163,17 +163,7 @@ export class NPC {
         }
     }
 
-    private startQuestDialogue(): void {
-        if (!this.currentQuest) return;
-        
-        // Check if quest is completed
-        const questProgress = this.getQuestProgress();
-        if (questProgress >= this.currentQuest.questData.amount) {
-            this.completeQuest();
-        } else {
-            this.startQuestOfferDialogue();
-        }
-    }
+
 
     private startQuestOfferDialogue(): void {
         if (!this.currentQuest) return;
@@ -412,24 +402,7 @@ export class NPC {
         return this.player.p1Inventory.getItemCount(itemType);
     }
 
-    private startGeneralDialogue(): void {
-        const dialogue: DialogueData = {
-            id: 'general',
-            text: "Greetings, traveler. I am Narvark, keeper of the valley's secrets. How may I assist you?",
-            responses: [
-                {
-                    text: "Tell me about this place.",
-                    nextDialogueId: 'lore_1'
-                },
-                {
-                    text: "I'll be on my way.",
-                    action: 'close'
-                }
-            ]
-        };
-        
-        this.showDialogue(dialogue);
-    }
+
 
     private showDialogue(dialogue: DialogueData): void {
         // Emit event to show dialogue UI

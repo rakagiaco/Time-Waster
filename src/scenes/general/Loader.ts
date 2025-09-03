@@ -22,7 +22,6 @@ export class Loader extends Phaser.Scene {
      * Initialize scene state and clear any existing data
      */
     init(): void {
-        console.log('=== LOADER SCENE INIT ===');
         this.quest = undefined;
         this.existing_inv = undefined;
     }
@@ -34,7 +33,6 @@ export class Loader extends Phaser.Scene {
      * loading save game data from localStorage if available.
      */
     preload(): void {
-        console.log('=== LOADER SCENE PRELOAD ===');
         // Note: Loading screen code commented out but preserved for future use
         // Can be uncommented to show loading progress to players
 
@@ -73,7 +71,6 @@ export class Loader extends Phaser.Scene {
         // KNIGHT SPRITESHEET (replacing player atlas)
         // =====================================================================
         this.load.spritesheet('player', '/spritesheets/player/newplayersprite/knight_1.png?v=3', { frameWidth: 32, frameHeight: 32 });
-        console.log('Loading knight_1.png spritesheet as "player"');
 
         // =====================================================================
         // STATIC IMAGES AND UI ELEMENTS
@@ -176,52 +173,7 @@ export class Loader extends Phaser.Scene {
         }
     }
 
-    // WHY THE FUCK ARE WE MAKING GRAPHICS PRIMITIVES IN THE LOADER???
-    // /**
-    //  * Create gold-coin texture for inventory system
-    //  */
-    // private createGoldCoinTexture(): void {
-    //     const graphics = this.add.graphics();
-        
-    //     // Main coin body (gold)
-    //     graphics.fillStyle(0xFFD700); // Gold color
-    //     graphics.fillCircle(16, 16, 8); // 32x32 texture, 16x16 coin
-        
-    //     // Inner circle (darker gold)
-    //     graphics.fillStyle(0xFFA500); // Darker gold
-    //     graphics.fillCircle(16, 16, 6);
-        
-    //     // Center highlight (bright gold)
-    //     graphics.fillStyle(0xFFFF00); // Bright gold
-    //     graphics.fillCircle(16, 16, 3);
-        
-    //     // Edge highlight
-    //     graphics.lineStyle(1, 0xFFFF00, 0.8);
-    //     graphics.strokeCircle(16, 16, 8);
-        
-    //     // Add coin details
-    //     graphics.fillStyle(0xFFD700, 0.6);
-        
-    //     // Small dots around the edge
-    //     for (let i = 0; i < 8; i++) {
-    //         const angle = (i * Math.PI * 2) / 8;
-    //         const radius = 6;
-    //         const x = 16 + Math.cos(angle) * radius;
-    //         const y = 16 + Math.sin(angle) * radius;
-    //         graphics.fillCircle(x, y, 1);
-    //     }
-        
-    //     // Center symbol (simple cross)
-    //     graphics.fillStyle(0xFFA500);
-    //     graphics.fillRect(15, 13, 2, 6); // Vertical line
-    //     graphics.fillRect(13, 15, 6, 2); // Horizontal line
-        
-    //     // Generate texture
-    //     graphics.generateTexture('gold-coin', 32, 32);
-    //     graphics.destroy();
-        
-    //     console.log('Gold-coin texture created successfully');
-    // }
+
 
     /**
      * Create all sprite animations and transition to main menu
@@ -231,7 +183,6 @@ export class Loader extends Phaser.Scene {
      * created here to ensure they're available when needed.
      */
     create(): void {
-        console.log('=== LOADER CREATE METHOD STARTING ===');
         // =====================================================================
         // KNIGHT ANIMATIONS (using knight_1 spritesheet)
         // ====================================================================="
@@ -271,14 +222,12 @@ export class Loader extends Phaser.Scene {
 
         // Idle animations for each direction
         // Frame layout: 0=down, 1=right, 2=left, 3=up (0-indexed!)
-        console.log('Creating idle animations...');
         this.anims.create({
             key: 'player-idle-down',
             frames: this.anims.generateFrameNumbers('player', { start: 0, end: 0 }),
             frameRate: 5,
             repeat: -1
         })
-        console.log('Created player-idle-down animation');
 
         this.anims.create({
             key: 'player-idle-right',
@@ -286,7 +235,6 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
-        console.log('Created player-idle-right animation');
 
         this.anims.create({
             key: 'player-idle-left',
@@ -294,7 +242,6 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
-        console.log('Created player-idle-left animation');
 
         this.anims.create({
             key: 'player-idle-up',
@@ -302,8 +249,6 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
-        console.log('Created player-idle-up animation');
-        console.log('All idle animations created successfully');
 
 
         this.anims.create({
@@ -549,8 +494,6 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
-
-        console.log('=== LOADER CREATE METHOD COMPLETED ===');
         
         // Start the main menu scene with loaded save data
         this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv });

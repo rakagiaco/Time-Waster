@@ -11,11 +11,11 @@ import { listen, determineKnockbackDirection } from './HelperFunc';
  */
 
 //dodge mechanic
-export function mechanic1(boss: any, player: any, scene: Scene): void {
-    let aoe = scene.physics.add.sprite(player.x + 16, player.y + 16, 'tree-1', 0).setDepth(0).setScale(2).setCircle().anims.play('boss-aoe-anim')
+export function mechanic1(_boss: any, player: any, scene: Scene): void {
+    let aoe = scene.physics.add.sprite(player.x + 16, player.y + 16, 'tree-1', 0).setDepth(0).setScale(2).setCircle(32).anims.play('boss-aoe-anim') as any;
     aoe.detectionDistance = GameConfig.DETECTION.BOSS_AOE_RANGE
     scene.time.delayedCall(1000, () => {
-        if (listen(scene, aoe)) {
+        if (listen(scene as any, aoe)) {
 
             let damage = Phaser.Math.Between(GameConfig.COMBAT.BOSS_AOE_DAMAGE_MIN, GameConfig.COMBAT.BOSS_AOE_DAMAGE_MAX)
             player.HIT_POINTS -= damage
@@ -31,7 +31,7 @@ export function mechanic1(boss: any, player: any, scene: Scene): void {
 }
 
 //heal mechanic
-export function mechanic2(boss: any, player: any, scene: Scene): void {
+export function mechanic2(boss: any, _player: any, scene: Scene): void {
     clearInterval(boss.INTERVAL_ID)
     boss.INTERVAL_ID = setInterval(() => {
         boss.HIT_POINTS += GameConfig.COMBAT.BOSS_HEAL_AMOUNT

@@ -19,7 +19,7 @@ export class InventoryUI {
     private isVisible: boolean = false;
     private inventoryContainer!: Phaser.GameObjects.Container;
     private inventorySlots: Phaser.GameObjects.Container[] = [];
-    private slotCount: number = 36; // 4 rows x 9 columns (Minecraft style)
+
     private slotSize: number = 40; // Good balance between size and usability
     private slotSpacing: number = 4; // Proper spacing for medieval aesthetic
     private inventoryWidth: number = 0;
@@ -453,7 +453,7 @@ export class InventoryUI {
         const inventoryData = this.playerInventory.getInventoryData();
         let slotIndex = 0;
 
-        inventoryData.forEach(([itemType, count]) => {
+        inventoryData.forEach(([itemType, count]: [string, number]) => {
             if (slotIndex >= this.inventorySlots.length) return;
 
             const slot = this.inventorySlots[slotIndex];
@@ -526,7 +526,7 @@ export class InventoryUI {
     /**
      * Adds enhanced interactions including tooltips and consumption for items
      */
-    private addItemInteractions(itemIcon: Phaser.GameObjects.Image, itemType: string, count: number, slot: Phaser.GameObjects.Container): void {
+    private addItemInteractions(itemIcon: Phaser.GameObjects.Image, itemType: string, count: number, _slot: Phaser.GameObjects.Container): void {
         itemIcon.setInteractive({ useHandCursor: true });
         
         // Hover effects - SUBTLE
@@ -824,8 +824,8 @@ export class InventoryUI {
         }
 
         // Check if player is at full health - prevent consumption if already at 100%
-        const currentHealth = this.player.HIT_POINTS;
-        const maxHealth = this.player.MAX_HIT_POINTS;
+        const currentHealth = this.player.getHitPoints();
+        const maxHealth = this.player.getMaxHitPoints();
         
         if (currentHealth >= maxHealth) {
             console.log(`Player health is already full (${currentHealth}/${maxHealth}) - cannot consume fruit`);
@@ -915,7 +915,7 @@ export class InventoryUI {
      */
     private canConsumeFruit(): boolean {
         if (!this.player) return false;
-        return this.player.HIT_POINTS < this.player.MAX_HIT_POINTS;
+        return this.player.getHitPoints() < this.player.getMaxHitPoints();
     }
 
     /**

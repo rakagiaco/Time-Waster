@@ -65,8 +65,6 @@ export class World extends Phaser.Scene {
 
     create(data: WorldData): void {
         try {
-            console.log('=== WORLD SCENE CREATE ===');
-            console.log('Data received:', data);
 
             // Create tilemap
             this.createTilemap();

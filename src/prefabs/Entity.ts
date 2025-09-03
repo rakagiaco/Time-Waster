@@ -190,6 +190,22 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
     }
 
     /**
+     * Gets the current hit points
+     * @returns Current hit points
+     */
+    public getHitPoints(): number {
+        return this.HIT_POINTS;
+    }
+
+    /**
+     * Gets the maximum hit points
+     * @returns Maximum hit points
+     */
+    public getMaxHitPoints(): number {
+        return this.MAX_HIT_POINTS;
+    }
+
+    /**
      * Initializes the health bar if it doesn't already exist
      * 
      * Safe method to ensure health bar is created without duplication.

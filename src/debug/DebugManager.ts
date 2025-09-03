@@ -125,8 +125,6 @@ export class DebugManager {
             this.clearVisualDebug();
         }
 
-        console.log(`Debug mode ${this.isEnabled ? 'ENABLED' : 'DISABLED'}`);
-
         if (this.isEnabled) {
             this.scene.events.emit('debug-enabled');
         } else {
@@ -259,8 +257,6 @@ export class DebugManager {
     }
 
     private setupDebugButtons(): void {
-        console.log('Setting up debug buttons...');
-
         if (!this.debugContentElement) {
             console.warn('Debug content element not available yet, skipping button setup');
             return;
@@ -273,49 +269,34 @@ export class DebugManager {
     }
 
     private attachButtonListeners(): void {
-        console.log('Attaching button listeners...');
-
         const collisionBtn = document.getElementById('debug-collision-btn');
         const pathBtn = document.getElementById('debug-path-btn');
         const dayBtn = document.getElementById('debug-day-btn');
         const nightBtn = document.getElementById('debug-night-btn');
 
-        console.log('Debug buttons found:', {
-            collisionBtn: !!collisionBtn,
-            pathBtn: !!pathBtn,
-            dayBtn: !!dayBtn,
-            nightBtn: !!nightBtn
-        });
-
         if (collisionBtn) {
             collisionBtn.onclick = () => {
-                console.log('Collision button clicked - DIRECT');
                 this.toggleCollisionBoxes();
             };
         }
 
         if (pathBtn) {
             pathBtn.onclick = () => {
-                console.log('Path button clicked - DIRECT');
                 this.togglePathVisualization();
             };
         }
 
         if (dayBtn) {
             dayBtn.onclick = () => {
-                console.log('Day button clicked - DIRECT');
                 this.toggleToPeakDay();
             };
         }
 
         if (nightBtn) {
             nightBtn.onclick = () => {
-                console.log('Night button clicked - DIRECT');
                 this.toggleToPeakNight();
             };
         }
-
-        console.log('All button listeners attached via onclick');
     }
 
     public drawCollisionBox(entity: Phaser.Physics.Arcade.Sprite, color: number = 0xff0000): void {
@@ -362,7 +343,7 @@ export class DebugManager {
 
         // Draw waypoint markers
         graphics.fillStyle(color, 0.6);
-        path.forEach((point, index) => {
+        path.forEach((point) => {
             graphics.fillCircle(point.x, point.y, 4);
         });
 
@@ -384,20 +365,16 @@ export class DebugManager {
     }
 
     public toggleCollisionBoxes(): void {
-        console.log('toggleCollisionBoxes called, isEnabled:', this.isEnabled);
         if (!this.isEnabled) return;
 
-        console.log('Collision boxes count:', this.collisionBoxes.length);
         this.collisionBoxes.forEach(box => {
             box.setVisible(!box.visible);
         });
     }
 
     public togglePathVisualization(): void {
-        console.log('togglePathVisualization called, isEnabled:', this.isEnabled);
         if (!this.isEnabled) return;
 
-        console.log('Path visualizations count:', this.pathVisualizations.length);
         this.pathVisualizations.forEach(path => {
             path.setVisible(!path.visible);
         });
@@ -431,7 +408,6 @@ export class DebugManager {
     }
 
     private toggleToPeakDay(): void {
-        console.log('🌅 Debug: Toggle to Peak Day button clicked');
 
         // Method 1: Scene-level event
         this.scene.events.emit('debug-setToPeakDay');
@@ -446,14 +422,10 @@ export class DebugManager {
         const worldScene = this.scene as any;
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakDay();
-            console.log('🌅 Debug: Set to peak day via direct access');
         }
-
-        console.log('🌅 Debug: All peak day triggers fired');
     }
 
     private toggleToPeakNight(): void {
-        console.log('🌙 Debug: Toggle to Peak Night button clicked');
 
         // Method 1: Scene-level event
         this.scene.events.emit('debug-setToPeakNight');
@@ -468,10 +440,7 @@ export class DebugManager {
         const worldScene = this.scene as any;
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakNight();
-            console.log('🌙 Debug: Set to peak night via direct access');
         }
-
-        console.log('🌙 Debug: All peak night triggers fired');
     }
 
     public destroy(): void {

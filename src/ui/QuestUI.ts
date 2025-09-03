@@ -13,7 +13,7 @@
  */
 
 import Phaser from 'phaser';
-import { GameConfig } from '../config/GameConfig';
+
 
 export interface QuestData {
     id: string;
@@ -275,7 +275,7 @@ export class QuestUI {
         this.updateQuestProgress(progress);
     }
 
-    private onQuestReadyForCompletion(questData: any): void {
+    private onQuestReadyForCompletion(_questData: any): void {
         // Make the quest UI glow green to indicate it's ready for completion
         if (this.questContainer && this.questBackground) {
             // Add a green glow effect
@@ -328,7 +328,7 @@ export class QuestUI {
         console.log('QuestUI: Starting swipe-out animation');
         
         // Get the current position
-        const startX = this.questContainer.x;
+        this.questContainer.x;
         const endX = this.scene.cameras.main.width + this.QUEST_WIDTH; // Swipe right off screen
         
         // Create swipe-out animation

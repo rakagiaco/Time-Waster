@@ -193,10 +193,7 @@ export function listen(scene: GameScene, listener: any): boolean {
 
     const isInRange = distance <= effectiveDetectionDistance;
 
-    // Debug logging (can be removed later)
-    if (isInRange) {
-        console.log(`Enemy ${listener.entity_type} detected player at distance ${distance.toFixed(1)} (effective range: ${effectiveDetectionDistance.toFixed(1)})`);
-    }
+
 
     return isInRange;
 }
@@ -297,7 +294,7 @@ export function toggleCursor(scene: Scene): void {
  * @param scene - The scene for timer management
  */
 export function updateMovement(entity: any, scene: Scene): void {
-    var decider = Math.round(Math.random() * 4)
+    const decider = Math.round(Math.random() * 4)
     switch (decider) {
         case 1:
             entity.setVelocityX(entity.VELOCITY)
@@ -373,22 +370,18 @@ export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.K
             if (vy < 0) {
                 player.anims.play('player-walk-up', true);
                 player.lastDirection = 'up';
-                console.log('Movement: Set lastDirection to up');
             } else {
                 player.anims.play('player-walk-down', true);
                 player.lastDirection = 'down';
-                console.log('Movement: Set lastDirection to down');
             }
         } else {
             // Horizontal movement takes priority
             if (vx < 0) {
                 player.anims.play('player-walk-left', true);
                 player.lastDirection = 'left';
-                console.log('Movement: Set lastDirection to left');
             } else {
                 player.anims.play('player-walk-right', true);
                 player.lastDirection = 'right';
-                console.log('Movement: Set lastDirection to right');
             }
         }
     }

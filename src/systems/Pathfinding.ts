@@ -9,12 +9,12 @@ export interface PathfindingConfig {
 }
 
 export class Pathfinding {
-    private scene: Phaser.Scene;
+
     private config: PathfindingConfig;
     private obstacles: Tree[] = [];
 
-    constructor(scene: Phaser.Scene, config?: Partial<PathfindingConfig>) {
-        this.scene = scene;
+    constructor(_scene: Phaser.Scene, config?: Partial<PathfindingConfig>) {
+
         this.config = {
             maxSearchDistance: 300,
             stepSize: 20,
@@ -75,7 +75,6 @@ export class Pathfinding {
 
     private isPointInObstacle(x: number, y: number): boolean {
         for (const obstacle of this.obstacles) {
-            const bounds = obstacle.getCollisionBounds();
             const radius = obstacle.getCollisionRadius();
             
             const distance = Phaser.Math.Distance.Between(x, y, obstacle.x, obstacle.y);

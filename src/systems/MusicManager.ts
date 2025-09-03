@@ -201,14 +201,11 @@ export class MusicManager {
             this.fadeOutAndStop();
         }
 
-        // Create new music
+        // Create new music with volume 0
         this.currentMusic = this.scene.sound.add(songKey, {
             volume: 0, // Start at 0 for fade in
             loop: false
         });
-
-        // Force volume to 0 immediately to prevent any loud initial notes
-        this.currentMusic.setVolume(0);
 
         // Set up end event to play next song
         this.currentMusic.on('complete', () => {
@@ -218,12 +215,17 @@ export class MusicManager {
             }
         });
 
-        // Play and immediately start fade in
+        // Play the music
         this.currentMusic.play();
         
-        // Start fade in immediately to prevent any loud initial notes
-        this.scene.time.delayedCall(10, () => {
-            this.fadeIn();
+        // Ensure volume is 0 and start fade in immediately
+        this.scene.time.delayedCall(50, () => {
+            if (this.currentMusic) {
+                // Double-check volume is 0
+                (this.currentMusic as any).setVolume(0);
+                // Start fade in
+                this.fadeIn();
+            }
         });
         
         console.log(`MusicManager: Playing ${songKey}`);
@@ -240,12 +242,19 @@ export class MusicManager {
             this.fadeTween.stop();
         }
 
+        // Ensure we start from volume 0
+        (this.currentMusic as any).setVolume(0);
+
         this.fadeTween = this.scene.tweens.add({
             targets: this.currentMusic,
             volume: this.TARGET_VOLUME,
             duration: this.FADE_DURATION,
             ease: 'Power2',
+            onStart: () => {
+                console.log('MusicManager: Starting fade in to volume', this.TARGET_VOLUME);
+            },
             onComplete: () => {
+                console.log('MusicManager: Fade in complete');
                 this.fadeTween = null;
             }
         });
@@ -262,6 +271,8 @@ export class MusicManager {
             this.fadeTween.stop();
         }
 
+        console.log('MusicManager: Starting fade out');
+
         this.fadeTween = this.scene.tweens.add({
             targets: this.currentMusic,
             volume: 0,
@@ -269,6 +280,7 @@ export class MusicManager {
             ease: 'Power2',
             onComplete: () => {
                 if (this.currentMusic) {
+                    console.log('MusicManager: Fade out complete, stopping music');
                     this.currentMusic.stop();
                     this.currentMusic.destroy();
                     this.currentMusic = null;

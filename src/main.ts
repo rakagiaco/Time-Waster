@@ -113,19 +113,12 @@ window.addEventListener('unhandledrejection', (event) => {
  * Performs pre-flight checks for DOM elements and browser compatibility.
  */
 try {
-    console.log('=== PHASER GAME INITIALIZATION ===');
-    console.log('Phaser version:', Phaser.VERSION);
-    console.log('Phaser object type:', typeof Phaser);
-    console.log('Phaser.Game type:', typeof Phaser.Game);
-    console.log('Game config:', config);
-    console.log('Scene count:', Array.isArray(config.scene) ? config.scene.length : 0);
 
     // Validate that the game container exists in the DOM
     const container = document.getElementById('gameContainer');
     if (!container) {
         throw new Error('Game container element "gameContainer" not found in DOM');
     }
-    console.log('Game container found:', container);
 
     // Check WebGL support and warn if unavailable
     if (!Phaser.WEBGL) {
@@ -133,17 +126,15 @@ try {
     }
 
     // Create the main Phaser game instance
-    console.log('Creating Phaser game...');
     game = new Phaser.Game(config);
-    console.log('Phaser game created successfully');
 
     // Set up game event listeners for monitoring game lifecycle
     game.events.on('ready', () => {
-        console.log('Game ready event fired - all systems initialized');
+        // Game ready
     });
 
     game.events.on('start', () => {
-        console.log('Game start event fired - gameplay begun');
+        // Game started
     });
 
     game.events.on('error', (error: any) => {
@@ -159,15 +150,6 @@ try {
     console.error('Full error object:', error);
     console.error('===========================================');
 
-    // Provide additional debugging information
-    console.log('=== DEBUGGING INFO ===');
-    console.log('Document ready state:', document.readyState);
-    console.log('Window performance navigation type:', window.performance?.navigation?.type);
-    console.log('Available DOM elements:', {
-        gameContainer: document.getElementById('gameContainer'),
-        body: document.body,
-        html: document.documentElement
-    });
-    console.log('======================');
+
 }
 

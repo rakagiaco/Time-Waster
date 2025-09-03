@@ -22,7 +22,6 @@ export let keyLantern: Phaser.Input.Keyboard.Key;
 // Player States
 class PlayerIdleState extends State {
     enter(_scene: Phaser.Scene, player: Player): void {
-        console.log('=== ENTERING IDLE STATE ===');
         player.setVelocity(0, 0);
 
         // Stop any currently playing animation to prevent infinite loops
@@ -30,8 +29,6 @@ class PlayerIdleState extends State {
 
         // Set idle frame directly based on last direction
         // Knight_1 idle frames: 0=down, 1=right, 2=left, 3=up (0-indexed!)
-        console.log(`PlayerIdleState: lastDirection = ${player.lastDirection}`);
-        
         let idleFrame = 0; // default to down
         switch (player.lastDirection) {
             case 'down':
@@ -51,14 +48,12 @@ class PlayerIdleState extends State {
                 break;
         }
         
-        console.log(`PlayerIdleState: setting frame ${idleFrame} for direction ${player.lastDirection}`);
         player.setFrame(idleFrame);
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
         // Check for movement input (with null checks)
         if ((keyUp && keyUp.isDown) || (keyDown && keyDown.isDown) || (keyLeft && keyLeft.isDown) || (keyRight && keyRight.isDown)) {
-            console.log("here")
             player.animsFSM.transition('walking');
         }
 
@@ -85,7 +80,6 @@ class PlayerIdleState extends State {
 
 class PlayerWalkingState extends State {
     enter(_scene: Phaser.Scene, _player: Player): void {
-        console.log('=== ENTERING WALKING STATE ===');
         // State entered when movement keys are pressed
     }
 
@@ -105,11 +99,8 @@ class PlayerWalkingState extends State {
 
         // Check if no movement keys are pressed
         const noKeysPressed = (!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown);
-        console.log('WalkingState: Key states - Up:', keyUp?.isDown, 'Down:', keyDown?.isDown, 'Left:', keyLeft?.isDown, 'Right:', keyRight?.isDown);
-        console.log('WalkingState: No keys pressed:', noKeysPressed);
         
         if (noKeysPressed) {
-            console.log('WalkingState: Transitioning to idle');
             player.animsFSM.transition('idle');
         }
 
@@ -242,51 +233,33 @@ export class Player extends Entity {
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
         super(scene, x, y, 'player');
         try {
-            console.log('=== PLAYER CONSTRUCTOR START ===');
-            console.log('Scene:', scene);
-            console.log('Position:', x, y);
-            console.log('Inventory:', inventory);
-            console.log('Quest data:', questData);
 
             // Set initial frame to down idle (frame 0, 0-indexed!)
             this.setFrame(0);
-            console.log('Player sprite created successfully with initial frame 0 (down idle)');
 
             // Initialize inventory
-            console.log('Initializing inventory...');
             this.p1Inventory = new Inventory();
             if (inventory) {
                 this.p1Inventory.loadFromData(inventory);
             }
-            console.log('Inventory initialized successfully');
 
             // Initialize quest status
-            console.log('Initializing quest status...');
             this.questStatus = questData || { finished: false, currentQuest: null };
-            console.log('Quest status initialized successfully');
 
             // Setup state machine
-            console.log('Setting up state machine...');
             this.setupStateMachine();
-            console.log('State machine setup successfully');
 
             // Setup physics
-            console.log('Setting up physics...');
             this.setupPhysics();
-            console.log('Physics setup successfully');
 
             // Setup input
-            console.log('Setting up input...');
             this.initializeInputKeys(scene);
-            console.log('Input setup successfully');
 
             // health bar
             this.setupHealthBar()
 
             // player size
             this.setScale(GameConfig.SCALE.PLAYER)
-
-            console.log('=== PLAYER CONSTRUCTOR COMPLETE ===');
         } catch (error) {
             console.error('=== CRITICAL ERROR IN PLAYER CONSTRUCTOR ===');
             console.error('Error:', error);
@@ -308,42 +281,7 @@ export class Player extends Entity {
         this.updateHealthBar()
     }
 
-    // private createLantern(): void {
-    //     this.lanternSprite = this.scene.add.graphics();
-    //     this.lanternSprite.setScrollFactor(1); // Follow world
-    //     this.lanternSprite.setDepth(1000); // Above player
-    //     this.lanternSprite.setVisible(false); // Hidden by default
-    // }
 
-    // public updateLantern(): void {
-    //     if (!this.lanternSprite || !this.flashlight) return;
-
-    //     // Show lantern when flashlight is active and it's night
-    //     const shouldShow = this.flashlight.isActive && this.flashlight.darknessIntensity > 0.3;
-    //     this.lanternSprite.setVisible(shouldShow);
-
-    //     if (shouldShow) {
-    //         // Position lantern above player
-    //         this.lanternSprite.x = this.x;
-    //         this.lanternSprite.y = this.y - 20;
-
-    //         // Draw simple lantern
-    //         this.lanternSprite.clear();
-    //         this.lanternSprite.fillStyle(0x8B4513, 1); // Brown handle
-    //         this.lanternSprite.fillRect(-2, -15, 4, 10);
-
-    //         this.lanternSprite.fillStyle(0xFFD700, 1); // Gold lantern
-    //         this.lanternSprite.fillCircle(0, -20, 6);
-
-    //         this.lanternSprite.fillStyle(0xFFFF00, 0.8); // Yellow light
-    //         this.lanternSprite.fillCircle(0, -20, 4);
-    //     }
-    // }
-
-    // protected updateHealthBar(): void {
-    //     // Store health data in the entity for the helper function to access
-    //     this.setData('hitPoints', this.HIT_POINTS);
-    //     this.setData('maxHitPoints', this.MAX_HIT_POINTS);
 
     protected updateHealthBar(): void {
         this.setData('hitPoints', this.HIT_POINTS);
@@ -389,8 +327,6 @@ export class Player extends Entity {
             keySprint = (keyboard as any).addKey('SHIFT');
             keyInteract = (keyboard as any).addKey('E');
             keyLantern = (keyboard as any).addKey('F');
-
-            console.log('Input keys initialized successfully');
         }
     }
 
@@ -451,8 +387,7 @@ export class Player extends Entity {
             }
         }
 
-        // Update lantern
-        // this.updateLantern();
+
     }
 
     public takeDamage(amount: number): void {
@@ -603,7 +538,6 @@ export class Player extends Entity {
 
     public heal(amount: number): void {
         this.HIT_POINTS = Math.min(this.HIT_POINTS + amount, this.MAX_HIT_POINTS);
-        console.log(`Player healed for ${amount} HP. Current HP: ${this.HIT_POINTS}/${this.MAX_HIT_POINTS}`);
         
         // Update the health bar display immediately after healing
         this.updateHealthBar();
@@ -663,22 +597,17 @@ export class Player extends Entity {
 
         // Show general pickup feedback if items were collected
         if (itemsCollected > 0) {
-            console.log(`Collected ${itemsCollected} items via proximity pickup`);
-
             // Update inventory UI if it exists
             const worldScene = this.scene as any;
             if (worldScene.inventoryUI) {
                 worldScene.inventoryUI.updateInventoryDisplay();
             }
-        } else {
-            console.log('No items found in pickup range');
         }
     }
 
     public toggleLantern(): void {
         if (this.lantern) {
             this.lantern.toggle();
-            console.log(`Lantern ${this.lantern.isLit() ? 'LIT' : 'EXTINGUISHED'}`);
         }
     }
 

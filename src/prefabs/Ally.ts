@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { StateMachine, State } from '../lib/StateMachine';
-import { listen } from '../lib/HelperFunc';
+
 
 
 // Ally States
@@ -18,15 +18,16 @@ class AllyIdleState extends State {
         }
     }
 
-    execute(scene: Phaser.Scene, ally: Ally): void {
+    execute(_scene: Phaser.Scene, ally: Ally): void {
         // For static NPCs, don't do any interaction detection
-        if (ally.isStatic) {
+        if (ally.getIsStatic()) {
             return; // Static NPCs don't interact
         }
 
         // For regular villagers, check if player is nearby using simple distance calculation
-        if (ally.player) {
-            const distance = Phaser.Math.Distance.Between(ally.x, ally.y, ally.player.x, ally.player.y);
+        const player = ally.getPlayer();
+        if (player) {
+            const distance = Phaser.Math.Distance.Between(ally.x, ally.y, player.x, player.y);
             if (distance < 100) { // Interaction range
                 ally.animsFSM.transition('interacting');
             }
@@ -40,15 +41,16 @@ class AllyInteractingState extends State {
         ally.showQuestIcon();
     }
 
-    execute(scene: Phaser.Scene, ally: Ally): void {
+    execute(_scene: Phaser.Scene, ally: Ally): void {
         // For static NPCs, don't do any interaction detection
-        if (ally.isStatic) {
+        if (ally.getIsStatic()) {
             return; // Static NPCs don't interact
         }
 
         // Check if player is still nearby using simple distance calculation
-        if (ally.player) {
-            const distance = Phaser.Math.Distance.Between(ally.x, ally.y, ally.player.x, ally.player.y);
+        const player = ally.getPlayer();
+        if (player) {
+            const distance = Phaser.Math.Distance.Between(ally.x, ally.y, player.x, player.y);
             if (distance > 100) { // Out of interaction range
                 ally.animsFSM.transition('idle');
             }
@@ -98,13 +100,25 @@ export class Ally extends Entity {
         if (isStatic) {
             // Static NPCs have physics and collision but don't move
             this.setVelocity(0, 0);
-            this.body?.setImmovable(true);
-            this.body?.setCollideWorldBounds(false);
+            if (this.body && 'setImmovable' in this.body) {
+                (this.body as Phaser.Physics.Arcade.Body).setImmovable(true);
+            }
+            if (this.body && 'setCollideWorldBounds' in this.body) {
+                (this.body as Phaser.Physics.Arcade.Body).setCollideWorldBounds(false);
+            }
             // Don't start the state machine for static NPCs
             if (this.animsFSM) {
                 this.animsFSM.transition('idle');
             }
         }
+    }
+
+    public getIsStatic(): boolean {
+        return this.isStatic;
+    }
+
+    public getPlayer(): any {
+        return this.player;
     }
 
     private setupStateMachine(): void {

@@ -34,7 +34,7 @@ export class DialogueUI {
     // UI dimensions
     private readonly UI_WIDTH = 700;
     private readonly UI_HEIGHT = 400;
-    private readonly SCROLL_PADDING = 30;
+
     private readonly TEXT_PADDING = 50;
 
     constructor(scene: Phaser.Scene) {

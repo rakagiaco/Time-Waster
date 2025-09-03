@@ -39,7 +39,6 @@ export class PauseMenu {
     }
 
     public toggle(): void {
-        console.log('Toggle called, isVisible:', this.isVisible);
         if (this.isVisible) {
             this.hide();
         } else {
@@ -315,8 +314,6 @@ export class PauseMenu {
             this.scene.time.delayedCall(2000, () => {
                 saveFeedback.destroy();
             });
-
-            console.log('Game saved successfully');
         } catch (error) {
             console.error('Error saving game:', error);
         }
@@ -451,7 +448,6 @@ export class PauseMenu {
         this.hide();
 
         // Stop any playing music before transitioning to menu
-        console.log('PauseMenu: Stopping all music before returning to main menu');
         this.scene.sound.stopAll();
 
         this.scene.scene.start('menuScene');

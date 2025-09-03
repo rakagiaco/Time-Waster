@@ -52,7 +52,7 @@ export class TreeLightEmission {
     private shouldTreeEmitLight(tree: Tree): boolean {
         // Only certain tree types emit light
         const lightEmittingTypes = ['tree-2-second', 'tree-3']; // Ancient trees and cherry blossoms
-        return lightEmittingTypes.includes(tree.treeType);
+        return lightEmittingTypes.includes(tree.getTreeType());
     }
 
     public update(delta: number): void {
@@ -61,8 +61,8 @@ export class TreeLightEmission {
         this.pulseTimer += delta * this.config.pulseSpeed;
 
         // Update each tree's light emission
-        this.lightGraphics.forEach((lightGraphic, tree) => {
-            this.updateTreeLight(tree, lightGraphic);
+        this.lightGraphics.forEach((_lightGraphic, tree) => {
+            this.updateTreeLight(tree, _lightGraphic);
         });
     }
 
@@ -131,7 +131,7 @@ export class TreeLightEmission {
     public getLightIntensityAtPoint(x: number, y: number): number {
         let maxIntensity = 0;
 
-        this.lightGraphics.forEach((lightGraphic, tree) => {
+        this.lightGraphics.forEach((_lightGraphic, tree) => {
             const distance = Phaser.Math.Distance.Between(x, y, tree.x, tree.y);
             if (distance <= this.config.maxRadius) {
                 // Calculate intensity based on distance
@@ -146,7 +146,7 @@ export class TreeLightEmission {
 
     public isPointInTreeLight(x: number, y: number): boolean {
         let inLight = false;
-        this.lightGraphics.forEach((lightGraphic, tree) => {
+        this.lightGraphics.forEach((_lightGraphic, tree) => {
             const distance = Phaser.Math.Distance.Between(x, y, tree.x, tree.y);
             if (distance <= this.config.maxRadius) {
                 inLight = true;

@@ -24,7 +24,6 @@ class EnemyPatrolState extends State {
         // Check if player is detected (with safety check)
         try {
             if (listen(scene as any, enemy)) {
-                console.log(`Enemy ${enemy.entity_type} detected player, transitioning to alert`);
                 enemy.animsFSM.transition('alert');
                 return;
             }

@@ -95,13 +95,13 @@ export class SaveSystem {
                     fruitItems: (tree as any).fruitItems?.map((fruit: Item) => ({
                         x: fruit.x,
                         y: fruit.y,
-                        itemType: fruit.item_type
+                        itemType: fruit.getItemType()
                     })) || []
                 })),
                 items: items.map(item => ({
                     x: item.x,
                     y: item.y,
-                    itemType: item.item_type
+                    itemType: item.getItemType()
                 })),
                 gameState: {
                     timeOfDay: gameState.timeOfDay || 'day',
@@ -124,7 +124,6 @@ export class SaveSystem {
             };
 
             localStorage.setItem(this.SAVE_KEY, JSON.stringify(saveData));
-            console.log('Game saved successfully');
             return true;
         } catch (error) {
             console.error('Failed to save game:', error);
