@@ -18,6 +18,13 @@ import { QuestUI } from '../../ui/QuestUI';
 import { SaveSystem } from '../../systems/SaveSystem';
 import { MusicManager } from '../../systems/MusicManager';
 
+/**  
+ HELLO CLANKER 
+ STOP HARDCODING SPAWN VALUES IN THIS FILE
+ EVERY TIME I COME IN HERE TO CLEAN UP YOUR MESS I FIND MORE HARD-CODED CRAP
+ ANYWHERE YOU SEE AN o7 IN THE FILE IS SOMEWHERE YOU HARD-CODED SOMETHING THAT WAS NOT NEEDED
+ YOUR FRIEND XERXSEIZE
+*/
 
 interface WorldData {
     qobj?: any;
@@ -72,15 +79,12 @@ export class World extends Phaser.Scene {
             // Create tilemap
             this.createTilemap();
 
-            // Create player animations (ensure they exist before creating player)
-            this.createPlayerAnimations();
-
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
             // Setup Day/Night Cycle (check for save data first to set correct initial time)
             console.log('Setting up day/night cycle...');
             let initialTime = undefined; // Default to noon (0.5)
-            
+
             if (data.loadSaveData) {
                 const saveData = SaveSystem.loadGame();
                 if (saveData && saveData.gameState) {
@@ -88,7 +92,7 @@ export class World extends Phaser.Scene {
                     console.log(`Found saved time in save data: ${initialTime}`);
                 }
             }
-            
+
             this.dayNightCycle = new DayNightCycle(this, undefined, initialTime);
 
             // Setup Music Manager
@@ -138,7 +142,7 @@ export class World extends Phaser.Scene {
             console.log('Setting up minimap...');
             this.setupMinimap();
             console.log('Minimap setup complete');
-            
+
             // Configure day/night overlays for both cameras
             this.dayNightCycle.setupMinimapCamera();
 
@@ -177,9 +181,9 @@ export class World extends Phaser.Scene {
             });
 
             console.log('Day/night cycle setup complete');
-            
+
             // Setup debug event listeners for day/night control (multiple methods)
-            
+
             // Method 1: Scene-level events
             this.events.on('debug-setToPeakDay', () => {
                 if (this.dayNightCycle) {
@@ -187,14 +191,14 @@ export class World extends Phaser.Scene {
                     console.log('🌅 Debug event (scene): Set to peak day');
                 }
             });
-            
+
             this.events.on('debug-setToPeakNight', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakNight();
                     console.log('🌙 Debug event (scene): Set to peak night');
                 }
             });
-            
+
             // Method 2: Global game events
             this.game.events.on('debug-setToPeakDay', () => {
                 if (this.dayNightCycle) {
@@ -202,14 +206,14 @@ export class World extends Phaser.Scene {
                     console.log('🌅 Debug event (global): Set to peak day');
                 }
             });
-            
+
             this.game.events.on('debug-setToPeakNight', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakNight();
                     console.log('🌙 Debug event (global): Set to peak night');
                 }
             });
-            
+
             // Method 3: Registry change listener
             this.registry.events.on('changedata-debugCommand', (_parent: any, _key: string, data: any) => {
                 if (data && this.dayNightCycle) {
@@ -233,7 +237,7 @@ export class World extends Phaser.Scene {
             console.log('Setting up quest system...');
             this.questSystem = new QuestSystem(this, this.player);
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
-            
+
             // Create Narvark the quest giver NPC
             const narvarkAlly = this.allies.find(ally => ally.entity_type === 'Narvark');
             if (narvarkAlly) {
@@ -245,10 +249,10 @@ export class World extends Phaser.Scene {
             } else {
                 console.error('Narvark ally not found!');
             }
-            
+
             // Setup Dialogue UI
             this.dialogueUI = new DialogueUI(this);
-            
+
             // Setup interaction controls
             this.setupInteractionControls();
 
@@ -294,7 +298,7 @@ export class World extends Phaser.Scene {
         // Update day/night cycle
         if (this.dayNightCycle) {
             this.dayNightCycle.update(delta);
-            
+
             // Update music manager with time of day
             if (this.musicManager) {
                 this.musicManager.updateTimeOfDay(this.dayNightCycle.getIsNight());
@@ -579,8 +583,11 @@ export class World extends Phaser.Scene {
 
         // Create circular mask for the minimap
         this.minimapMask = this.add.graphics();
-        this.minimapMask.fillStyle(0xffffff, 0); // Transparent mask
+        this.minimapMask.setDepth(999)
+        this.minimapMask.setScrollFactor(0)
+        this.minimapMask.fillStyle(0xffffff, 1);
         this.minimapMask.fillCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, minimapSize / 2);
+        this.miniMapCamera.ignore(this.minimapMask)
 
         // Create medieval-themed minimap ring with ornate compass design
         const minimapRing = this.createMedievalMinimapRing(minimapX, minimapY, minimapSize);
@@ -783,23 +790,23 @@ export class World extends Phaser.Scene {
         const centerY = minimapY + minimapSize / 2;
         const outerRadius = (minimapSize / 2) + 8;
         const innerRadius = (minimapSize / 2) + 2;
-        
+
         // Outer ornate ring - bronze/brass color with metallic feel
         ring.lineStyle(6, 0x8B4513, 1); // Dark brown/bronze
         ring.strokeCircle(centerX, centerY, outerRadius);
-        
+
         // Inner decorative ring - lighter bronze
         ring.lineStyle(2, 0xCD853F, 1); // Light bronze
         ring.strokeCircle(centerX, centerY, outerRadius - 3);
-        
+
         // Main border ring - dark metallic
         ring.lineStyle(3, 0x2F4F4F, 1); // Dark slate gray
         ring.strokeCircle(centerX, centerY, innerRadius + 1);
-        
+
         // Compass cardinal points (N, S, E, W)
         const cardinalRadius = outerRadius + 12;
         ring.fillStyle(0x8B4513, 1); // Bronze color
-        
+
         // North point
         ring.beginPath();
         ring.moveTo(centerX, centerY - cardinalRadius);
@@ -807,7 +814,7 @@ export class World extends Phaser.Scene {
         ring.lineTo(centerX + 4, centerY - cardinalRadius + 8);
         ring.closePath();
         ring.fillPath();
-        
+
         // South point
         ring.beginPath();
         ring.moveTo(centerX, centerY + cardinalRadius);
@@ -815,7 +822,7 @@ export class World extends Phaser.Scene {
         ring.lineTo(centerX + 4, centerY + cardinalRadius - 8);
         ring.closePath();
         ring.fillPath();
-        
+
         // East point
         ring.beginPath();
         ring.moveTo(centerX + cardinalRadius, centerY);
@@ -823,7 +830,7 @@ export class World extends Phaser.Scene {
         ring.lineTo(centerX + cardinalRadius - 8, centerY + 4);
         ring.closePath();
         ring.fillPath();
-        
+
         // West point
         ring.beginPath();
         ring.moveTo(centerX - cardinalRadius, centerY);
@@ -831,12 +838,12 @@ export class World extends Phaser.Scene {
         ring.lineTo(centerX - cardinalRadius + 8, centerY + 4);
         ring.closePath();
         ring.fillPath();
-        
+
         // Decorative corner ornaments (NE, NW, SE, SW)
         const cornerRadius = outerRadius + 6;
         const cornerAngle = Math.PI / 4; // 45 degrees
         ring.fillStyle(0xCD853F, 1); // Light bronze
-        
+
         // Corner ornaments - small diamonds
         const corners = [
             { angle: cornerAngle, name: 'NE' },
@@ -844,11 +851,11 @@ export class World extends Phaser.Scene {
             { angle: Math.PI - cornerAngle, name: 'NW' },
             { angle: Math.PI + cornerAngle, name: 'SW' }
         ];
-        
+
         corners.forEach(corner => {
             const x = centerX + Math.cos(corner.angle) * cornerRadius;
             const y = centerY + Math.sin(corner.angle) * cornerRadius;
-            
+
             ring.beginPath();
             ring.moveTo(x, y - 3);
             ring.lineTo(x + 3, y);
@@ -857,7 +864,7 @@ export class World extends Phaser.Scene {
             ring.closePath();
             ring.fillPath();
         });
-        
+
         // Add subtle texture lines for aged metal effect
         ring.lineStyle(1, 0x696969, 0.6); // Dim gray
         for (let i = 0; i < 8; i++) {
@@ -868,50 +875,15 @@ export class World extends Phaser.Scene {
             const startY = centerY + Math.sin(angle) * startRadius;
             const endX = centerX + Math.cos(angle) * endRadius;
             const endY = centerY + Math.sin(angle) * endRadius;
-            
+
             ring.beginPath();
             ring.moveTo(startX, startY);
             ring.lineTo(endX, endY);
             ring.strokePath();
         }
-        
+
         return ring;
     }
-
-    // private setupInput(): void {
-    //     // Input setup is handled in the Player class
-    // }
-
-    // // Getter methods for other classes to access
-    // getPlayer(): Player {
-    //     return this.player;
-    // }
-
-    // getEnemies(): Enemy[] {
-    //     return this.enemies;
-    // }
-
-    // getAllies(): Ally[] {
-    //     return this.allies;
-    // }
-
-    // getItems(): Item[] {
-    //     return this.items;
-    // }
-
-    // getTilemap(): Phaser.Tilemaps.Tilemap {
-    //     return this.tilemap;
-    // }
-
-    // getGroundLayer(): Phaser.Tilemaps.TilemapLayer | null {
-    //     return this.groundLayer;
-    // }
-
-
-
-    // getMiniMapCamera(): Phaser.Cameras.Scene2D.Camera {
-    //     return this.miniMapCamera;
-    // }
 
     public getPauseMenu(): PauseMenu {
         return this.pauseMenu;
@@ -928,7 +900,7 @@ export class World extends Phaser.Scene {
     private createQuestHerbs(): void {
         try {
             console.log('Creating quest mysterious herbs...');
-            
+
             // Define 5 positions in the top-left area of the map (roughly 0-400 x, 0-400 y)
             const questHerbPositions = [
                 { x: 150, y: 120 },  // Near top-left corner
@@ -1002,7 +974,7 @@ export class World extends Phaser.Scene {
             );
             fadeOverlay.setDepth(20000); // Above everything else
             fadeOverlay.setScrollFactor(0); // Fixed to camera
-            
+
             // Fade from black to transparent
             this.tweens.add({
                 targets: fadeOverlay,
@@ -1014,80 +986,12 @@ export class World extends Phaser.Scene {
                     console.log('Game fade in complete');
                 }
             });
-            
+
             console.log('Starting game fade in...');
-            
+
         } catch (error) {
             console.error('Error in game fade in:', error);
         }
-    }
-
-    /**
-     * Create player animations for knight sprite
-     * Ensures animations are available before player creation
-     */
-    private createPlayerAnimations(): void {
-        console.log('=== CREATING PLAYER ANIMATIONS IN WORLD SCENE ===');
-        
-        // Walking animations
-        this.anims.create({
-            key: 'player-walk-up',
-            frames: this.anims.generateFrameNumbers('player', { start: 10, end: 11 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'player-walk-down',
-            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 5 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'player-walk-left',
-            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 7 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'player-walk-right',
-            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 9 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        // Idle animations for each direction (0-indexed!)
-        this.anims.create({
-            key: 'player-idle-down',
-            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 0 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'player-idle-right',
-            frames: this.anims.generateFrameNumbers('player', { start: 1, end: 1 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'player-idle-left',
-            frames: this.anims.generateFrameNumbers('player', { start: 2, end: 2 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        this.anims.create({
-            key: 'player-idle-up',
-            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 3 }),
-            frameRate: 5,
-            repeat: -1
-        });
-
-        console.log('Player animations created successfully in World scene');
     }
 
     /**
@@ -1095,18 +999,18 @@ export class World extends Phaser.Scene {
      */
     shutdown(): void {
         console.log('World scene shutting down...');
-        
+
         // Stop music manager with fade out
         if (this.musicManager) {
             console.log('Stopping shuffle playlist...');
             this.musicManager.stopPlaylist();
         }
-        
+
         // Clean up day/night cycle
         if (this.dayNightCycle) {
             this.dayNightCycle.destroy();
         }
-        
+
         console.log('World scene cleanup complete');
     }
 }

@@ -7,6 +7,8 @@
  * This scene runs before the main menu and ensures all resources are available
  * before gameplay begins. It also creates all sprite animations used throughout
  * the game.
+ * 
+ *  HONESTLY THIS IS THE ONLY FILE THAT SHOULD EVEN BE REMOTELY CLOSE TO 1000 LINES ... YET ITS ONE OF THE SMALLER FILES ... 
  */
 export class Loader extends Phaser.Scene {
     quest: any;                 // Saved quest data from localStorage
@@ -174,51 +176,52 @@ export class Loader extends Phaser.Scene {
         }
     }
 
-    /**
-     * Create gold-coin texture for inventory system
-     */
-    private createGoldCoinTexture(): void {
-        const graphics = this.add.graphics();
+    // WHY THE FUCK ARE WE MAKING GRAPHICS PRIMITIVES IN THE LOADER???
+    // /**
+    //  * Create gold-coin texture for inventory system
+    //  */
+    // private createGoldCoinTexture(): void {
+    //     const graphics = this.add.graphics();
         
-        // Main coin body (gold)
-        graphics.fillStyle(0xFFD700); // Gold color
-        graphics.fillCircle(16, 16, 8); // 32x32 texture, 16x16 coin
+    //     // Main coin body (gold)
+    //     graphics.fillStyle(0xFFD700); // Gold color
+    //     graphics.fillCircle(16, 16, 8); // 32x32 texture, 16x16 coin
         
-        // Inner circle (darker gold)
-        graphics.fillStyle(0xFFA500); // Darker gold
-        graphics.fillCircle(16, 16, 6);
+    //     // Inner circle (darker gold)
+    //     graphics.fillStyle(0xFFA500); // Darker gold
+    //     graphics.fillCircle(16, 16, 6);
         
-        // Center highlight (bright gold)
-        graphics.fillStyle(0xFFFF00); // Bright gold
-        graphics.fillCircle(16, 16, 3);
+    //     // Center highlight (bright gold)
+    //     graphics.fillStyle(0xFFFF00); // Bright gold
+    //     graphics.fillCircle(16, 16, 3);
         
-        // Edge highlight
-        graphics.lineStyle(1, 0xFFFF00, 0.8);
-        graphics.strokeCircle(16, 16, 8);
+    //     // Edge highlight
+    //     graphics.lineStyle(1, 0xFFFF00, 0.8);
+    //     graphics.strokeCircle(16, 16, 8);
         
-        // Add coin details
-        graphics.fillStyle(0xFFD700, 0.6);
+    //     // Add coin details
+    //     graphics.fillStyle(0xFFD700, 0.6);
         
-        // Small dots around the edge
-        for (let i = 0; i < 8; i++) {
-            const angle = (i * Math.PI * 2) / 8;
-            const radius = 6;
-            const x = 16 + Math.cos(angle) * radius;
-            const y = 16 + Math.sin(angle) * radius;
-            graphics.fillCircle(x, y, 1);
-        }
+    //     // Small dots around the edge
+    //     for (let i = 0; i < 8; i++) {
+    //         const angle = (i * Math.PI * 2) / 8;
+    //         const radius = 6;
+    //         const x = 16 + Math.cos(angle) * radius;
+    //         const y = 16 + Math.sin(angle) * radius;
+    //         graphics.fillCircle(x, y, 1);
+    //     }
         
-        // Center symbol (simple cross)
-        graphics.fillStyle(0xFFA500);
-        graphics.fillRect(15, 13, 2, 6); // Vertical line
-        graphics.fillRect(13, 15, 6, 2); // Horizontal line
+    //     // Center symbol (simple cross)
+    //     graphics.fillStyle(0xFFA500);
+    //     graphics.fillRect(15, 13, 2, 6); // Vertical line
+    //     graphics.fillRect(13, 15, 6, 2); // Horizontal line
         
-        // Generate texture
-        graphics.generateTexture('gold-coin', 32, 32);
-        graphics.destroy();
+    //     // Generate texture
+    //     graphics.generateTexture('gold-coin', 32, 32);
+    //     graphics.destroy();
         
-        console.log('Gold-coin texture created successfully');
-    }
+    //     console.log('Gold-coin texture created successfully');
+    // }
 
     /**
      * Create all sprite animations and transition to main menu
@@ -546,9 +549,6 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
-
-        // Create gold-coin texture for inventory
-        this.createGoldCoinTexture();
 
         console.log('=== LOADER CREATE METHOD COMPLETED ===');
         
