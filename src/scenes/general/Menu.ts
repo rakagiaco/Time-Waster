@@ -560,7 +560,7 @@ export class Menu extends Phaser.Scene {
 
         // Make interactive with enhanced hover effects
         button.setSize(180, 50);
-        button.setInteractive({ useHandCursor: true });
+        button.setInteractive();
 
         // Hover effects with medieval flair
         button.on('pointerover', () => {

@@ -127,8 +127,7 @@ export class World extends Phaser.Scene {
             this.createTrees();
             console.log('Trees created successfully, count:', this.trees.length);
 
-            // Create 5 mysterious herbs for the quest in the top-left area
-            this.createQuestHerbs();
+
 
             // Setup camera
             console.log('Setting up camera...');
@@ -897,37 +896,8 @@ export class World extends Phaser.Scene {
         return this.questUI;
     }
 
-    private createQuestHerbs(): void {
-        try {
-            console.log('Creating quest mysterious herbs...');
-
-            // Define 5 positions in the top-left area of the map (roughly 0-400 x, 0-400 y)
-            const questHerbPositions = [
-                { x: 150, y: 120 },  // Near top-left corner
-                { x: 280, y: 180 },  // Slightly right and down
-                { x: 120, y: 280 },  // Left side, more down
-                { x: 350, y: 100 },  // More right, near top
-                { x: 200, y: 320 }   // Center-left, bottom of area
-            ];
-
-            questHerbPositions.forEach((pos, index) => {
-                const herb = new Item(
-                    this,
-                    pos.x,
-                    pos.y,
-                    'mysterious herb',
-                    { sound: 'collect-herb', volume: 0.3 }
-                );
-                herb.setScale(0.8);
-                herb.setDepth(5); // Above ground but below trees
-                this.items.push(herb);
-                console.log(`Created quest herb ${index + 1} at (${pos.x}, ${pos.y})`);
-            });
-
-        } catch (error) {
-            console.error('Error creating quest herbs:', error);
-        }
-    }
+    // o7
+    // private createQuestHerbs(): void {}
 
     private setupInteractionControls(): void {
         // Setup E key for interaction
