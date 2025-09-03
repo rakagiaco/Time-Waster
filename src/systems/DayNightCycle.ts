@@ -359,6 +359,27 @@ export class DayNightCycle {
         }
     }
 
+    /**
+     * Get current time of day (0-1)
+     */
+    public getCurrentTime(): number {
+        return this.currentTime;
+    }
+
+    /**
+     * Get whether it's currently day time
+     */
+    public getIsDay(): boolean {
+        return this.isDay;
+    }
+
+    /**
+     * Get whether it's currently night time
+     */
+    public getIsNight(): boolean {
+        return !this.isDay;
+    }
+
     public destroy(): void {
         if (this.overlay) {
             this.overlay.destroy();

@@ -16,6 +16,7 @@ import { Pathfinding } from '../../systems/Pathfinding';
 import { PauseMenu } from '../../ui/PauseMenu';
 import { QuestUI } from '../../ui/QuestUI';
 import { SaveSystem } from '../../systems/SaveSystem';
+import { MusicManager } from '../../systems/MusicManager';
 
 
 interface WorldData {
@@ -50,6 +51,7 @@ export class World extends Phaser.Scene {
     private pathfinding!: Pathfinding;
     private pauseMenu!: PauseMenu;
     private questUI!: QuestUI;
+    private musicManager!: MusicManager;
 
     constructor() {
         super('worldScene');
@@ -88,6 +90,12 @@ export class World extends Phaser.Scene {
             }
             
             this.dayNightCycle = new DayNightCycle(this, undefined, initialTime);
+
+            // Setup Music Manager
+            console.log('Setting up music manager...');
+            this.musicManager = new MusicManager(this);
+            this.musicManager.reset(); // Ensure fresh start
+            this.musicManager.startPlaylist();
 
             // Load save data if requested (this will restore all other game state)
             if (data.loadSaveData) {
@@ -282,6 +290,16 @@ export class World extends Phaser.Scene {
 
     update(): void {
         const delta = this.game.loop.delta;
+
+        // Update day/night cycle
+        if (this.dayNightCycle) {
+            this.dayNightCycle.update(delta);
+            
+            // Update music manager with time of day
+            if (this.musicManager) {
+                this.musicManager.updateTimeOfDay(this.dayNightCycle.getIsNight());
+            }
+        }
 
         // Update player (only if it exists)
         if (this.player) {
@@ -1070,5 +1088,25 @@ export class World extends Phaser.Scene {
         });
 
         console.log('Player animations created successfully in World scene');
+    }
+
+    /**
+     * Clean up resources when scene is destroyed
+     */
+    shutdown(): void {
+        console.log('World scene shutting down...');
+        
+        // Stop music manager with fade out
+        if (this.musicManager) {
+            console.log('Stopping shuffle playlist...');
+            this.musicManager.stopPlaylist();
+        }
+        
+        // Clean up day/night cycle
+        if (this.dayNightCycle) {
+            this.dayNightCycle.destroy();
+        }
+        
+        console.log('World scene cleanup complete');
     }
 }

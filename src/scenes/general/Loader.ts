@@ -131,7 +131,22 @@ export class Loader extends Phaser.Scene {
         this.load.audio('complete-quest', '/audio/complete-quest.mp3')
         this.load.audio('page-turn', '/audio/page-turn.mp3')
         this.load.audio('game-over', '/audio/game-over.wav')
-        this.load.audio('main-menu-music', '/audio/music/Time Waster (1).mp3')
+        this.load.audio('main-menu-music', '/audio/music/mainmenu/Time Waster (1).mp3')
+        
+        // =====================================================================
+        // SHUFFLE PLAYLIST MUSIC
+        // =====================================================================
+        // Day songs
+        this.load.audio('shuffle-divo', '/audio/music/Shuffle/Divo.mp3')
+        this.load.audio('shuffle-j178', '/audio/music/Shuffle/J178.mp3')
+        this.load.audio('shuffle-maude', '/audio/music/Shuffle/Maude.mp3')
+        this.load.audio('shuffle-wahwah', '/audio/music/Shuffle/WahWah.mp3')
+        
+        // Night songs
+        this.load.audio('shuffle-dream2', '/audio/music/Shuffle/night/Dream2.mp3')
+        this.load.audio('shuffle-jeeno', '/audio/music/Shuffle/night/Jeeno.mp3')
+        this.load.audio('shuffle-lucid', '/audio/music/Shuffle/night/Lucid.mp3')
+        this.load.audio('shuffle-n187', '/audio/music/Shuffle/night/N187.mp3')
 
         this.load.bitmapFont('8-bit', '/font/8-bit.png', '/font/8-bit.xml')
         this.load.bitmapFont('8-bit-white', '/font/8-bit-white.png', '/font/8-bit-white.xml')

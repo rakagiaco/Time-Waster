@@ -18,8 +18,18 @@ export class Menu extends Phaser.Scene {
             console.log('=== MENU SCENE CREATE ===');
             console.log('Scene key:', this.scene.key);
 
-            // Start main menu music
-            this.startMainMenuMusic();
+            // Stop any existing music first (with safety check)
+            if (this.scene.sound) {
+                this.scene.sound.stopAll();
+                console.log('Menu: Stopped all existing music');
+            } else {
+                console.log('Menu: Sound system not ready yet, skipping stopAll');
+            }
+
+            // Start main menu music with a small delay to ensure sound system is ready
+            this.time.delayedCall(100, () => {
+                this.startMainMenuMusic();
+            });
 
             // Create pixel art medieval background
             this.createMedievalBackground();
@@ -79,9 +89,8 @@ export class Menu extends Phaser.Scene {
         for (let i = 0; i < gradientSteps; i++) {
             const progress = i / gradientSteps;
             // Smooth transition from deep blue at top to warm pink/orange at bottom
-            const topColor = this.lerpColor(0x191970, 0x4169E1, progress * 0.5); // Deep blue to royal blue
-            const bottomColor = this.lerpColor(0x4169E1, 0xFFB6C1, Math.max(0, (progress - 0.5) * 2)); // Royal blue to pink
-            const currentColor = progress < 0.5 ? topColor : bottomColor;
+            // Use a single smooth interpolation across the entire gradient
+            const currentColor = this.lerpColor(0x191970, 0xFFB6C1, progress); // Deep blue to pink
             
             bg.fillStyle(currentColor, 1);
             bg.fillRect(0, i * stepHeight, width, stepHeight + 1); // +1 to avoid gaps
@@ -515,7 +524,7 @@ export class Menu extends Phaser.Scene {
         // Freeplay button
         this.createMedievalButton(centerX, centerY + 190, 'FREEPLAY', () => {
             console.log('Freeplay button clicked');
-            this.scene.start('worldScene');
+            this.fadeToGame(false);
         });
     }
 
@@ -635,10 +644,29 @@ export class Menu extends Phaser.Scene {
      */
     private startMainMenuMusic(): void {
         try {
-            // Check if music is already playing to avoid duplicates
-            if (this.sound.get('main-menu-music')) {
+            // Check if sound system is available
+            if (!this.sound) {
+                console.log('Menu: Sound system not available, retrying in 200ms...');
+                // Retry after a short delay
+                this.time.delayedCall(200, () => {
+                    this.startMainMenuMusic();
+                });
                 return;
             }
+
+            // Check if music is already playing to avoid duplicates
+            const existingMusic = this.sound.get('main-menu-music');
+            if (existingMusic && existingMusic.isPlaying) {
+                console.log('Menu: Main menu music already playing');
+                return;
+            }
+
+            // Stop any existing main menu music first
+            if (existingMusic) {
+                existingMusic.destroy();
+            }
+
+            console.log('Menu: Starting main menu music...');
 
             // Create and play the main menu music
             const music = this.sound.add('main-menu-music', {
@@ -646,21 +674,53 @@ export class Menu extends Phaser.Scene {
                 loop: true   // Loop the music continuously
             });
 
+            // Force volume to 0 immediately to prevent any loud initial notes
+            music.setVolume(0);
+
             music.play();
             
-            // Fade in the music
-            this.tweens.add({
-                targets: music,
-                volume: 0.3, // Target volume
-                duration: 1500, // 1.5 second fade in
-                ease: 'Power2',
-                onComplete: () => {
-                    console.log('Main menu music faded in and looping');
-                }
+            // Start fade in immediately to prevent any loud initial notes
+            this.time.delayedCall(10, () => {
+                this.tweens.add({
+                    targets: music,
+                    volume: 0.3, // Target volume
+                    duration: 3000, // 3 second fade in (increased from 1.5s)
+                    ease: 'Power2',
+                    onComplete: () => {
+                        console.log('Main menu music faded in and looping');
+                    }
+                });
             });
             
         } catch (error) {
             console.error('Error starting main menu music:', error);
+        }
+    }
+
+    /**
+     * Stop the main menu music with fade out
+     */
+    private stopMainMenuMusic(): void {
+        try {
+            const music = this.sound.get('main-menu-music');
+            if (music && music.isPlaying) {
+                console.log('Stopping main menu music...');
+                
+                // Fade out the music
+                this.tweens.add({
+                    targets: music,
+                    volume: 0,
+                    duration: 1500, // 1.5 second fade out
+                    ease: 'Power2',
+                    onComplete: () => {
+                        music.stop();
+                        music.destroy();
+                        console.log('Main menu music stopped and destroyed');
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error stopping main menu music:', error);
         }
     }
 

@@ -449,6 +449,11 @@ export class PauseMenu {
 
     private exitToMenu(): void {
         this.hide();
+        
+        // Stop any playing music before transitioning to menu
+        console.log('PauseMenu: Stopping all music before returning to main menu');
+        this.scene.sound.stopAll();
+        
         this.scene.scene.start('menuScene');
     }
 
