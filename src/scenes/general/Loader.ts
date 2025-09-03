@@ -128,6 +128,7 @@ export class Loader extends Phaser.Scene {
         this.load.audio('complete-quest', '/audio/complete-quest.mp3')
         this.load.audio('page-turn', '/audio/page-turn.mp3')
         this.load.audio('game-over', '/audio/game-over.wav')
+        this.load.audio('main-menu-music', '/audio/music/Time Waster (1).mp3')
 
         this.load.bitmapFont('8-bit', '/font/8-bit.png', '/font/8-bit.xml')
         this.load.bitmapFont('8-bit-white', '/font/8-bit-white.png', '/font/8-bit-white.xml')
@@ -153,6 +154,52 @@ export class Loader extends Phaser.Scene {
             const parse = JSON.parse(this.existing_inv);
             this.existing_inv = new Map(parse);
         }
+    }
+
+    /**
+     * Create gold-coin texture for inventory system
+     */
+    private createGoldCoinTexture(): void {
+        const graphics = this.add.graphics();
+        
+        // Main coin body (gold)
+        graphics.fillStyle(0xFFD700); // Gold color
+        graphics.fillCircle(16, 16, 8); // 32x32 texture, 16x16 coin
+        
+        // Inner circle (darker gold)
+        graphics.fillStyle(0xFFA500); // Darker gold
+        graphics.fillCircle(16, 16, 6);
+        
+        // Center highlight (bright gold)
+        graphics.fillStyle(0xFFFF00); // Bright gold
+        graphics.fillCircle(16, 16, 3);
+        
+        // Edge highlight
+        graphics.lineStyle(1, 0xFFFF00, 0.8);
+        graphics.strokeCircle(16, 16, 8);
+        
+        // Add coin details
+        graphics.fillStyle(0xFFD700, 0.6);
+        
+        // Small dots around the edge
+        for (let i = 0; i < 8; i++) {
+            const angle = (i * Math.PI * 2) / 8;
+            const radius = 6;
+            const x = 16 + Math.cos(angle) * radius;
+            const y = 16 + Math.sin(angle) * radius;
+            graphics.fillCircle(x, y, 1);
+        }
+        
+        // Center symbol (simple cross)
+        graphics.fillStyle(0xFFA500);
+        graphics.fillRect(15, 13, 2, 6); // Vertical line
+        graphics.fillRect(13, 15, 6, 2); // Horizontal line
+        
+        // Generate texture
+        graphics.generateTexture('gold-coin', 32, 32);
+        graphics.destroy();
+        
+        console.log('Gold-coin texture created successfully');
     }
 
     /**
@@ -456,6 +503,9 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
+
+        // Create gold-coin texture for inventory
+        this.createGoldCoinTexture();
 
         // Start the main menu scene with loaded save data
         this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv });

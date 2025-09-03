@@ -124,7 +124,17 @@ export class Ally extends Entity {
         // Make interactive
         this.setInteractive();
         this.on('pointerdown', () => {
-            this.isInteracting = true;
+            // Check if player is within interaction range
+            if (this.player) {
+                const distance = Phaser.Math.Distance.Between(this.x, this.y, this.player.x, this.player.y);
+                if (distance <= 100) { // Same range as E key interaction
+                    this.interact();
+                } else {
+                    console.log('Ally: Player too far away for interaction');
+                }
+            } else {
+                console.log('Ally: No player reference for interaction');
+            }
         });
     }
 
@@ -136,6 +146,11 @@ export class Ally extends Entity {
     private loadQuestData(): void {
         // Load quest data from scene cache
         this.questData = this.scene.cache.json.get('quest-1');
+    }
+
+    public interact(): void {
+        // Default interaction - can be overridden by NPC class
+        console.log('Ally: Default interaction triggered');
     }
 
     public update(): void {

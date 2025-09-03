@@ -8,9 +8,13 @@ import { DebugManager } from '../../debug/DebugManager';
 import { InventoryUI } from '../../ui/InventoryUI';
 import { DayNightCycle } from '../../systems/DayNightCycle';
 import { Lantern } from '../../systems/Lantern';
+import { NPC } from '../../prefabs/NPC';
+import { QuestSystem } from '../../systems/QuestSystem';
+import { DialogueUI } from '../../ui/DialogueUI';
 import { TreeLightEmission } from '../../systems/TreeLightEmission';
 import { Pathfinding } from '../../systems/Pathfinding';
 import { PauseMenu } from '../../ui/PauseMenu';
+import { QuestUI } from '../../ui/QuestUI';
 import { SaveSystem } from '../../systems/SaveSystem';
 
 
@@ -39,9 +43,13 @@ export class World extends Phaser.Scene {
     // Day/Night and Lighting Systems
     private dayNightCycle!: DayNightCycle;
     private lantern!: Lantern;
+    private npc!: NPC;
+    private questSystem!: QuestSystem;
+    private dialogueUI!: DialogueUI;
     private treeLightEmission!: TreeLightEmission;
     private pathfinding!: Pathfinding;
     private pauseMenu!: PauseMenu;
+    private questUI!: QuestUI;
 
     constructor() {
         super('worldScene');
@@ -55,6 +63,9 @@ export class World extends Phaser.Scene {
             console.log('=== WORLD SCENE CREATE ===');
             console.log('Scene key:', this.scene.key);
             console.log('Data received:', data);
+
+            // Start with fade in effect
+            this.startFadeIn();
 
             // Create tilemap
             this.createTilemap();
@@ -100,6 +111,9 @@ export class World extends Phaser.Scene {
             console.log('Creating trees...');
             this.createTrees();
             console.log('Trees created successfully, count:', this.trees.length);
+
+            // Create 5 mysterious herbs for the quest in the top-left area
+            this.createQuestHerbs();
 
             // Setup camera
             console.log('Setting up camera...');
@@ -204,6 +218,29 @@ export class World extends Phaser.Scene {
             this.player.lantern = this.lantern; // Connect lantern to player
             console.log('Lantern setup complete');
 
+            // Setup Quest System and NPC
+            console.log('Setting up quest system...');
+            this.questSystem = new QuestSystem(this, this.player);
+            this.data.set('questSystem', this.questSystem); // Store quest system in scene data
+            
+            // Create Narvark the quest giver NPC
+            const narvarkAlly = this.allies.find(ally => ally.entity_type === 'Narvark');
+            if (narvarkAlly) {
+                this.npc = new NPC(this, narvarkAlly);
+                this.npc.setPlayer(this.player);
+                this.questSystem.setNPC(this.npc);
+                this.data.set('npc', this.npc);
+                console.log('Narvark NPC system initialized');
+            } else {
+                console.error('Narvark ally not found!');
+            }
+            
+            // Setup Dialogue UI
+            this.dialogueUI = new DialogueUI(this);
+            
+            // Setup interaction controls
+            this.setupInteractionControls();
+
             // Setup Tree Light Emission
             console.log('Setting up tree light emission...');
             this.treeLightEmission = new TreeLightEmission(this);
@@ -227,6 +264,10 @@ export class World extends Phaser.Scene {
             console.log('Setting up pause menu...');
             this.pauseMenu = new PauseMenu(this);
             console.log('Pause menu setup complete');
+
+            // Setup quest UI
+            this.questUI = new QuestUI(this);
+            console.log('Quest UI setup complete');
 
         } catch (error) {
             console.error('=== CRITICAL ERROR IN WORLD CREATE ===');
@@ -292,6 +333,16 @@ export class World extends Phaser.Scene {
         // Update Lantern
         if (this.lantern) {
             this.lantern.update(delta);
+        }
+
+        // Update NPC
+        if (this.npc) {
+            this.npc.update();
+        }
+
+        // Update Dialogue UI
+        if (this.dialogueUI) {
+            this.dialogueUI.update(delta);
         }
 
         // Update Tree Light Emission
@@ -847,5 +898,106 @@ export class World extends Phaser.Scene {
 
     public getInventoryUI(): InventoryUI {
         return this.inventoryUI;
+    }
+
+    public getQuestUI(): QuestUI {
+        return this.questUI;
+    }
+
+    private createQuestHerbs(): void {
+        try {
+            console.log('Creating quest mysterious herbs...');
+            
+            // Define 5 positions in the top-left area of the map (roughly 0-400 x, 0-400 y)
+            const questHerbPositions = [
+                { x: 150, y: 120 },  // Near top-left corner
+                { x: 280, y: 180 },  // Slightly right and down
+                { x: 120, y: 280 },  // Left side, more down
+                { x: 350, y: 100 },  // More right, near top
+                { x: 200, y: 320 }   // Center-left, bottom of area
+            ];
+
+            questHerbPositions.forEach((pos, index) => {
+                const herb = new Item(
+                    this,
+                    pos.x,
+                    pos.y,
+                    'mysterious herb',
+                    { sound: 'collect-herb', volume: 0.3 }
+                );
+                herb.setScale(0.8);
+                herb.setDepth(5); // Above ground but below trees
+                this.items.push(herb);
+                console.log(`Created quest herb ${index + 1} at (${pos.x}, ${pos.y})`);
+            });
+
+        } catch (error) {
+            console.error('Error creating quest herbs:', error);
+        }
+    }
+
+    private setupInteractionControls(): void {
+        // Setup E key for interaction
+        this.input.keyboard?.on('keydown-E', () => {
+            if (this.npc && this.npc.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+                this.npc.interact();
+            }
+        });
+
+        // Setup F key as alternative interaction
+        this.input.keyboard?.on('keydown-F', () => {
+            if (this.npc && this.npc.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+                this.npc.interact();
+            }
+        });
+
+        // Setup mouse click interaction
+        this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            if (this.npc && this.npc.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+                // Check if click is near NPC
+                const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, this.npc.ally.x, this.npc.ally.y);
+                if (distance < 50) {
+                    this.npc.interact();
+                }
+            }
+        });
+
+        console.log('Interaction controls setup complete');
+    }
+
+    /**
+     * Starts the fade in effect when entering the game
+     */
+    private startFadeIn(): void {
+        try {
+            // Create a black overlay that covers the entire screen
+            const fadeOverlay = this.add.rectangle(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                this.cameras.main.width,
+                this.cameras.main.height,
+                0x000000,
+                1 // Start fully opaque (black)
+            );
+            fadeOverlay.setDepth(20000); // Above everything else
+            fadeOverlay.setScrollFactor(0); // Fixed to camera
+            
+            // Fade from black to transparent
+            this.tweens.add({
+                targets: fadeOverlay,
+                alpha: 0,
+                duration: 1000, // 1 second fade
+                ease: 'Power2',
+                onComplete: () => {
+                    fadeOverlay.destroy();
+                    console.log('Game fade in complete');
+                }
+            });
+            
+            console.log('Starting game fade in...');
+            
+        } catch (error) {
+            console.error('Error in game fade in:', error);
+        }
     }
 }

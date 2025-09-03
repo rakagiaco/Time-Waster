@@ -603,9 +603,10 @@ export class Player extends Entity {
                 const distance = Phaser.Math.Distance.Between(this.x, this.y, item.x, item.y);
 
                 if (distance <= pickupRadius) {
-                    // Check if it's a fruit item
                     const itemType = item.getItemType();
-                    if (this.isFruitItem(itemType)) {
+                    
+                    // Check if it's a collectible item (fruit or mysterious herb)
+                    if (this.isFruitItem(itemType) || this.isMysteriousHerb(itemType)) {
                         // Add to inventory
                         this.p1Inventory.add(itemType, 1);
 
@@ -617,6 +618,9 @@ export class Player extends Entity {
 
                         // Show pickup feedback
                         this.showPickupFeedback(itemType, item.x, item.y);
+
+                        // Emit item collected event for quest system
+                        this.scene.events.emit('itemCollected', itemType, 1);
 
                         // Destroy the item
                         item.destroy();
@@ -650,6 +654,11 @@ export class Player extends Entity {
     private isFruitItem(itemType: string): boolean {
         const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'fruit', 'tree-of-life-fruit'];
         return fruitTypes.includes(itemType);
+    }
+
+    private isMysteriousHerb(itemType: string): boolean {
+        const herbTypes = ['mysterious herb', 'mysterious-herb'];
+        return herbTypes.includes(itemType);
     }
 
     private showPickupFeedback(itemType: string, x: number, y: number): void {

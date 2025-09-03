@@ -1,0 +1,265 @@
+import Phaser from 'phaser';
+import { Player } from '../prefabs/Player';
+import { NPC } from '../prefabs/NPC';
+
+export interface QuestProgress {
+    questId: number;
+    currentAmount: number;
+    requiredAmount: number;
+    isCompleted: boolean;
+    isReadyForCompletion: boolean; // New field to track if quest requirements are met
+}
+
+/**
+ * QuestSystem - Manages quest progression and tracking
+ * Handles quest state, progress tracking, and completion rewards
+ */
+export class QuestSystem {
+    private scene: Phaser.Scene;
+    private player: Player;
+    private npc: NPC | null = null;
+    private activeQuests: Map<number, QuestProgress> = new Map();
+    private completedQuests: Set<number> = new Set();
+    
+    constructor(scene: Phaser.Scene, player: Player) {
+        this.scene = scene;
+        this.player = player;
+        this.setupEventListeners();
+    }
+
+    private setupEventListeners(): void {
+        // Listen for dialogue actions
+        this.scene.events.on('dialogueAction', (action: string) => {
+            this.handleDialogueAction(action);
+        });
+        
+        // Listen for item collection events
+        this.scene.events.on('itemCollected', (itemType: string, amount: number) => {
+            this.updateQuestProgress(itemType, amount);
+        });
+        
+        // Listen for enemy death events
+        this.scene.events.on('enemyKilled', (enemyType: string) => {
+            this.updateQuestProgress(enemyType, 1);
+        });
+        
+        // Listen for quest start events
+        this.scene.events.on('startQuest', (questId: number) => {
+            this.startQuest(questId);
+        });
+    }
+
+    public setNPC(npc: NPC): void {
+        this.npc = npc;
+    }
+
+    public startQuest(questId: number): void {
+        // Check if quest is already active
+        if (this.activeQuests.has(questId)) {
+            console.log(`QuestSystem: Quest ${questId} is already active, skipping start`);
+            return;
+        }
+        
+        const questData = this.scene.cache.json.get(`quest-${questId}`);
+        if (!questData) {
+            console.error(`Quest ${questId} not found`);
+            return;
+        }
+        
+        const questProgress: QuestProgress = {
+            questId: questId,
+            currentAmount: 0,
+            requiredAmount: questData.questdata.amount,
+            isCompleted: false,
+            isReadyForCompletion: false
+        };
+        
+        this.activeQuests.set(questId, questProgress);
+        console.log(`QuestSystem: Started quest ${questId}: ${questData.name}`);
+    }
+
+    public updateQuestProgress(itemType: string, amount: number): void {
+        // Check all active quests for matching requirements
+        this.activeQuests.forEach((progress, questId) => {
+            if (progress.isCompleted) return;
+            
+            const questData = this.scene.cache.json.get(`quest-${questId}`);
+            if (!questData) return;
+            
+            const questItemType = questData.questdata.type.toLowerCase().replace(/[-\s]/g, '');
+            const currentItemType = itemType.toLowerCase().replace(/[-\s]/g, '');
+            
+            // Check if this item matches the quest requirement
+            if (questItemType === currentItemType || 
+                questItemType.includes(currentItemType) ||
+                currentItemType.includes(questItemType)) {
+                
+                progress.currentAmount = Math.min(
+                    progress.currentAmount + amount,
+                    progress.requiredAmount
+                );
+                
+                console.log(`QuestSystem: Quest ${questId} progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+                
+                // Emit quest progress event for QuestUI
+                this.scene.events.emit('questProgress', progress.currentAmount);
+                
+                // Check if quest requirements are met (but don't complete yet)
+                if (progress.currentAmount >= progress.requiredAmount && !progress.isReadyForCompletion) {
+                    progress.isReadyForCompletion = true;
+                    console.log(`QuestSystem: Quest ${questId} requirements met - ready for completion`);
+                    
+                    // Emit quest ready event for QuestUI to show green
+                    this.scene.events.emit('questReadyForCompletion', {
+                        questId: questId,
+                        questName: questData.name
+                    });
+                }
+            }
+        });
+    }
+
+    public completeQuestAtNPC(questId: number): boolean {
+        const questProgress = this.activeQuests.get(questId);
+        if (!questProgress || !questProgress.isReadyForCompletion) {
+            return false;
+        }
+        
+        const questData = this.scene.cache.json.get(`quest-${questId}`);
+        if (!questData) return false;
+        
+        // Mark as completed
+        questProgress.isCompleted = true;
+        this.completedQuests.add(questId);
+        
+        // Quest is ready for completion, so we can complete it
+        // Remove items from player inventory now
+        const itemType = questData.questdata.type;
+        const amount = questData.questdata.amount;
+        
+        if (this.player.p1Inventory.hasItem(itemType, amount)) {
+            this.player.p1Inventory.remove(itemType, amount);
+            console.log(`QuestSystem: Removed ${amount} ${itemType} from player inventory`);
+        } else {
+            console.log(`QuestSystem: Warning - player doesn't have required items, but quest is marked as ready`);
+        }
+        
+        // Get reward (but don't add to inventory yet - player must accept it)
+        const reward = this.getQuestReward(questId);
+        
+        console.log(`QuestSystem: Quest ${questId} completed: ${questData.name}`);
+        console.log(`QuestSystem: Reward available: ${reward.amount} ${reward.type}`);
+        
+        // Remove from active quests
+        this.activeQuests.delete(questId);
+        
+        // Emit quest completion event
+        this.scene.events.emit('questCompleted', {
+            questId: questId,
+            questName: questData.name,
+            reward: reward
+        });
+        
+        return true;
+    }
+
+    private completeQuest(questId: number): void {
+        // This method is now deprecated - use completeQuestAtNPC instead
+        console.warn('QuestSystem: completeQuest called directly - use completeQuestAtNPC instead');
+    }
+
+    private getQuestReward(questId: number): any {
+        // Define rewards for each quest
+        const rewards: { [key: number]: any } = {
+            1: { type: 'gold-coin', amount: 10 }, // Mysterious herbs quest
+            2: { type: 'gold-coin', amount: 15 }, // Nepian scouts quest
+            3: { type: 'gold-coin', amount: 20 }, // Nepian blood quest
+            4: { type: 'gold-coin', amount: 50 }, // Electro Lord quest
+            5: { type: 'gold-coin', amount: 100 }, // 1000 scouts quest
+            6: { type: 'gold-coin', amount: 150 }, // 1000 observers quest
+            7: { type: 'gold-coin', amount: 200 }  // 1000 hearts quest
+        };
+        
+        return rewards[questId] || { type: 'gold-coin', amount: 10 };
+    }
+
+    private handleDialogueAction(action: string): void {
+        switch (action) {
+            case 'continue':
+                // Continue current quest
+                break;
+            case 'turn_in':
+                // Turn in quest items
+                this.handleQuestTurnIn();
+                break;
+            case 'close':
+                // Close dialogue
+                if (this.npc) {
+                    this.npc.endInteraction();
+                }
+                break;
+        }
+    }
+
+    private handleQuestTurnIn(): void {
+        if (!this.npc) return;
+        
+        const currentQuest = this.npc.getCurrentQuest();
+        if (!currentQuest) return;
+        
+        const questProgress = this.activeQuests.get(currentQuest.id);
+        if (!questProgress || !questProgress.isCompleted) {
+            console.log('QuestSystem: Quest not ready for turn-in');
+            return;
+        }
+        
+        // Remove items from player inventory
+        const itemType = currentQuest.questData.type;
+        const amount = currentQuest.questData.amount;
+        
+        if (this.player.p1Inventory.hasItem(itemType, amount)) {
+            this.player.p1Inventory.remove(itemType, amount);
+            
+            // Give reward
+            const reward = this.getQuestReward(currentQuest.id);
+            this.player.p1Inventory.add(reward.type, reward.amount);
+            
+            console.log(`QuestSystem: Gave reward: ${reward.amount} ${reward.type}`);
+            
+            // Remove from active quests
+            this.activeQuests.delete(currentQuest.id);
+        }
+    }
+
+    public getActiveQuests(): Map<number, QuestProgress> {
+        return this.activeQuests;
+    }
+
+    public getCompletedQuests(): Set<number> {
+        return this.completedQuests;
+    }
+
+    public isQuestActive(questId: number): boolean {
+        return this.activeQuests.has(questId);
+    }
+
+    public isQuestCompleted(questId: number): boolean {
+        return this.completedQuests.has(questId);
+    }
+
+    public isQuestReadyForCompletion(questId: number): boolean {
+        const progress = this.activeQuests.get(questId);
+        const isReady = progress ? progress.isReadyForCompletion : false;
+        console.log(`QuestSystem: Quest ${questId} ready for completion: ${isReady}`);
+        if (progress) {
+            console.log(`QuestSystem: Quest progress: ${progress.currentAmount}/${progress.requiredAmount}, isReady: ${progress.isReadyForCompletion}`);
+        } else {
+            console.log(`QuestSystem: No progress found for quest ${questId}`);
+        }
+        return isReady;
+    }
+
+    public getQuestProgress(questId: number): QuestProgress | null {
+        return this.activeQuests.get(questId) || null;
+    }
+}

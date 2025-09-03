@@ -18,6 +18,9 @@ export class Menu extends Phaser.Scene {
             console.log('=== MENU SCENE CREATE ===');
             console.log('Scene key:', this.scene.key);
 
+            // Start main menu music
+            this.startMainMenuMusic();
+
             // Create pixel art medieval background
             this.createMedievalBackground();
             
@@ -69,8 +72,8 @@ export class Menu extends Phaser.Scene {
         const bg = this.add.graphics();
         bg.setDefaultStyles({ lineStyle: { width: 1, alpha: 1 }, fillStyle: { alpha: 1 } });
         
-        // Create a more detailed gradient with multiple layers
-        const gradientSteps = 20;
+        // Create a more detailed gradient with multiple layers (HD quality)
+        const gradientSteps = 40; // Doubled for HD quality
         const stepHeight = height / gradientSteps;
         
         for (let i = 0; i < gradientSteps; i++) {
@@ -86,6 +89,9 @@ export class Menu extends Phaser.Scene {
         
         // Mountains in background - layered silhouettes
         this.createMountains(width, height);
+        
+        // Forest between mountains and castle
+        this.createForest(width, height);
         
         // Castle silhouette
         this.createCastleSilhouette(width, height);
@@ -109,22 +115,57 @@ export class Menu extends Phaser.Scene {
         mountains.beginPath();
         mountains.moveTo(0, height - 200);
         
-        // Create smooth mountain silhouettes with more detail points
+        // Create smooth mountain silhouettes with HD detail points
         const backMountainPoints = [
             {x: 0, y: height - 200},
+            {x: 25, y: height - 220},
             {x: 50, y: height - 240},
+            {x: 75, y: height - 260},
+            {x: 100, y: height - 290},
             {x: 120, y: height - 320},
+            {x: 140, y: height - 335},
+            {x: 160, y: height - 345},
+            {x: 180, y: height - 350},
             {x: 200, y: height - 350},
+            {x: 220, y: height - 345},
+            {x: 240, y: height - 340},
+            {x: 260, y: height - 335},
             {x: 280, y: height - 330},
+            {x: 300, y: height - 325},
+            {x: 320, y: height - 320},
+            {x: 340, y: height - 315},
             {x: 350, y: height - 310},
+            {x: 370, y: height - 308},
+            {x: 390, y: height - 305},
             {x: 400, y: height - 300},
+            {x: 420, y: height - 310},
+            {x: 440, y: height - 320},
+            {x: 460, y: height - 340},
             {x: 480, y: height - 360},
+            {x: 500, y: height - 375},
+            {x: 520, y: height - 385},
+            {x: 540, y: height - 390},
             {x: 560, y: height - 390},
+            {x: 580, y: height - 395},
             {x: 600, y: height - 400},
+            {x: 620, y: height - 395},
+            {x: 640, y: height - 390},
+            {x: 660, y: height - 385},
             {x: 680, y: height - 380},
+            {x: 700, y: height - 370},
+            {x: 720, y: height - 360},
+            {x: 740, y: height - 350},
             {x: 750, y: height - 340},
+            {x: 770, y: height - 335},
+            {x: 790, y: height - 330},
             {x: 800, y: height - 320},
+            {x: 820, y: height - 315},
+            {x: 840, y: height - 310},
             {x: 850, y: height - 300},
+            {x: 870, y: height - 295},
+            {x: 890, y: height - 290},
+            {x: 910, y: height - 285},
+            {x: 930, y: height - 280},
             {x: width, y: height - 280}
         ];
         
@@ -148,23 +189,56 @@ export class Menu extends Phaser.Scene {
         
         const frontMountainPoints = [
             {x: 0, y: height - 150},
+            {x: 20, y: height - 170},
             {x: 40, y: height - 190},
+            {x: 60, y: height - 210},
             {x: 80, y: height - 230},
+            {x: 100, y: height - 245},
             {x: 120, y: height - 260},
+            {x: 135, y: height - 270},
             {x: 150, y: height - 280},
+            {x: 170, y: height - 275},
+            {x: 190, y: height - 270},
             {x: 200, y: height - 260},
+            {x: 220, y: height - 255},
+            {x: 240, y: height - 250},
             {x: 250, y: height - 240},
+            {x: 270, y: height - 235},
+            {x: 290, y: height - 232},
             {x: 300, y: height - 230},
+            {x: 320, y: height - 228},
+            {x: 340, y: height - 225},
             {x: 350, y: height - 220},
+            {x: 370, y: height - 230},
+            {x: 390, y: height - 240},
+            {x: 410, y: height - 250},
             {x: 420, y: height - 260},
+            {x: 440, y: height - 270},
+            {x: 460, y: height - 280},
             {x: 480, y: height - 290},
+            {x: 500, y: height - 295},
             {x: 520, y: height - 300},
+            {x: 535, y: height - 300},
             {x: 550, y: height - 300},
+            {x: 570, y: height - 295},
+            {x: 590, y: height - 290},
             {x: 600, y: height - 280},
+            {x: 620, y: height - 275},
+            {x: 640, y: height - 272},
             {x: 650, y: height - 270},
+            {x: 670, y: height - 268},
+            {x: 690, y: height - 265},
             {x: 700, y: height - 260},
+            {x: 720, y: height - 255},
+            {x: 740, y: height - 252},
             {x: 750, y: height - 250},
+            {x: 770, y: height - 240},
+            {x: 790, y: height - 230},
             {x: 800, y: height - 220},
+            {x: 820, y: height - 215},
+            {x: 840, y: height - 210},
+            {x: 860, y: height - 205},
+            {x: 880, y: height - 202},
             {x: width, y: height - 200}
         ];
         
@@ -183,35 +257,163 @@ export class Menu extends Phaser.Scene {
     }
 
     /**
-     * Creates a medieval castle silhouette
+     * Creates a forest silhouette between mountains and castle
+     */
+    private createForest(width: number, height: number): void {
+        const forest = this.add.graphics();
+        
+        // Forest layer 1 (back trees) - darker, more distant
+        forest.fillStyle(0x2D5016, 0.8); // Dark forest green
+        this.drawTreeLayer(forest, width, height, height - 180, height - 120, 15, 25, 8);
+        
+        // Forest layer 2 (middle trees) - medium tone
+        forest.fillStyle(0x3D6B1A, 0.9); // Medium forest green
+        this.drawTreeLayer(forest, width, height, height - 160, height - 100, 20, 35, 12);
+        
+        // Forest layer 3 (front trees) - lighter, closer
+        forest.fillStyle(0x4A7C1F, 1.0); // Light forest green
+        this.drawTreeLayer(forest, width, height, height - 140, height - 80, 25, 45, 15);
+    }
+
+    /**
+     * Helper method to draw a layer of trees
+     */
+    private drawTreeLayer(graphics: Phaser.GameObjects.Graphics, width: number, _height: number, 
+                         startY: number, endY: number, minWidth: number, maxWidth: number, 
+                         treeCount: number): void {
+        for (let i = 0; i < treeCount; i++) {
+            const x = (width / treeCount) * i + (Math.random() * (width / treeCount) * 0.6);
+            const treeWidth = minWidth + Math.random() * (maxWidth - minWidth);
+            const treeHeight = endY - startY + (Math.random() * 20 - 10);
+            
+            // Calculate trunk height and position to connect to canopy
+            const trunkHeight = Math.min(20, treeHeight * 0.3); // Trunk is 30% of tree height, max 20px
+            const trunkTopY = endY - trunkHeight;
+            
+            // Draw tree trunk (positioned to connect with canopy)
+            graphics.fillStyle(0x4A2C17, 1); // Brown trunk
+            graphics.fillRect(x - 2, trunkTopY, 4, trunkHeight);
+            
+            // Draw tree canopy (irregular shape) - positioned above trunk
+            graphics.fillStyle(0x2D5016, 0.8); // Dark green
+            graphics.beginPath();
+            graphics.moveTo(x, trunkTopY);
+            
+            // Create irregular tree shape starting from trunk top
+            const points = 8;
+            for (let p = 0; p <= points; p++) {
+                const angle = (p / points) * Math.PI;
+                const radius = treeWidth / 2 + (Math.random() * 8 - 4);
+                const treeX = x + Math.cos(angle) * radius;
+                const treeY = trunkTopY - Math.sin(angle) * (treeHeight * 0.4) + (Math.random() * 8 - 4);
+                
+                if (p === 0) {
+                    graphics.moveTo(treeX, treeY);
+                } else {
+                    graphics.lineTo(treeX, treeY);
+                }
+            }
+            graphics.closePath();
+            graphics.fillPath();
+        }
+    }
+
+    /**
+     * Creates a medieval castle silhouette with HD resolution and centered red tops
      */
     private createCastleSilhouette(width: number, height: number): void {
         const castle = this.add.graphics();
         castle.fillStyle(0x2F2F2F, 1); // Dark gray
         
-        // Main castle keep
-        castle.fillRect(width - 300, height - 300, 80, 200);
+        // Main castle keep (scaled for HD, moved down to touch ground)
+        castle.fillRect(width - 360, height - 240, 96, 240);
         
-        // Castle towers
-        castle.fillRect(width - 280, height - 350, 40, 50); // Left tower top
-        castle.fillRect(width - 260, height - 280, 60, 180); // Right tower
-        castle.fillRect(width - 240, height - 320, 30, 40); // Right tower top
+        // Castle towers (scaled for HD, moved down to touch ground)
+        castle.fillRect(width - 336, height - 300, 48, 60); // Left tower top
+        castle.fillRect(width - 312, height - 216, 72, 216); // Right tower
+        castle.fillRect(width - 288, height - 264, 36, 48); // Right tower top
         
-        // Castle walls
-        castle.fillRect(width - 380, height - 220, 200, 120);
+        // Castle walls (scaled for HD, moved down to touch ground)
+        castle.fillRect(width - 456, height - 144, 240, 144);
         
-        // Tower flags (small triangles)
+        // Tower red tops (shifted more left and moved down)
         castle.fillStyle(0x8B0000, 1); // Dark red
+        
+        // Left tower red top (shifted more left)
         castle.fillTriangle(
-            width - 260, height - 350,
-            width - 250, height - 370,
-            width - 240, height - 350
+            width - 324, height - 300,  // Left point (shifted more left)
+            width - 312, height - 330,  // Top point (shifted more left)
+            width - 300, height - 300   // Right point (shifted more left)
         );
+        
+        // Right tower red top (shifted more left)
         castle.fillTriangle(
-            width - 225, height - 320,
-            width - 215, height - 340,
-            width - 205, height - 320
+            width - 282, height - 264,  // Left point (shifted more left)
+            width - 270, height - 294,  // Top point (shifted more left)
+            width - 258, height - 264   // Right point (shifted more left)
         );
+        
+        // Add castle windows and lights
+        this.addCastleWindows(castle, width, height);
+    }
+
+    /**
+     * Adds windows and lights to the castle
+     */
+    private addCastleWindows(castle: Phaser.GameObjects.Graphics, width: number, height: number): void {
+        // Main keep windows (positioned lower on the keep walls)
+        castle.fillStyle(0xFFD700, 0.9); // Golden light
+        castle.fillRect(width - 350, height - 220, 3, 4); // Left window (on keep wall)
+        castle.fillRect(width - 340, height - 220, 3, 4); // Right window (on keep wall)
+        castle.fillRect(width - 350, height - 180, 3, 4); // Left window (lower on keep)
+        castle.fillRect(width - 340, height - 180, 3, 4); // Right window (lower on keep)
+        
+        // Left tower windows (positioned lower on tower walls)
+        castle.fillStyle(0xFFD700, 0.9); // Golden light
+        castle.fillRect(width - 330, height - 250, 2, 3); // Small window (on tower)
+        castle.fillRect(width - 325, height - 250, 2, 3); // Small window (on tower)
+        
+        // Right tower windows (positioned lower on tower walls)
+        castle.fillStyle(0xFFD700, 0.9); // Golden light
+        castle.fillRect(width - 300, height - 200, 2, 3); // Small window (on tower)
+        castle.fillRect(width - 295, height - 200, 2, 3); // Small window (on tower)
+        castle.fillRect(width - 300, height - 160, 2, 3); // Small window (lower on tower)
+        castle.fillRect(width - 295, height - 160, 2, 3); // Small window (lower on tower)
+        
+        // Right tower top windows (positioned lower on tower top walls)
+        castle.fillStyle(0xFFD700, 0.9); // Golden light
+        castle.fillRect(width - 285, height - 240, 2, 3); // Small window (on tower top)
+        castle.fillRect(width - 280, height - 240, 2, 3); // Small window (on tower top)
+        
+        // Castle wall windows (positioned lower on wall structure)
+        castle.fillStyle(0xFFD700, 0.9); // Golden light
+        castle.fillRect(width - 440, height - 120, 2, 3); // Wall window (on wall)
+        castle.fillRect(width - 430, height - 120, 2, 3); // Wall window (on wall)
+        castle.fillRect(width - 420, height - 120, 2, 3); // Wall window (on wall)
+        castle.fillRect(width - 410, height - 120, 2, 3); // Wall window (on wall)
+        castle.fillRect(width - 400, height - 120, 2, 3); // Wall window (on wall)
+        
+        // Add some flickering effect to the lights
+        this.addFlickeringLights(castle, width, height);
+    }
+
+    /**
+     * Adds flickering effect to castle lights
+     */
+    private addFlickeringLights(castle: Phaser.GameObjects.Graphics, width: number, height: number): void {
+        // Create subtle flickering effect for some windows (lowered positions)
+        const flickerWindows = [
+            {x: width - 350, y: height - 220, width: 3, height: 4}, // Main keep window
+            {x: width - 300, y: height - 200, width: 2, height: 3}, // Right tower window
+            {x: width - 440, y: height - 120, width: 2, height: 3}  // Wall window
+        ];
+        
+        flickerWindows.forEach((window, index) => {
+            // Add slight variation to light intensity
+            const flickerIntensity = 0.7 + Math.random() * 0.3;
+            castle.fillStyle(0xFFD700, flickerIntensity);
+            castle.fillRect(window.x, window.y, window.width, window.height);
+        });
     }
 
     /**
@@ -275,7 +477,7 @@ export class Menu extends Phaser.Scene {
             
             if (hasSaveData) {
                 console.log('Save data found - loading saved game');
-                this.scene.start('worldScene', { loadSaveData: true });
+                this.fadeToGame(true);
             } else {
                 console.log('No save data available');
                 this.showNoSaveMessage();
@@ -288,7 +490,7 @@ export class Menu extends Phaser.Scene {
         // New Game button
         this.createMedievalButton(centerX, centerY + 50, 'NEW GAME', () => {
             console.log('New Game button clicked');
-            this.scene.start('worldScene', { loadSaveData: false }); // Explicitly start fresh game
+            this.fadeToGame(false);
         });
         
         // Credits button  
@@ -413,5 +615,114 @@ export class Menu extends Phaser.Scene {
         this.time.delayedCall(2000, () => {
             message.destroy();
         });
+    }
+
+    /**
+     * Starts the main menu music with looping and fade in
+     */
+    private startMainMenuMusic(): void {
+        try {
+            // Check if music is already playing to avoid duplicates
+            if (this.sound.get('main-menu-music')) {
+                return;
+            }
+
+            // Create and play the main menu music
+            const music = this.sound.add('main-menu-music', {
+                volume: 0, // Start at 0 volume for fade in
+                loop: true   // Loop the music continuously
+            });
+
+            music.play();
+            
+            // Fade in the music
+            this.tweens.add({
+                targets: music,
+                volume: 0.3, // Target volume
+                duration: 1500, // 1.5 second fade in
+                ease: 'Power2',
+                onComplete: () => {
+                    console.log('Main menu music faded in and looping');
+                }
+            });
+            
+        } catch (error) {
+            console.error('Error starting main menu music:', error);
+        }
+    }
+
+    /**
+     * Called when the scene is shut down - fades out the music
+     */
+    shutdown(): void {
+        try {
+            this.fadeOutMusic();
+        } catch (error) {
+            console.error('Error in menu shutdown:', error);
+        }
+    }
+
+    /**
+     * Fades out the main menu music smoothly
+     */
+    private fadeOutMusic(): void {
+        try {
+            const music = this.sound.get('main-menu-music');
+            if (music && music.isPlaying) {
+                // Create a fade out tween
+                this.tweens.add({
+                    targets: music,
+                    volume: 0,
+                    duration: 1000, // 1 second fade
+                    ease: 'Power2',
+                    onComplete: () => {
+                        music.stop();
+                        console.log('Main menu music faded out and stopped');
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error fading out main menu music:', error);
+        }
+    }
+
+    /**
+     * Handles the fade transition from menu to game
+     */
+    private fadeToGame(loadSaveData: boolean): void {
+        try {
+            // Start fading out the music
+            this.fadeOutMusic();
+            
+            // Create a black overlay for the fade effect
+            const fadeOverlay = this.add.rectangle(
+                this.cameras.main.width / 2,
+                this.cameras.main.height / 2,
+                this.cameras.main.width,
+                this.cameras.main.height,
+                0x000000,
+                0
+            );
+            fadeOverlay.setDepth(10000); // Above everything else
+            
+            // Fade to black
+            this.tweens.add({
+                targets: fadeOverlay,
+                alpha: 1,
+                duration: 1000, // 1 second fade
+                ease: 'Power2',
+                onComplete: () => {
+                    // Start the game scene after fade completes
+                    this.scene.start('worldScene', { loadSaveData });
+                }
+            });
+            
+            console.log('Starting fade transition to game...');
+            
+        } catch (error) {
+            console.error('Error in fade transition:', error);
+            // Fallback to direct scene start if fade fails
+            this.scene.start('worldScene', { loadSaveData });
+        }
     }
 }

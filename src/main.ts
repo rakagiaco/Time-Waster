@@ -45,8 +45,8 @@ import { GameOver } from './scenes/general/GameOver';
 const config: Phaser.Types.Core.GameConfig = {
     parent: 'gameContainer',           // HTML element ID to mount the game
     type: Phaser.WEBGL,               // Use WebGL for better performance
-    width: 1000,                      // Game canvas width in pixels
-    height: 800,                      // Game canvas height in pixels
+    width: 1200,                      // Game canvas width in pixels (increased for better quality)
+    height: 900,                      // Game canvas height in pixels (increased for better quality)
     
     // Rendering configuration
     render: {

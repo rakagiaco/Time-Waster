@@ -22,6 +22,15 @@ export class Inventory {
         return this.maxStackSize;
     }
 
+    public hasItem(itemType: string, amount: number): boolean {
+        const currentAmount = this.items.get(itemType) || 0;
+        return currentAmount >= amount;
+    }
+
+    public getItemCount(itemType: string): number {
+        return this.items.get(itemType) || 0;
+    }
+
     public remove(itemType: string, amount: number): boolean {
         const currentAmount = this.items.get(itemType) || 0;
         if (currentAmount >= amount) {

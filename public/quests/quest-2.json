@@ -1,13 +1,13 @@
 {   
-    "name" : "Further Concerns",
-    "description" : "Well, now that I have these herbs, I can analyze them. Ah yes, I see now. It seems the herbs indeed possess some form of magic, or magical essence that is. This essence is similar to that of the essence that scoured the valley centuries ago. Although, it is being nullified by something. Some unknown malignance, possibly. You see, Traveler, I think that this valley hides many of its secrets in plain sight.The herbs have told us some basic information about the current state of the valley. Alas, if we are to continue in this exploration for the source of the valley's famine, we must continue with the thorough investigation of the valley. Traveler, there are some Nepian just to the south of here. I need you to begin to clear them away so we can get further into the valley.",
-    "requirements" : "Xavius Silverleaf wants you to slay 5 Nepian Scouts",
-    "completiontext" : "There you are! I have been waiting quite some time… Have you gathered what  I asked of you ?",
+    "name" : "The Nepian Threat Emerges",
+    "description" : "Fascinating! The analysis of these herbs has revealed something extraordinary. They contain traces of the same otherworldly energy that once powered the valley, but it's been corrupted - twisted by some malevolent force. The herbs speak to me of a great evil that has taken root in this land. They tell of creatures that emerged from the valley's depths after the hermit's disappearance - beings of pure malice that feed on the valley's remaining life force. These creatures call themselves the Nepian, and they are the reason nothing can survive here for long. The herbs have shown me that the Nepian are not native to this world. They came through some kind of dimensional rift, drawn by the valley's power like moths to a flame. When the hermit destroyed the idol, the resulting magical backlash created tears in reality itself, allowing these abominations to enter our world. The Nepian have been slowly corrupting the valley ever since, turning its remaining life force into something dark and twisted. But there is hope. The herbs also tell me that the Nepian are vulnerable to the same energy they seek to corrupt. If we can gather enough of their essence, we may be able to create a weapon against them. Traveler, I have seen Nepian scouts lurking in the southern reaches of the valley. They are the weakest of their kind, but they are still dangerous. I need you to eliminate five of these scouts and bring me proof of their destruction. This will be the first step in our war against the Nepian menace.",
+    "requirements" : "Narvark wants you to eliminate 5 Nepian Scouts in the valley's southern regions",
+    "completiontext" : "Excellent work, traveler! I can sense the dark energy dissipating from the valley with each Nepian you destroy. These creatures are indeed vulnerable to our efforts. The herbs I studied have given me insight into their weaknesses, and your success proves that we can fight back against this ancient evil. Take these additional coins as reward for your bravery.",
        
     "questdata" : {
         "questnumber": 2,
         "verb" : "kill",
         "type" : "Nepian Scout",
-        "ammount" : 5
+        "amount" : 5
     }
 }
