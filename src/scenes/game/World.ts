@@ -70,6 +70,9 @@ export class World extends Phaser.Scene {
             // Create tilemap
             this.createTilemap();
 
+            // Create player animations (ensure they exist before creating player)
+            this.createPlayerAnimations();
+
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
             // Setup Day/Night Cycle (check for save data first to set correct initial time)
@@ -999,5 +1002,73 @@ export class World extends Phaser.Scene {
         } catch (error) {
             console.error('Error in game fade in:', error);
         }
+    }
+
+    /**
+     * Create player animations for knight sprite
+     * Ensures animations are available before player creation
+     */
+    private createPlayerAnimations(): void {
+        console.log('=== CREATING PLAYER ANIMATIONS IN WORLD SCENE ===');
+        
+        // Walking animations
+        this.anims.create({
+            key: 'player-walk-up',
+            frames: this.anims.generateFrameNumbers('player', { start: 10, end: 11 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'player-walk-down',
+            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 5 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'player-walk-left',
+            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 7 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'player-walk-right',
+            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 9 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        // Idle animations for each direction (0-indexed!)
+        this.anims.create({
+            key: 'player-idle-down',
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 0 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'player-idle-right',
+            frames: this.anims.generateFrameNumbers('player', { start: 1, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'player-idle-left',
+            frames: this.anims.generateFrameNumbers('player', { start: 2, end: 2 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: 'player-idle-up',
+            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 3 }),
+            frameRate: 5,
+            repeat: -1
+        });
+
+        console.log('Player animations created successfully in World scene');
     }
 }

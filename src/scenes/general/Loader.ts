@@ -20,6 +20,7 @@ export class Loader extends Phaser.Scene {
      * Initialize scene state and clear any existing data
      */
     init(): void {
+        console.log('=== LOADER SCENE INIT ===');
         this.quest = undefined;
         this.existing_inv = undefined;
     }
@@ -31,6 +32,7 @@ export class Loader extends Phaser.Scene {
      * loading save game data from localStorage if available.
      */
     preload(): void {
+        console.log('=== LOADER SCENE PRELOAD ===');
         // Note: Loading screen code commented out but preserved for future use
         // Can be uncommented to show loading progress to players
 
@@ -66,9 +68,10 @@ export class Loader extends Phaser.Scene {
         this.load.spritesheet('boss-lootable', '/spritesheets/boss-lootable.png', { frameWidth: 32, frameHeight: 50 })
 
         // =====================================================================
-        // PLAYER ATLAS AND ANIMATIONS
+        // KNIGHT SPRITESHEET (replacing player atlas)
         // =====================================================================
-        this.load.atlas('player', '/spritesheets/player/player.png', '/spritesheets/player/player-walk-anims.json');
+        this.load.spritesheet('player', '/spritesheets/player/newplayersprite/knight_1.png?v=3', { frameWidth: 32, frameHeight: 32 });
+        console.log('Loading knight_1.png spritesheet as "player"');
 
         // =====================================================================
         // STATIC IMAGES AND UI ELEMENTS
@@ -210,54 +213,79 @@ export class Loader extends Phaser.Scene {
      * created here to ensure they're available when needed.
      */
     create(): void {
+        console.log('=== LOADER CREATE METHOD STARTING ===');
         // =====================================================================
-        // PLAYER ANIMATIONS
+        // KNIGHT ANIMATIONS (using knight_1 spritesheet)
         // ====================================================================="
+        // Knight_1 layout: frames 0-3 are idle, frames 4-13 are walking (2 frames each direction)
+        // Idle: 0=down, 1=right, 2=left, 3=up
+        // Walking: 4-5=down, 6-7=left, 8-9=right, 10-11=up
+        
         this.anims.create({
             key: 'player-walk-up',
-            frames: this.anims.generateFrameNames('player', {
-                prefix: 'walking-up-',
-                start: 1,
-                end: 2
-            }),
-            frameRate: 10,
-            repeat: 0
+            frames: this.anims.generateFrameNumbers('player', { start: 10, end: 11 }),
+            frameRate: 5,
+            repeat: -1
         })
 
         this.anims.create({
             key: 'player-walk-down',
-            frames: this.anims.generateFrameNames('player', {
-                prefix: 'walking-down-',
-                start: 1,
-                end: 2
-            }),
-            frameRate: 10,
-            repeat: 0
+            frames: this.anims.generateFrameNumbers('player', { start: 4, end: 5 }),
+            frameRate: 5,
+            repeat: -1
         })
 
 
         this.anims.create({
             key: 'player-walk-left',
-            frames: this.anims.generateFrameNames('player', {
-                prefix: 'walking-left-',
-                start: 1,
-                end: 2
-            }),
-            frameRate: 10,
-            repeat: 0
+            frames: this.anims.generateFrameNumbers('player', { start: 6, end: 7 }),
+            frameRate: 5,
+            repeat: -1
         })
 
 
         this.anims.create({
             key: 'player-walk-right',
-            frames: this.anims.generateFrameNames('player', {
-                prefix: 'walking-right-',
-                start: 1,
-                end: 2
-            }),
-            frameRate: 10,
-            repeat: 0
+            frames: this.anims.generateFrameNumbers('player', { start: 8, end: 9 }),
+            frameRate: 5,
+            repeat: -1
         })
+
+        // Idle animations for each direction
+        // Frame layout: 0=down, 1=right, 2=left, 3=up (0-indexed!)
+        console.log('Creating idle animations...');
+        this.anims.create({
+            key: 'player-idle-down',
+            frames: this.anims.generateFrameNumbers('player', { start: 0, end: 0 }),
+            frameRate: 5,
+            repeat: -1
+        })
+        console.log('Created player-idle-down animation');
+
+        this.anims.create({
+            key: 'player-idle-right',
+            frames: this.anims.generateFrameNumbers('player', { start: 1, end: 1 }),
+            frameRate: 5,
+            repeat: -1
+        })
+        console.log('Created player-idle-right animation');
+
+        this.anims.create({
+            key: 'player-idle-left',
+            frames: this.anims.generateFrameNumbers('player', { start: 2, end: 2 }),
+            frameRate: 5,
+            repeat: -1
+        })
+        console.log('Created player-idle-left animation');
+
+        this.anims.create({
+            key: 'player-idle-up',
+            frames: this.anims.generateFrameNumbers('player', { start: 3, end: 3 }),
+            frameRate: 5,
+            repeat: -1
+        })
+        console.log('Created player-idle-up animation');
+        console.log('All idle animations created successfully');
 
 
         this.anims.create({
@@ -507,6 +535,8 @@ export class Loader extends Phaser.Scene {
         // Create gold-coin texture for inventory
         this.createGoldCoinTexture();
 
+        console.log('=== LOADER CREATE METHOD COMPLETED ===');
+        
         // Start the main menu scene with loaded save data
         this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv });
     }

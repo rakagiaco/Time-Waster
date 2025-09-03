@@ -336,6 +336,19 @@ export class Menu extends Phaser.Scene {
         // Castle walls (scaled for HD, moved down to touch ground)
         castle.fillRect(width - 456, height - 144, 240, 144);
         
+        // Castle gate/drawbridge (open arch at bottom of castle)
+        castle.fillStyle(0x1a1a1a, 1); // Dark gate opening
+        castle.fillRect(width - 380, height - 80, 80, 80); // Gate opening
+        
+        // Gate arch (rounded top)
+        castle.fillStyle(0x2F2F2F, 1); // Same as castle walls
+        castle.fillRect(width - 380, height - 80, 80, 20); // Top of gate arch
+        
+        // Gate chains/ropes (decorative)
+        castle.fillStyle(0x8B4513, 1); // Brown rope color
+        castle.fillRect(width - 375, height - 60, 3, 40); // Left chain
+        castle.fillRect(width - 362, height - 60, 3, 40); // Right chain
+        
         // Tower red tops (shifted more left and moved down)
         castle.fillStyle(0x8B0000, 1); // Dark red
         
@@ -408,7 +421,7 @@ export class Menu extends Phaser.Scene {
             {x: width - 440, y: height - 120, width: 2, height: 3}  // Wall window
         ];
         
-        flickerWindows.forEach((window, index) => {
+        flickerWindows.forEach((window) => {
             // Add slight variation to light intensity
             const flickerIntensity = 0.7 + Math.random() * 0.3;
             castle.fillStyle(0xFFD700, flickerIntensity);

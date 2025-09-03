@@ -22,15 +22,37 @@ export let keyLantern: Phaser.Input.Keyboard.Key;
 // Player States
 class PlayerIdleState extends State {
     enter(_scene: Phaser.Scene, player: Player): void {
+        console.log('=== ENTERING IDLE STATE ===');
         player.setVelocity(0, 0);
 
-        // Check if animation exists before playing
-        if (player.anims.exists('player-walk-down')) {
-            player.anims.play('player-walk-down', true);
-            player.anims.stop();
-        } else {
-            console.warn('Animation "player-walk-down" not found');
+        // Stop any currently playing animation to prevent infinite loops
+        player.anims.stop();
+
+        // Set idle frame directly based on last direction
+        // Knight_1 idle frames: 0=down, 1=right, 2=left, 3=up (0-indexed!)
+        console.log(`PlayerIdleState: lastDirection = ${player.lastDirection}`);
+        
+        let idleFrame = 0; // default to down
+        switch (player.lastDirection) {
+            case 'down':
+                idleFrame = 0;
+                break;
+            case 'right':
+                idleFrame = 1;
+                break;
+            case 'left':
+                idleFrame = 2;
+                break;
+            case 'up':
+                idleFrame = 3;
+                break;
+            default:
+                idleFrame = 0; // default to down
+                break;
         }
+        
+        console.log(`PlayerIdleState: setting frame ${idleFrame} for direction ${player.lastDirection}`);
+        player.setFrame(idleFrame);
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
@@ -63,6 +85,7 @@ class PlayerIdleState extends State {
 
 class PlayerWalkingState extends State {
     enter(_scene: Phaser.Scene, _player: Player): void {
+        console.log('=== ENTERING WALKING STATE ===');
         // State entered when movement keys are pressed
     }
 
@@ -81,7 +104,12 @@ class PlayerWalkingState extends State {
         }
 
         // Check if no movement keys are pressed
-        if ((!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown)) {
+        const noKeysPressed = (!keyUp || !keyUp.isDown) && (!keyDown || !keyDown.isDown) && (!keyLeft || !keyLeft.isDown) && (!keyRight || !keyRight.isDown);
+        console.log('WalkingState: Key states - Up:', keyUp?.isDown, 'Down:', keyDown?.isDown, 'Left:', keyLeft?.isDown, 'Right:', keyRight?.isDown);
+        console.log('WalkingState: No keys pressed:', noKeysPressed);
+        
+        if (noKeysPressed) {
+            console.log('WalkingState: Transitioning to idle');
             player.animsFSM.transition('idle');
         }
 
@@ -208,6 +236,7 @@ export class Player extends Entity {
     public isKnockedBack: boolean = false;
     public knockbackTimer: number = 0;
     public lanternSprite: Phaser.GameObjects.Graphics | null = null;
+    public lastDirection: string = 'down'; // Track last movement direction for idle animation
 
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
@@ -219,7 +248,9 @@ export class Player extends Entity {
             console.log('Inventory:', inventory);
             console.log('Quest data:', questData);
 
-            console.log('Player sprite created successfully');
+            // Set initial frame to down idle (frame 0, 0-indexed!)
+            this.setFrame(0);
+            console.log('Player sprite created successfully with initial frame 0 (down idle)');
 
             // Initialize inventory
             console.log('Initializing inventory...');
