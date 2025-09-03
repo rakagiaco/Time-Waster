@@ -1,14 +1,14 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
-import { StateMachine, State } from '../../lib/StateMachine';
-import { listen } from '../../lib/HelperFunc';
+import { StateMachine, State } from '../lib/StateMachine';
+import { listen } from '../lib/HelperFunc';
 
 
 // Ally States
 class AllyIdleState extends State {
     enter(_scene: Phaser.Scene, ally: Ally): void {
         ally.setVelocity(0, 0);
-        
+
         // Check if animation exists before playing
         if (ally.anims.exists('npc-1')) {
             ally.anims.play('npc-1', true);
@@ -23,7 +23,7 @@ class AllyIdleState extends State {
         if (ally.isStatic) {
             return; // Static NPCs don't interact
         }
-        
+
         // For regular villagers, check if player is nearby using simple distance calculation
         if (ally.player) {
             const distance = Phaser.Math.Distance.Between(ally.x, ally.y, ally.player.x, ally.player.y);
@@ -45,7 +45,7 @@ class AllyInteractingState extends State {
         if (ally.isStatic) {
             return; // Static NPCs don't interact
         }
-        
+
         // Check if player is still nearby using simple distance calculation
         if (ally.player) {
             const distance = Phaser.Math.Distance.Between(ally.x, ally.y, ally.player.x, ally.player.y);
@@ -53,7 +53,7 @@ class AllyInteractingState extends State {
                 ally.animsFSM.transition('idle');
             }
         }
-        
+
         // Check for player interaction
         if (ally.isPlayerInteracting()) {
             ally.handlePlayerInteraction();
@@ -71,28 +71,28 @@ export class Ally extends Entity {
 
     constructor(scene: Phaser.Scene, x: number, y: number) {
         super(scene, x, y, 'npc-1');
-        
+
         // Set ally-specific properties
         this.HIT_POINTS = 100;
         this.MAX_HIT_POINTS = 100;
         this.VELOCITY = 0; // NPCs don't move
-        
+
         // Setup state machine
         this.setupStateMachine();
-        
+
         // Setup physics
         this.setupPhysics();
-        
+
         // Find player reference
         this.findPlayer();
-        
+
         // Load quest data
         this.loadQuestData();
-        
+
         // Create name tag
         this.createNameTag();
     }
-    
+
     public setStatic(isStatic: boolean = true): void {
         this.isStatic = isStatic;
         if (isStatic) {
@@ -112,7 +112,7 @@ export class Ally extends Entity {
             'idle': new AllyIdleState(),
             'interacting': new AllyInteractingState()
         };
-        
+
         this.animsFSM = new StateMachine('idle', states, [this.scene, this]);
     }
 
@@ -120,7 +120,7 @@ export class Ally extends Entity {
         this.setCollideWorldBounds(false);
         this.setSize(16, 16);
         this.setOffset(8, 8);
-        
+
         // Make interactive
         this.setInteractive();
         this.on('pointerdown', () => {
@@ -141,10 +141,10 @@ export class Ally extends Entity {
     public update(): void {
         // Update state machine
         this.animsFSM.step();
-        
+
         // Update health bar position
         this.updateHealthBar();
-        
+
         // Update name tag position
         this.updateNameTag();
     }
@@ -180,7 +180,7 @@ export class Ally extends Entity {
 
     public handlePlayerInteraction(): void {
         if (!this.player || !this.questData) return;
-        
+
         // Check if player has required items
         const currentQuest = this.player.getQuestStatus().currentQuest;
         if (currentQuest && this.player.getInventory().has(currentQuest.type, currentQuest.amount)) {
@@ -190,7 +190,7 @@ export class Ally extends Entity {
             // Show quest dialog
             this.showQuestDialog();
         }
-        
+
         this.isInteracting = false;
     }
 
@@ -203,22 +203,22 @@ export class Ally extends Entity {
     private completeQuest(): void {
         const currentQuest = this.player.getQuestStatus().currentQuest;
         if (!currentQuest) return;
-        
+
         // Remove items from inventory
         this.player.getInventory().remove(currentQuest.type, currentQuest.amount);
-        
+
         // Update quest status
         this.player.setQuestStatus({
             finished: false,
             currentQuest: this.getNextQuest()
         });
-        
+
         // Play completion sound
         this.scene.sound.play('complete-quest', { volume: 0.5 });
-        
+
         // Show completion message
         console.log('Quest completed!');
-        
+
         // Save game
         this.player.saveGame();
     }

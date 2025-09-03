@@ -2,8 +2,8 @@ import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { Inventory } from './Inventory';
 import { Item } from './Item';
-import { StateMachine, State } from '../../lib/StateMachine';
-import { updatePlayerMovement } from '../../lib/HelperFunc';
+import { StateMachine, State } from '../lib/StateMachine';
+import { updatePlayerMovement } from '../lib/HelperFunc';
 import GameConfig from '../config/GameConfig';
 
 

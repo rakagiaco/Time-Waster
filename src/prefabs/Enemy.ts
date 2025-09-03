@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
-import { StateMachine, State } from '../../lib/StateMachine';
-import { listen, createLootInterfaceWindow } from '../../lib/HelperFunc';
+import { StateMachine, State } from '../lib/StateMachine';
+import { listen, createLootInterfaceWindow } from '../lib/HelperFunc';
 import GameConfig from '../config/GameConfig';
 import { Item } from './Item';
 
@@ -11,7 +11,7 @@ class EnemyPatrolState extends State {
         enemy.setVelocity(0, 0);
         enemy.patrolTimer = 0;
         enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1; // Random initial direction
-        
+
         // Check if animation exists before playing
         if (enemy.anims.exists('enemy-1-walk')) {
             enemy.anims.play('enemy-1-walk', true);
@@ -31,7 +31,7 @@ class EnemyPatrolState extends State {
         } catch (error) {
             console.warn('Error in listen function for enemy patrolling:', error);
         }
-        
+
         // Enhanced patrol movement with more dynamic behavior
         enemy.patrol();
     }
@@ -41,19 +41,19 @@ class EnemyAlertState extends State {
     enter(_scene: Phaser.Scene, enemy: Enemy): void {
         enemy.setVelocity(0, 0);
         enemy.alertTimer = 0;
-        
+
         // Play alert animation or sound
         if (enemy.anims.exists('enemy-1-idle')) {
             enemy.anims.play('enemy-1-idle', true);
         }
-        
+
         // Show alert indicator (could be a visual effect)
         enemy.showAlertIndicator();
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
         enemy.alertTimer += scene.game.loop.delta;
-        
+
         // Check if player is still in detection range
         try {
             if (!listen(scene as any, enemy)) {
@@ -64,7 +64,7 @@ class EnemyAlertState extends State {
         } catch (error) {
             console.warn('Error in listen function for enemy alert:', error);
         }
-        
+
         // After alert period, transition to pursuing
         if (enemy.alertTimer > 500) { // 0.5 second alert period
             console.log(`Enemy ${enemy.entity_type} transitioning from alert to pursuing`);
@@ -77,7 +77,7 @@ class EnemyPursuingState extends State {
     enter(_scene: Phaser.Scene, enemy: Enemy): void {
         enemy.pursuitTimer = 0;
         enemy.lastPlayerPosition = { x: 0, y: 0 };
-        
+
         // Check if animation exists before playing
         if (enemy.anims.exists('enemy-1-walk')) {
             enemy.anims.play('enemy-1-walk', true);
@@ -88,7 +88,7 @@ class EnemyPursuingState extends State {
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
         enemy.pursuitTimer += scene.game.loop.delta;
-        
+
         // Check if player is out of range (with safety check)
         try {
             if (!listen(scene as any, enemy)) {
@@ -98,16 +98,16 @@ class EnemyPursuingState extends State {
         } catch (error) {
             console.warn('Error in listen function for enemy pursuing:', error);
         }
-        
+
         // Check if close enough to attack
         if (enemy.isPlayerInAttackRange()) {
             enemy.animsFSM.transition('attacking');
             return;
         }
-        
+
         // Enhanced pursuit with pathfinding-like behavior
         enemy.pursuePlayer();
-        
+
         // If pursuing for too long without reaching player, try different approach
         if (enemy.pursuitTimer > 5000) { // 5 seconds
             enemy.animsFSM.transition('flanking');
@@ -121,7 +121,7 @@ class EnemySearchingState extends State {
         enemy.searchTimer = 0;
         enemy.searchDirection = Math.random() > 0.5 ? 1 : -1;
         enemy.lastKnownPlayerPosition = enemy.lastPlayerPosition;
-        
+
         // Play search animation
         if (enemy.anims.exists('enemy-1-idle')) {
             enemy.anims.play('enemy-1-idle', true);
@@ -130,7 +130,7 @@ class EnemySearchingState extends State {
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
         enemy.searchTimer += scene.game.loop.delta;
-        
+
         // Check if player is detected again
         try {
             if (listen(scene as any, enemy)) {
@@ -140,13 +140,13 @@ class EnemySearchingState extends State {
         } catch (error) {
             console.warn('Error in listen function for enemy searching:', error);
         }
-        
+
         // Search behavior - move towards last known position
         if (enemy.lastKnownPlayerPosition) {
             const dx = enemy.lastKnownPlayerPosition.x - enemy.x;
             const dy = enemy.lastKnownPlayerPosition.y - enemy.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
-            
+
             if (distance > 10) {
                 const vx = (dx / distance) * (enemy.getVelocity() * 0.5); // Slower search speed
                 const vy = (dy / distance) * (enemy.getVelocity() * 0.5);
@@ -159,7 +159,7 @@ class EnemySearchingState extends State {
             // No last known position, just patrol
             enemy.animsFSM.transition('patrolling');
         }
-        
+
         // Give up searching after a while
         if (enemy.searchTimer > 3000) { // 3 seconds
             enemy.animsFSM.transition('patrolling');
@@ -171,7 +171,7 @@ class EnemyFlankingState extends State {
     enter(_scene: Phaser.Scene, enemy: Enemy): void {
         enemy.flankTimer = 0;
         enemy.flankDirection = Math.random() > 0.5 ? 1 : -1;
-        
+
         // Play different animation for flanking
         if (enemy.anims.exists('enemy-1-walk')) {
             enemy.anims.play('enemy-1-walk', true);
@@ -180,7 +180,7 @@ class EnemyFlankingState extends State {
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
         enemy.flankTimer += scene.game.loop.delta;
-        
+
         // Check if player is out of range
         try {
             if (!listen(scene as any, enemy)) {
@@ -190,16 +190,16 @@ class EnemyFlankingState extends State {
         } catch (error) {
             console.warn('Error in listen function for enemy flanking:', error);
         }
-        
+
         // Check if close enough to attack
         if (enemy.isPlayerInAttackRange()) {
             enemy.animsFSM.transition('attacking');
             return;
         }
-        
+
         // Flanking behavior - try to approach from the side
         enemy.flankPlayer();
-        
+
         // Return to normal pursuit after flanking attempt
         if (enemy.flankTimer > 2000) { // 2 seconds
             enemy.animsFSM.transition('pursuing');
@@ -215,13 +215,13 @@ class EnemyAttackingState extends State {
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
         enemy.attackTimer += scene.game.loop.delta;
-        
+
         // Check if player is still in attack range
         if (!enemy.isPlayerInAttackRange()) {
             enemy.animsFSM.transition('pursuing');
             return;
         }
-        
+
         // Check if player is out of detection range
         try {
             if (!listen(scene as any, enemy)) {
@@ -231,7 +231,7 @@ class EnemyAttackingState extends State {
         } catch (error) {
             console.warn('Error in listen function for enemy attacking:', error);
         }
-        
+
         // Attack cooldown and combo system
         if (!enemy.isAttackOnCooldown()) {
             // Chance for combo attack
@@ -252,9 +252,9 @@ class EnemyDeadState extends State {
         } else {
             console.warn('Animation "enemy-1-death" not found');
         }
-        
+
         enemy.setVelocity(0, 0);
-        
+
         // Set death timer
         scene.time.delayedCall(GameConfig.TIMING.ENEMY_DEATH_DELAY, () => {
             enemy.animsFSM.transition('fading');
@@ -288,7 +288,7 @@ class EnemyRevivingState extends State {
     enter(scene: Phaser.Scene, enemy: Enemy): void {
         // Reset enemy properties
         enemy.reset();
-        
+
         // Set revive timer
         scene.time.delayedCall(GameConfig.TIMING.ENEMY_REVIVE_DELAY, () => {
             enemy.animsFSM.transition('patrolling');
@@ -316,7 +316,7 @@ export class Enemy extends Entity {
     public heavyAttack_dmg: number = 0;
     public FSM: any; // StateMachine
     public INTERVAL_ID: any;
-    
+
     // Enhanced AI properties
     public alertTimer: number = 0;
     public pursuitTimer: number = 0;
@@ -329,13 +329,13 @@ export class Enemy extends Entity {
     public flankDirection: number = 1;
     public detectionDistance: number = GameConfig.DETECTION.DEFAULT_DISTANCE;
     public alertIndicator: Phaser.GameObjects.Graphics | null = null;
-    
+
     // Night-time stat modifiers
     private baseVelocity: number = 0;
     private baseAttackPower: number = 0;
     private isNightTime: boolean = false;
     private nightStatsApplied: boolean = false;
-    
+
     // Pathfinding properties
     private currentPath: { x: number; y: number }[] = [];
     private currentWaypointIndex: number = 0;
@@ -343,32 +343,32 @@ export class Enemy extends Entity {
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
         super(scene, x, y, texture);
-        
+
         // Set enemy-specific properties
         this.HIT_POINTS = 50;
         this.MAX_HIT_POINTS = 50;
         this.VELOCITY = GameConfig.MOVEMENT.ENEMY_BASE_VELOCITY;
-        
+
         // Store base stats for night-time modifications
         this.baseVelocity = GameConfig.MOVEMENT.ENEMY_BASE_VELOCITY;
         this.baseAttackPower = this.attackPower;
-        
+
         // Set detection distance based on enemy type
         this.setDetectionDistance();
-        
+
         // Setup state machine
         this.setupStateMachine();
-        
+
         // Setup physics
         this.setupPhysics();
-        
+
         // Find player reference
         this.findPlayer();
-        
+
         // Create name tag
         this.createNameTag();
     }
-    
+
     private setDetectionDistance(): void {
         // Set different detection distances for different enemy types
         if (this.entity_type === 'Nepian Observer') {
@@ -392,7 +392,7 @@ export class Enemy extends Entity {
             'fading': new EnemyFadingState(),
             'reviving': new EnemyRevivingState()
         };
-        
+
         this.animsFSM = new StateMachine('patrolling', states, [this.scene, this]);
     }
 
@@ -404,11 +404,11 @@ export class Enemy extends Entity {
 
     private findPlayer(): void {
         // Find player in the scene - try multiple approaches
-        this.player = this.scene.children.getByName('player') || 
-                     this.scene.children.getByName('Player') ||
-                     (this.scene as any).player ||
-                     (this.scene as any).p1;
-        
+        this.player = this.scene.children.getByName('player') ||
+            this.scene.children.getByName('Player') ||
+            (this.scene as any).player ||
+            (this.scene as any).p1;
+
         // If still not found, search through all children
         if (!this.player) {
             this.scene.children.list.forEach(child => {
@@ -417,35 +417,35 @@ export class Enemy extends Entity {
                 }
             });
         }
-        
+
         console.log('Enemy found player:', !!this.player, this.player?.constructor.name);
     }
 
     public update(): void {
         // Update state machine
         this.animsFSM.step();
-        
+
         // Update health bar position
         this.updateHealthBar();
-        
+
         // Update name tag position
         this.updateNameTag();
-        
+
         // Update patrol timer
         this.patrolTimer += this.scene.game.loop.delta;
-        
+
         // Update alert indicator position if it exists
         if (this.alertIndicator) {
             this.alertIndicator.setPosition(this.x, this.y - 30);
         }
-        
+
         // Check for nearby enemies for group behavior
         this.checkForNearbyEnemies();
-        
+
         // Update night-time stats
         this.updateNightTimeStats();
     }
-    
+
     private checkForNearbyEnemies(): void {
         // Find other enemies in the scene
         const nearbyEnemies: Enemy[] = [];
@@ -457,7 +457,7 @@ export class Enemy extends Entity {
                 }
             }
         });
-        
+
         // If this enemy is in pursuit and there are nearby enemies, they might join the hunt
         if (this.animsFSM.state === 'pursuing' && nearbyEnemies.length > 0) {
             nearbyEnemies.forEach(enemy => {
@@ -478,11 +478,11 @@ export class Enemy extends Entity {
 
         const dayNightCycle = scene.dayNightCycle;
         const currentlyNight = dayNightCycle.isCurrentlyNight();
-        
+
         // Only update if night status has changed
         if (currentlyNight !== this.isNightTime) {
             this.isNightTime = currentlyNight;
-            
+
             if (this.isNightTime) {
                 // Apply night-time stat bonuses
                 this.applyNightStats();
@@ -495,33 +495,33 @@ export class Enemy extends Entity {
 
     private applyNightStats(): void {
         if (this.nightStatsApplied) return;
-        
+
         // Apply speed bonus
         this.VELOCITY = this.baseVelocity * GameConfig.COMBAT.NIGHT_SPEED_MULTIPLIER;
-        
+
         // Apply damage bonus
         this.attackPower = this.baseAttackPower * GameConfig.COMBAT.NIGHT_DAMAGE_MULTIPLIER;
-        
+
         this.nightStatsApplied = true;
-        
+
         // Visual indicator for night-time enhancement
         this.setTint(0x6666ff); // Slight blue tint to indicate night enhancement
-        
+
         console.log(`${this.entity_type} enhanced for night time - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
     }
 
     private removeNightStats(): void {
         if (!this.nightStatsApplied) return;
-        
+
         // Restore base stats
         this.VELOCITY = this.baseVelocity;
         this.attackPower = this.baseAttackPower;
-        
+
         this.nightStatsApplied = false;
-        
+
         // Remove visual indicator
         this.clearTint();
-        
+
         console.log(`${this.entity_type} restored to day time stats - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
     }
 
@@ -548,7 +548,7 @@ export class Enemy extends Entity {
         if (!waypoint) return false;
 
         const distance = Phaser.Math.Distance.Between(this.x, this.y, waypoint.x, waypoint.y);
-        
+
         // If we're close enough to the waypoint, move to the next one
         if (distance < 15) {
             this.currentWaypointIndex++;
@@ -558,7 +558,7 @@ export class Enemy extends Entity {
         // Move towards the waypoint
         const angle = Phaser.Math.Angle.Between(this.x, this.y, waypoint.x, waypoint.y);
         const velocity = this.VELOCITY;
-        
+
         this.setVelocity(
             Math.cos(angle) * velocity,
             Math.sin(angle) * velocity
@@ -587,7 +587,7 @@ export class Enemy extends Entity {
         this.HIT_POINTS = this.MAX_HIT_POINTS;
         this.isAttacking = false;
         this.alpha = 1;
-        
+
         // Reset AI timers and states
         this.alertTimer = 0;
         this.pursuitTimer = 0;
@@ -598,26 +598,26 @@ export class Enemy extends Entity {
         this.lastKnownPlayerPosition = null;
         this.patrolTimer = 0;
         this.attackCooldown = false;
-        
+
         // Clean up alert indicator
         if (this.alertIndicator) {
             this.alertIndicator.destroy();
             this.alertIndicator = null;
         }
-        
+
         this.animsFSM.transition('patrolling');
     }
 
     public loot(): void {
         if (this.animsFSM.state === 'dead' && !this.looted) {
             let x: any = undefined;
-            
+
             if (this.entity_type === 'Electro Lord Kealthis') { // the boss
                 x = new Item(this.scene, this.x, this.y, 'frozen-heart').setAlpha(0);
             } else if (this.entity_type === 'Nepian Observer' && this.is_lootable) {
                 x = new Item(this.scene, this.x, this.y, 'nepian-blood').setScale(0.5).setAlpha(0);
             }
-            
+
             // Cast scene to GameScene to access custom properties
             const gameScene = this.scene as any;
             if (x !== undefined && !gameScene.p1?.windowOpen && !this.looted) {
@@ -633,10 +633,10 @@ export class Enemy extends Entity {
 
     public takeDamage(amount: number): void {
         super.takeDamage(amount);
-        
+
         // Play damage sound
         this.scene.sound.play('enemy-hit', { volume: 0.5 });
-        
+
         // Check if enemy is dead
         if (this.isDead()) {
             this.animsFSM.transition('dead');
@@ -652,14 +652,14 @@ export class Enemy extends Entity {
         if (this.patrolTimer > 2000 + Math.random() * 1000) { // Random patrol duration
             this.patrolDirection *= -1;
             this.patrolTimer = 0;
-            
+
             // Occasionally pause during patrol
             if (Math.random() < 0.3) {
                 this.setVelocity(0, 0);
                 return;
             }
         }
-        
+
         // Add slight vertical movement for more natural patrol
         const verticalMovement = Math.sin(this.patrolTimer * 0.001) * 10;
         this.setVelocity(this.VELOCITY * 0.7 * this.patrolDirection, verticalMovement);
@@ -667,10 +667,10 @@ export class Enemy extends Entity {
 
     public pursuePlayer(): void {
         if (!this.player) return;
-        
+
         // Update last known player position
         this.lastPlayerPosition = { x: this.player.x, y: this.player.y };
-        
+
         // Use pathfinding if enabled and pathfinding system is available
         const scene = this.scene as any;
         if (this.pathfindingEnabled && scene.pathfinding) {
@@ -679,7 +679,7 @@ export class Enemy extends Entity {
                 const path = scene.pathfinding.findPath(this.x, this.y, this.player.x, this.player.y);
                 this.setPath(path);
             }
-            
+
             // Move along the path
             if (this.moveToWaypoint()) {
                 return; // Successfully moving along path
@@ -688,22 +688,22 @@ export class Enemy extends Entity {
                 this.clearPath();
             }
         }
-        
+
         // Fallback to direct pursuit
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance > 0) {
             // Enhanced pursuit with slight prediction
             const predictionFactor = 0.1; // Predict player movement
             const predictedX = this.player.x + (this.player.body?.velocity.x || 0) * predictionFactor;
             const predictedY = this.player.y + (this.player.body?.velocity.y || 0) * predictionFactor;
-            
+
             const predDx = predictedX - this.x;
             const predDy = predictedY - this.y;
             const predDistance = Math.sqrt(predDx * predDx + predDy * predDy);
-            
+
             if (predDistance > 0) {
                 const vx = (predDx / predDistance) * this.VELOCITY;
                 const vy = (predDy / predDistance) * this.VELOCITY;
@@ -715,45 +715,45 @@ export class Enemy extends Entity {
     private shouldRecalculatePath(): boolean {
         // Recalculate path if player has moved significantly
         if (this.currentPath.length === 0) return true;
-        
+
         const lastWaypoint = this.currentPath[this.currentPath.length - 1];
         const distanceToTarget = Phaser.Math.Distance.Between(
-            this.player.x, this.player.y, 
+            this.player.x, this.player.y,
             lastWaypoint.x, lastWaypoint.y
         );
-        
+
         return distanceToTarget > 50; // Recalculate if player moved more than 50 pixels
     }
-    
+
     public flankPlayer(): void {
         if (!this.player) return;
-        
+
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         if (distance > 0) {
             // Flanking: approach from the side
             const angle = Math.atan2(dy, dx);
             const flankAngle = angle + (this.flankDirection * Math.PI / 2); // 90 degrees to the side
-            
+
             const vx = Math.cos(flankAngle) * this.VELOCITY * 0.8;
             const vy = Math.sin(flankAngle) * this.VELOCITY * 0.8;
             this.setVelocity(vx, vy);
         }
     }
-    
+
     public showAlertIndicator(): void {
         if (this.alertIndicator) {
             this.alertIndicator.destroy();
         }
-        
+
         // Create a small visual indicator above the enemy
         this.alertIndicator = this.scene.add.graphics();
         this.alertIndicator.fillStyle(0xff0000, 0.8);
         this.alertIndicator.fillCircle(0, -30, 3);
         this.alertIndicator.setDepth(1000);
-        
+
         // Make it follow the enemy
         this.scene.tweens.add({
             targets: this.alertIndicator,
@@ -769,17 +769,17 @@ export class Enemy extends Entity {
             }
         });
     }
-    
+
     public performComboAttack(): void {
         if (!this.player || this.isAttackOnCooldown()) return;
-        
+
         // Combo attack - multiple hits
         this.attackCooldown = true;
-        
+
         // First hit with effects
         this.createAttackEffects();
         this.scene.sound.play('attack-light', { volume: 0.5 });
-        
+
         this.scene.time.delayedCall(200, () => {
             if (this.player && this.isPlayerInAttackRange()) {
                 // Use enhanced attack power if night stats are applied
@@ -788,14 +788,14 @@ export class Enemy extends Entity {
                 this.createPlayerDamageEffect();
             }
         });
-        
+
         // Second hit after short delay
         this.scene.time.delayedCall(500, () => {
             if (this.player && this.isPlayerInAttackRange()) {
                 // Create second attack effect
                 this.createAttackEffects();
                 this.scene.sound.play('attack-light', { volume: 0.3 });
-                
+
                 this.scene.time.delayedCall(200, () => {
                     if (this.player && this.isPlayerInAttackRange()) {
                         // Use enhanced attack power if night stats are applied (reduced for second hit)
@@ -806,7 +806,7 @@ export class Enemy extends Entity {
                 });
             }
         });
-        
+
         // Reset cooldown
         this.scene.time.delayedCall(GameConfig.TIMING.ENEMY_ATTACK_DELAY * 1.5, () => {
             this.attackCooldown = false;
@@ -815,27 +815,27 @@ export class Enemy extends Entity {
 
     public isPlayerInAttackRange(): boolean {
         if (!this.player) return false;
-        
+
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         return distance < GameConfig.DETECTION.ENEMY_ATTACK_RANGE;
     }
-    
+
     public isPlayerInDetectionRange(): boolean {
         if (!this.player) return false;
-        
+
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
-        
+
         return distance < this.detectionDistance;
     }
-    
+
     public getDistanceToPlayer(): number {
         if (!this.player) return Infinity;
-        
+
         const dx = this.player.x - this.x;
         const dy = this.player.y - this.y;
         return Math.sqrt(dx * dx + dy * dy);
@@ -843,16 +843,16 @@ export class Enemy extends Entity {
 
     public attackPlayer(): void {
         if (!this.player || this.isAttackOnCooldown()) return;
-        
+
         // Set attack cooldown
         this.attackCooldown = true;
-        
+
         // Create attack visual effects
         this.createAttackEffects();
-        
+
         // Play attack sound
         this.scene.sound.play('attack-light', { volume: 0.5 });
-        
+
         // Deal damage to player with slight delay for effect timing
         this.scene.time.delayedCall(200, () => {
             if (this.player && this.isPlayerInAttackRange()) {
@@ -862,30 +862,30 @@ export class Enemy extends Entity {
                 this.createPlayerDamageEffect();
             }
         });
-        
+
         // Reset cooldown after delay
         this.scene.time.delayedCall(GameConfig.TIMING.ENEMY_ATTACK_DELAY, () => {
             this.attackCooldown = false;
         });
     }
-    
+
     private createAttackEffects(): void {
-        
+
         // Create attack slash effect
         const slashEffect = this.scene.add.graphics();
         slashEffect.lineStyle(3, 0xff0000, 0.8);
-        
+
         // Draw attack line from enemy to player
         const startX = this.x;
         const startY = this.y;
         const endX = this.player.x;
         const endY = this.player.y;
-        
+
         slashEffect.beginPath();
         slashEffect.moveTo(startX, startY);
         slashEffect.lineTo(endX, endY);
         slashEffect.strokePath();
-        
+
         // Animate the slash effect
         this.scene.tweens.add({
             targets: slashEffect,
@@ -895,12 +895,12 @@ export class Enemy extends Entity {
                 slashEffect.destroy();
             }
         });
-        
+
         // Create impact effect at player position
         const impactEffect = this.scene.add.graphics();
         impactEffect.fillStyle(0xff0000, 0.6);
         impactEffect.fillCircle(endX, endY, 15);
-        
+
         this.scene.tweens.add({
             targets: impactEffect,
             scaleX: 2,
@@ -911,26 +911,26 @@ export class Enemy extends Entity {
                 impactEffect.destroy();
             }
         });
-        
+
         // Create screen shake effect
         this.createScreenShake();
     }
-    
+
     private createPlayerDamageEffect(): void {
         if (!this.player) return;
-        
+
         // Calculate actual damage dealt
         const actualDamage = this.nightStatsApplied ? this.attackPower : GameConfig.COMBAT.ENEMY_ATTACK_DAMAGE;
-        
+
         // Create damage text effect
         const damageText = this.scene.add.bitmapText(
-            this.player.x, 
-            this.player.y - 30, 
-            'pixel-red', 
-            `-${actualDamage}`, 
+            this.player.x,
+            this.player.y - 30,
+            'pixel-red',
+            `-${actualDamage}`,
             24
         ).setOrigin(0.5);
-        
+
         // Animate damage text
         this.scene.tweens.add({
             targets: damageText,
@@ -941,36 +941,36 @@ export class Enemy extends Entity {
                 damageText.destroy();
             }
         });
-        
+
         // Create player hit flash effect
         const originalTint = this.player.tint;
         this.player.setTint(0xff0000); // Red flash
-        
+
         this.scene.time.delayedCall(100, () => {
             this.player.setTint(originalTint);
         });
-        
+
         // Create blood splatter effect
         this.createBloodSplatter();
     }
-    
+
     private createBloodSplatter(): void {
         if (!this.player) return;
-        
+
         // Create multiple blood particles
         for (let i = 0; i < 5; i++) {
             const bloodParticle = this.scene.add.graphics();
             bloodParticle.fillStyle(0x8B0000, 0.8);
             bloodParticle.fillCircle(0, 0, 2);
-            
+
             // Random position around player
             const angle = Math.random() * Math.PI * 2;
             const distance = Math.random() * 20 + 10;
             const x = this.player.x + Math.cos(angle) * distance;
             const y = this.player.y + Math.sin(angle) * distance;
-            
+
             bloodParticle.setPosition(x, y);
-            
+
             // Animate blood particle
             this.scene.tweens.add({
                 targets: bloodParticle,
@@ -983,11 +983,11 @@ export class Enemy extends Entity {
             });
         }
     }
-    
+
     private createScreenShake(): void {
         // Get the main camera
         const camera = this.scene.cameras.main;
-        
+
         // Create screen shake effect
         this.scene.tweens.add({
             targets: camera,
@@ -1001,7 +1001,7 @@ export class Enemy extends Entity {
             }
         });
     }
-    
+
 
 
     public isAttackOnCooldown(): boolean {

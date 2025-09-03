@@ -171,14 +171,6 @@ export class World extends Phaser.Scene {
             this.pauseMenu = new PauseMenu(this);
             console.log('Pause menu setup complete');
 
-            //             console.log('=== WORLD SCENE SETUP COMPLETE ===');
-            //         } catch (error) {
-            //             console.error('=== CRITICAL ERROR CREATING GAME OBJECTS ===');
-            //             console.error('Error:', error);
-            //             console.error('Stack:', (error as any)?.stack);
-            //             console.error('==========================================');
-            //         }
-            //     });
         } catch (error) {
             console.error('=== CRITICAL ERROR IN WORLD CREATE ===');
             console.error('Error:', error);
