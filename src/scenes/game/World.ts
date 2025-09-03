@@ -40,7 +40,6 @@ export class World extends Phaser.Scene {
     private trees: Tree[] = [];
     private tilemap!: Phaser.Tilemaps.Tilemap;
     private tileset!: Phaser.Tilemaps.Tileset | null;
-    // private groundLayer!: Phaser.Tilemaps.TilemapLayer | null;
     private objlayer!: Phaser.Tilemaps.ObjectLayer | null
 
     private miniMapCamera!: Phaser.Cameras.Scene2D.Camera;
@@ -62,85 +61,40 @@ export class World extends Phaser.Scene {
 
     constructor() {
         super('worldScene');
-        console.log('=== WORLD SCENE CONSTRUCTOR ===');
-        console.log('Scene key:', 'worldScene');
-        console.log('==============================');
     }
 
     create(data: WorldData): void {
         try {
             console.log('=== WORLD SCENE CREATE ===');
-            console.log('Scene key:', this.scene.key);
             console.log('Data received:', data);
-
-            // Start with fade in effect
-            this.startFadeIn();
 
             // Create tilemap
             this.createTilemap();
 
+            // player
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
-            // Setup Day/Night Cycle (check for save data first to set correct initial time)
-            console.log('Setting up day/night cycle...');
-            let initialTime = undefined; // Default to noon (0.5)
+            // Day/Night Cycle
+            this.dayNightCycle = new DayNightCycle(this, undefined, 1);
 
-            if (data.loadSaveData) {
-                const saveData = SaveSystem.loadGame();
-                if (saveData && saveData.gameState) {
-                    initialTime = saveData.gameState.currentTime;
-                    console.log(`Found saved time in save data: ${initialTime}`);
-                }
-            }
-
-            this.dayNightCycle = new DayNightCycle(this, undefined, initialTime);
-
-            // Setup Music Manager
-            console.log('Setting up music manager...');
+            // Music Manager
             this.musicManager = new MusicManager(this);
-            this.musicManager.reset(); // Ensure fresh start
+            this.musicManager.reset();
             this.musicManager.startPlaylist();
 
-            // Load save data if requested (this will restore all other game state)
-            if (data.loadSaveData) {
-                console.log('Loading save data...');
-                this.loadSaveData();
-            }
-
-            // Create enemies
-            console.log('Creating enemies...');
+            // Create game entities
             this.createEnemies();
-            console.log('Enemies created successfully, count:', this.enemies.length);
-
-            // Create allies
-            console.log('Creating allies...');
             this.createAllies();
-            console.log('Allies created successfully, count:', this.allies.length);
-
-            // Create items
-            console.log('Creating items...');
             this.createItems();
-            console.log('Items created successfully, count:', this.items.length);
-
-            // Create trees
-            console.log('Creating trees...');
             this.createTrees();
-            console.log('Trees created successfully, count:', this.trees.length);
 
-
-
-            // Setup camera
-            console.log('Setting up camera...');
+            // camera ** do not change zoom level of main camera ** o7
             this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.cameras.main.startFollow(this.player);
-            // absolutely under no circumstances should we change the zoom level of the main camera
-            console.log('Camera setup complete');
 
-            // Setup minimap camera
-            console.log('Setting up minimap...');
+            // minimap
             this.setupMinimap();
-            console.log('Minimap setup complete');
 
             // Configure day/night overlays for both cameras
             this.dayNightCycle.setupMinimapCamera();
@@ -283,6 +237,18 @@ export class World extends Phaser.Scene {
             this.questUI = new QuestUI(this);
             console.log('Quest UI setup complete');
 
+            let initialTime
+            if (data.loadSaveData) {
+                this.loadSaveData();
+                const saveData = SaveSystem.loadGame();
+                if (saveData && saveData.gameState) {
+                    initialTime = saveData.gameState.currentTime;
+                    console.log(`Found saved time in save data: ${initialTime}`);
+                }
+            }
+
+            // dont fade into the scene until everything is done loading
+            this.startFadeIn();
         } catch (error) {
             console.error('=== CRITICAL ERROR IN WORLD CREATE ===');
             console.error('Error:', error);
@@ -340,20 +306,6 @@ export class World extends Phaser.Scene {
             }
         });
 
-        // // Update items (with safety checks)
-        // this.items.forEach(item => {
-        //     try {
-        //         item.update();
-        //     } catch (error) {
-        //         console.error('Error updating item:', error);
-        //     }
-        // });
-
-        // Update Day/Night Cycle
-        if (this.dayNightCycle) {
-            this.dayNightCycle.update(delta);
-        }
-
         // Update Lantern
         if (this.lantern) {
             this.lantern.update(delta);
@@ -373,16 +325,11 @@ export class World extends Phaser.Scene {
         if (this.treeLightEmission) {
             this.treeLightEmission.update(delta);
         }
-
-        // Update minimap to follow player
-
         // Update debug manager
         if (this.debugManager) {
             this.updateDebugInfo();
             this.debugManager.update();
         }
-
-        // Inventory UI doesn't need update calls - it's event-driven
     }
 
     private createTilemap(): void {
@@ -392,8 +339,7 @@ export class World extends Phaser.Scene {
         if (this.tileset) {
             this.tilemap.createLayer('Background', this.tileset, 0, 0);
             this.objlayer = this.tilemap.getObjectLayer('Player/NPC')
-            // Note: No object layer exists in this tilemap, so we skip collision setup
-            // The tilemap only has a "Background" layer and object layers for spawn points
+            // o7
         }
     }
 
@@ -422,7 +368,6 @@ export class World extends Phaser.Scene {
     private createAllies(): void {
         try {
             console.log('Creating quest giver Narvark near spawn...');
-            // Create quest giver near spawn point (500, 400) with slight offset
             const npc1Spawn = this.tilemap.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
             if (!npc1Spawn) {
                 console.error('NPC spawn point not found in tilemap!');
@@ -449,11 +394,9 @@ export class World extends Phaser.Scene {
 
     private createItems(): void {
         try {
-            console.log('Creating biome-specific items...');
             // Create collectible items from tilemap object layer
             // Uses named objects like 'bush_1' to spawn herb items
             // Positions are set visually in Tiled Map Editor
-
             if (this.objlayer) {
                 this.objlayer.objects.forEach(element => {
                     if (element.name === 'bush_1') {
@@ -693,14 +636,6 @@ export class World extends Phaser.Scene {
         this.trees.forEach(tree => {
             this.debugManager.drawCollisionBox(tree, 0x8B4513); // Brown for trees
         });
-
-        // Draw enemy patrol paths (if available)
-        // Note: Enemy class doesn't currently have patrolPoints property
-        // this.enemies.forEach(enemy => {
-        //     if (enemy.patrolPoints && enemy.patrolPoints.length > 1) {
-        //         this.debugManager.drawPath(enemy.patrolPoints, 0xff8800); // Orange for patrol paths
-        //     }
-        // });
 
         // Add info text for entities
         this.enemies.forEach((enemy, index) => {
