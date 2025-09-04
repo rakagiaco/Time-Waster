@@ -85,7 +85,10 @@ export class World extends Phaser.Scene {
             // Music Manager
             this.musicManager = new MusicManager(this);
             this.musicManager.reset();
-            this.musicManager.startPlaylist();
+            
+            // Start music manager with correct initial time state
+            const initialIsNight = this.dayNightCycle.isCurrentlyNight();
+            this.musicManager.startPlaylist(initialIsNight);
 
             // Create game entities
             this.createEnemies();
@@ -539,7 +542,7 @@ export class World extends Phaser.Scene {
         // Create circular minimap camera
         this.miniMapCamera = this.cameras.add(minimapX, minimapY, minimapSize, minimapSize);
         this.miniMapCamera.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
-        this.miniMapCamera.setZoom(0.25);
+        this.miniMapCamera.setZoom(0.14);
         this.miniMapCamera.startFollow(this.player, true, 0.1, 0.1);
         
         // Ensure minimap camera is isolated from any shake effects

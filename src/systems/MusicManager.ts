@@ -44,14 +44,15 @@ export class MusicManager {
     /**
      * Start the shuffle playlist
      */
-    public startPlaylist(): void {
+    public startPlaylist(initialIsNight: boolean = false): void {
         if (this.isPlaying) {
             console.log('MusicManager: Playlist already playing');
             return;
         }
         
         this.isPlaying = true;
-        console.log('MusicManager: Starting shuffle playlist');
+        this.isNightTime = initialIsNight;
+        console.log(`MusicManager: Starting shuffle playlist (initial time: ${initialIsNight ? 'night' : 'day'})`);
         
         // Add some randomization to the initial song selection
         // This ensures the first song isn't always the same
@@ -76,25 +77,35 @@ export class MusicManager {
     }
 
     /**
-     * Play the first song with true randomization across all songs
+     * Play the first song respecting the current time of day
      */
     private playFirstRandomSong(): void {
         if (!this.isPlaying) {
             return;
         }
 
-        // Combine all songs for true randomization
-        const allSongs = [...this.daySongs, ...this.nightSongs];
+        // Choose playlist based on current time and priority
+        let playlist: string[];
+        let playedSongs: string[];
         
-        // Select completely random song from all available songs
-        const selectedSong = allSongs[Math.floor(Math.random() * allSongs.length)];
-        
-        // Add to appropriate played list based on which playlist it belongs to
-        if (this.daySongs.includes(selectedSong)) {
-            this.dayPlayedSongs.push(selectedSong);
+        if (this.isNightTime) {
+            // Night time - always prefer night songs, but allow occasional day songs
+            if (Math.random() < this.NIGHT_PRIORITY_CHANCE) {
+                playlist = this.nightSongs;
+                playedSongs = this.nightPlayedSongs;
+            } else {
+                playlist = this.daySongs;
+                playedSongs = this.dayPlayedSongs;
+            }
         } else {
-            this.nightPlayedSongs.push(selectedSong);
+            // Day time - always play day songs
+            playlist = this.daySongs;
+            playedSongs = this.dayPlayedSongs;
         }
+        
+        // Select random song from appropriate playlist
+        const selectedSong = playlist[Math.floor(Math.random() * playlist.length)];
+        playedSongs.push(selectedSong);
         
         this.playSong(selectedSong);
     }
@@ -157,12 +168,17 @@ export class MusicManager {
         let playlist: string[];
         let playedSongs: string[];
         
-        if (this.isNightTime && Math.random() < this.NIGHT_PRIORITY_CHANCE) {
-            // Night time with night priority
-            playlist = this.nightSongs;
-            playedSongs = this.nightPlayedSongs;
+        if (this.isNightTime) {
+            // Night time - always prefer night songs, but allow occasional day songs
+            if (Math.random() < this.NIGHT_PRIORITY_CHANCE) {
+                playlist = this.nightSongs;
+                playedSongs = this.nightPlayedSongs;
+            } else {
+                playlist = this.daySongs;
+                playedSongs = this.dayPlayedSongs;
+            }
         } else {
-            // Day time or night time without priority
+            // Day time - always play day songs
             playlist = this.daySongs;
             playedSongs = this.dayPlayedSongs;
         }
@@ -186,9 +202,15 @@ export class MusicManager {
      * Play a specific song with fade in
      */
     private playSong(songKey: string): void {
-        // Stop current music if playing
+        // Stop current music if playing - immediate stop to prevent overlap
         if (this.currentMusic) {
-            this.fadeOutAndStop();
+            this.currentMusic.stop();
+            this.currentMusic.destroy();
+            this.currentMusic = null;
+            if (this.fadeTween) {
+                this.fadeTween.stop();
+                this.fadeTween = null;
+            }
         }
 
         // Create new music with volume 0
