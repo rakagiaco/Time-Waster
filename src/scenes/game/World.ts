@@ -1170,66 +1170,6 @@ export class World extends Phaser.Scene {
         return keyStates;
     }
 
-    // private drawDebugVisuals(): void {
-    //     if (!this.debugManager || !this.debugManager.isDebugEnabled()) return;
-
-    //     // Draw collision boxes for all entities
-    //     if (this.player) {
-    //         this.debugManager.drawCollisionBox(this.player, 0x00ff00); // Green for player
-    //     }
-
-    //     this.enemies.forEach(enemy => {
-    //         this.debugManager.drawCollisionBox(enemy, 0xff0000); // Red for enemies
-    //     });
-
-    //     this.npcs.forEach(npc => {
-    //         this.debugManager.drawCollisionBox(npc, 0x0000ff); // Blue for NPCs
-    //     });
-
-    //     this.trees.forEach(tree => {
-    //         this.debugManager.drawCollisionBox(tree, 0x8B4513); // Brown for trees
-    //     });
-
-    //     // Add info text for entities
-    //     this.enemies.forEach((enemy, index) => {
-    //         const name = enemy.entity_type && enemy.entity_type !== 'Entity' ? enemy.entity_type : `Enemy ${index + 1}`;
-    //         this.debugManager.addInfoText(
-    //             enemy.x,
-    //             enemy.y - 50,
-    //             `${name}\nHP: ${enemy.getHealth()}/${enemy.getMaxHealth()}`,
-    //             0xff0000
-    //         );
-    //     });
-
-    //     this.npcs.forEach((npc, index) => {
-    //         const name = npc.entity_type && npc.entity_type !== 'Entity' ? npc.entity_type : `NPC ${index + 1}`;
-    //         this.debugManager.addInfoText(
-    //             npc.x,
-    //             npc.y - 50,
-    //             `${name}\nHP: ${npc.getHealth()}/${npc.getMaxHealth()}`,
-    //             0x0000ff
-    //         );
-    //     });
-
-    //     this.trees.forEach((tree, index) => {
-    //         const fruitStatus = tree.hasFruitAvailable() ? 'Has Fruit' : 'No Fruit';
-    //         this.debugManager.addInfoText(
-    //             tree.x,
-    //             tree.y - 50,
-    //             `Tree ${index + 1}\n${tree.getTreeType()}\n${fruitStatus}`,
-    //             0x8B4513
-    //         );
-    //     });
-
-    //     // Draw pathfinding paths for enemies
-    //     this.enemies.forEach((enemy) => {
-    //         const enemyPath = (enemy as any).currentPath;
-    //         if (enemyPath && enemyPath.length > 0) {
-    //             this.debugManager.drawPath(enemyPath, 0x00ff00);
-    //         }
-    //     });
-    // }
-
     private setupCollisionDetection(): void {
         // Player collision with trees
         this.physics.add.collider(this.player, this.trees);

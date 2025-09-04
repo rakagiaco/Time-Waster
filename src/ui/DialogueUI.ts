@@ -180,7 +180,7 @@ export class DialogueUI {
         
         this.dialogueText = this.scene.add.bitmapText(
             0, -this.UI_HEIGHT / 2 + 100,
-            'pixel-black', '', 20
+            '8-bit', '', 25
         );
         this.dialogueText.setTint(0x000000); // Black text for better visibility
         this.dialogueText.setOrigin(0.5, 0);
