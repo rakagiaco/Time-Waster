@@ -427,8 +427,8 @@ export class World extends Phaser.Scene {
                     if (element.name === 'bush_1') {
                         console.log('Found bush_1 at:', element.x, element.y);
                         const bush = new Item(this, element.x as number, element.y as number, 'bush-1', { sound: 'collect-herb', volume: 0.5 })
-                        bush.setScale(0.5).setSize(35, 30) // Smaller scale for herbs
-                        bush.anims.play('bush-1-anim', true) // Play the sparkle animation
+                        bush.setScale(0.1).setSize(35, 30) // Much smaller scale for herbs
+                        bush.anims.play('quest-icon', true) // Play the sparkle animation
                         this.items.push(bush)
                     }
                 })
@@ -482,10 +482,10 @@ export class World extends Phaser.Scene {
                     sound: 'collect-herb', 
                     volume: 0.5 
                 });
-                herb.setScale(0.5).setSize(35, 30); // Smaller scale for herbs
+                herb.setScale(0.1).setSize(35, 30); // Much smaller scale for herbs
                 herb.setVisible(true); // Ensure herb is visible
                 herb.setDepth(10); // Set high depth to ensure visibility
-                herb.anims.play('bush-1-anim', true); // Play the sparkle animation
+                herb.anims.play('quest-icon', true); // Play the sparkle animation
                 this.items.push(herb);
                 console.log(`✓ Test herb ${index + 1} created successfully at (${pos.x}, ${pos.y})`);
                 console.log(`  - Herb visible: ${herb.visible}`);
@@ -630,7 +630,7 @@ export class World extends Phaser.Scene {
             timeOfDay: this.dayNightCycle ? this.dayNightCycle.getTimeOfDay() : 'Unknown',
             currentTime: this.dayNightCycle ? this.dayNightCycle.getCurrentTime() : 0,
             darknessIntensity: this.dayNightCycle ? this.dayNightCycle.getDarknessIntensity() : 0,
-            lanternActive: this.lantern ? this.lantern.isLit() : false,
+            flashlightActive: this.lantern ? this.lantern.isLit() : false,
             treeLightsActive: this.treeLightEmission ? this.treeLightEmission.isLightActive() : false,
             // Enemy Night Stats
             enemiesEnhanced: this.enemies.filter(enemy => (enemy as any).nightStatsApplied).length,

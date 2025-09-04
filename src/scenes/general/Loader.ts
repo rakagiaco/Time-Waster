@@ -81,12 +81,6 @@ export class Loader extends Phaser.Scene {
         this.load.image('enemy-1', '/img/enemy-1.png')
         this.load.image('Frozen Heart', '/img/frozen-heart.png')
         this.load.image('fruit', '/img/fruit.png')
-        // Load individual fruit textures - each will be created from the base fruit.png with unique modifications
-        this.load.image('apple', '/img/fruit.png')
-        this.load.image('pinecone', '/img/fruit.png')
-        this.load.image('ancient-fruit', '/img/fruit.png')
-        this.load.image('cherry', '/img/fruit.png')
-        this.load.image('tree-of-life-fruit', '/img/fruit.png')
         this.load.image('fullscreen', '/img/fullscreen.png')
         this.load.image('mysterious herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
@@ -184,6 +178,11 @@ export class Loader extends Phaser.Scene {
      * created here to ensure they're available when needed.
      */
     create(): void {
+        // =====================================================================
+        // CREATE INDIVIDUAL FRUIT TEXTURES
+        // =====================================================================
+        this.createFruitTextures();
+        
         // =====================================================================
         // KNIGHT ANIMATIONS (using knight_1 spritesheet)
         // ====================================================================="
@@ -357,6 +356,13 @@ export class Loader extends Phaser.Scene {
         })
 
         this.anims.create({
+            key: 'quest-icon-bounce',
+            frames: this.anims.generateFrameNumbers('quest-icon', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: -1
+        })
+
+        this.anims.create({
             key: 'quest-complete-icon-anim',
             frames: this.anims.generateFrameNumbers('quest-complete-icon', { start: 0, end: 6 }),
             frameRate: 5,
@@ -498,5 +504,76 @@ export class Loader extends Phaser.Scene {
         
         // Start the main menu scene with loaded save data
         this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv });
+    }
+
+    /**
+     * Create individual fruit textures with unique visual characteristics
+     * Each fruit type gets its own distinct texture based on the base fruit.png
+     */
+    private createFruitTextures(): void {
+        // Create apple texture (red fruit)
+        this.createFruitTexture('apple', 0xff6b6b, '🍎');
+        
+        // Create pinecone texture (brown, pinecone shape)
+        this.createFruitTexture('pinecone', 0x8b4513, '🌲');
+        
+        // Create ancient fruit texture (purple, mystical)
+        this.createFruitTexture('ancient-fruit', 0x9b59b6, '✨');
+        
+        // Create cherry texture (pink, small)
+        this.createFruitTexture('cherry', 0xff69b4, '🍒');
+        
+        // Create tree of life fruit texture (golden, special)
+        this.createFruitTexture('tree-of-life-fruit', 0xffd700, '🌟');
+    }
+
+    /**
+     * Create a unique fruit texture with specific color and shape
+     */
+    private createFruitTexture(textureKey: string, color: number, shape: string): void {
+        const graphics = this.add.graphics();
+        
+        // Base fruit shape (16x16)
+        graphics.fillStyle(color);
+        
+        if (textureKey === 'pinecone') {
+            // Pinecone shape - elongated oval with scales
+            graphics.fillEllipse(8, 8, 12, 16);
+            // Add scale details
+            graphics.fillStyle(0x654321);
+            for (let i = 0; i < 4; i++) {
+                graphics.fillRect(2 + i * 2, 2 + i * 2, 2, 2);
+                graphics.fillRect(12 - i * 2, 2 + i * 2, 2, 2);
+            }
+        } else if (textureKey === 'cherry') {
+            // Cherry shape - small round with stem
+            graphics.fillCircle(8, 8, 6);
+            graphics.fillStyle(0x228B22);
+            graphics.fillRect(7, 2, 2, 4);
+        } else if (textureKey === 'ancient-fruit') {
+            // Ancient fruit - mystical star shape
+            graphics.fillCircle(8, 8, 7);
+            graphics.fillStyle(0xffffff);
+            graphics.fillRect(7, 1, 2, 2);
+            graphics.fillRect(7, 13, 2, 2);
+            graphics.fillRect(1, 7, 2, 2);
+            graphics.fillRect(13, 7, 2, 2);
+        } else if (textureKey === 'tree-of-life-fruit') {
+            // Tree of life fruit - golden with sparkles
+            graphics.fillCircle(8, 8, 8);
+            graphics.fillStyle(0xffffff);
+            graphics.fillRect(6, 6, 4, 4);
+        } else {
+            // Default apple shape - round with slight indent
+            graphics.fillCircle(8, 8, 7);
+            graphics.fillStyle(0x228B22);
+            graphics.fillRect(7, 1, 2, 3);
+        }
+        
+        // Generate the texture
+        graphics.generateTexture(textureKey, 16, 16);
+        graphics.destroy();
+        
+        console.log(`Created ${textureKey} texture with color ${color.toString(16)}`);
     }
 }

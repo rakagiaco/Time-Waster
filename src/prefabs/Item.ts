@@ -24,9 +24,6 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
             console.log(`Item texture '${itemType}' exists and loaded`);
         }
         
-        // Apply visual modifications to fruit types to make them distinct
-        this.applyFruitVisualModifications(itemType);
-        
         // Setup physics
         this.setCollideWorldBounds(false);
         this.setSize(16, 16);
@@ -90,36 +87,4 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         graphics.destroy();
     }
 
-    private applyFruitVisualModifications(itemType: string): void {
-        // Apply different visual modifications to make fruit types distinct
-        switch (itemType) {
-            case 'apple':
-                // Red tint for apples
-                this.setTint(0xff6b6b);
-                break;
-            case 'pinecone':
-                // Brown tint for pinecones
-                this.setTint(0x8b4513);
-                break;
-            case 'ancient-fruit':
-                // Purple tint for ancient fruit
-                this.setTint(0x9b59b6);
-                break;
-            case 'cherry':
-                // Pink tint for cherries
-                this.setTint(0xff69b4);
-                break;
-            case 'tree-of-life-fruit':
-                // Golden tint for Tree of Life fruit
-                this.setTint(0xffd700);
-                break;
-            case 'fruit':
-                // No tint for generic fruit
-                this.clearTint();
-                break;
-            default:
-                // No modification for other items
-                break;
-        }
-    }
 }
