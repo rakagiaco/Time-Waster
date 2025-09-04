@@ -8,6 +8,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
     private hasFruit: boolean = true;
     private fruitRespawnTimer: number = 0;
     private fruitRespawnDelay: number = 300000; // 5 minutes
+    public entity_text!: Phaser.GameObjects.BitmapText; // Name tag for special trees
 
     constructor(scene: Phaser.Scene, x: number, y: number, treeType: string) {
         super(scene, x, y, treeType);
@@ -133,6 +134,9 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
                 console.log(`🍎 Fruit respawned on ${this.treeType} tree after 5 minutes`);
             }
         }
+
+        // Update name tag position
+        this.updateNameTag();
     }
 
     public getTreeType(): string {
@@ -228,5 +232,38 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
     public getCollisionRadius(): number {
         // Return a slightly larger radius for pathfinding to ensure enemies don't get too close
         return Math.max(this.width, this.height) / 2 + 20;
+    }
+
+    /**
+     * Creates a name tag above the tree
+     */
+    public createNameTag(name: string): void {
+        if (!this.entity_text) {
+            // Position nametag at the top center of the tree's visual bounds
+            // Adjust X position to account for tree's visual center
+            const nametagX = this.x - (this.displayWidth * 0.2); // Move left more to center
+            const nametagY = this.y - (this.displayHeight / 2) - 20;
+            
+            this.entity_text = this.scene.add.bitmapText(nametagX, nametagY, '8-bit', name, 20);
+            this.entity_text.setOrigin(0.5, 1);
+            this.entity_text.setScrollFactor(1);
+            this.entity_text.setDepth(this.depth + 1);
+            this.entity_text.setTint(0x00ff00); // Green color for Tree of Life
+            
+            console.log(`Tree of Life nametag created at: x=${this.entity_text.x}, y=${this.entity_text.y}`);
+        }
+    }
+
+    /**
+     * Updates the name tag position to follow the tree
+     */
+    public updateNameTag(): void {
+        if (this.entity_text) {
+            // Position nametag at the top center of the tree's visual bounds
+            // Adjust X position to account for tree's visual center
+            const nametagX = this.x - (this.displayWidth * 0.2); // Move left more to center
+            const nametagY = this.y - (this.displayHeight / 2) - 20;
+            this.entity_text.setPosition(nametagX, nametagY);
+        }
     }
 }

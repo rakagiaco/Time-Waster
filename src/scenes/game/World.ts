@@ -1,14 +1,13 @@
 import Phaser from 'phaser';
 import { Player } from '../../prefabs/Player';
 import { Enemy } from '../../prefabs/Enemy';
-import { Ally } from '../../prefabs/Ally';
+import { UnifiedNPC } from '../../prefabs/UnifiedNPC';
 import { Item } from '../../prefabs/Item';
 import { Tree } from '../../prefabs/Tree';
 import { DebugManager } from '../../debug/DebugManager';
 import { InventoryUI } from '../../ui/InventoryUI';
 import { DayNightCycle } from '../../systems/DayNightCycle';
 import { Lantern } from '../../systems/Lantern';
-import { NPC } from '../../prefabs/NPC';
 import { QuestSystem } from '../../systems/QuestSystem';
 import { DialogueUI } from '../../ui/DialogueUI';
 import { TreeLightEmission } from '../../systems/TreeLightEmission';
@@ -35,7 +34,7 @@ interface WorldData {
 export class World extends Phaser.Scene {
     private player!: Player;
     private enemies: Enemy[] = [];
-    private allies: Ally[] = [];
+    private npcs: UnifiedNPC[] = [];
     private items: Item[] = [];
     private trees: Tree[] = [];
     private tilemap!: Phaser.Tilemaps.Tilemap;
@@ -50,7 +49,7 @@ export class World extends Phaser.Scene {
     // Day/Night and Lighting Systems
     private dayNightCycle!: DayNightCycle;
     private lantern!: Lantern;
-    private npc!: NPC;
+    private questGiverNPC!: UnifiedNPC;
     private questSystem!: QuestSystem;
     private dialogueUI!: DialogueUI;
     private treeLightEmission!: TreeLightEmission;
@@ -84,7 +83,7 @@ export class World extends Phaser.Scene {
             console.log('=== STARTING ENTITY CREATION ===');
             this.createEnemies();
             console.log('Enemies created');
-            this.createAllies();
+            this.createNPCs();
             console.log('Allies created');
             console.log('About to call createItems()...');
             this.createItems();
@@ -191,15 +190,15 @@ export class World extends Phaser.Scene {
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
 
             // Create Narvark the quest giver NPC
-            const narvarkAlly = this.allies.find(ally => ally.entity_type === 'Narvark');
-            if (narvarkAlly) {
-                this.npc = new NPC(this, narvarkAlly);
-                this.npc.setPlayer(this.player);
-                this.questSystem.setNPC(this.npc);
-                this.data.set('npc', this.npc);
+            const narvarkNPC = this.npcs.find(npc => npc.entity_type === 'Narvark');
+            if (narvarkNPC) {
+                this.questGiverNPC = narvarkNPC;
+                this.questGiverNPC.setPlayer(this.player);
+                this.questSystem.setNPC(this.questGiverNPC);
+                this.data.set('npc', this.questGiverNPC);
                 console.log('Narvark NPC system initialized');
             } else {
-                console.error('Narvark ally not found!');
+                console.error('Narvark NPC not found!');
             }
 
             // Setup Dialogue UI
@@ -309,12 +308,12 @@ export class World extends Phaser.Scene {
             }
         });
 
-        // Update allies (with safety checks)
-        this.allies.forEach(ally => {
+        // Update NPCs (with safety checks)
+        this.npcs.forEach(npc => {
             try {
-                ally.update();
+                npc.update();
             } catch (error) {
-                console.error('Error updating ally:', error);
+                console.error('Error updating NPC:', error);
             }
         });
 
@@ -329,13 +328,11 @@ export class World extends Phaser.Scene {
 
         // Update Lantern
         if (this.lantern) {
-            this.lantern.update(delta);
+            this.lantern.update();
         }
 
-        // Update NPC
-        if (this.npc) {
-            this.npc.update();
-        }
+        // Update NPCs
+        this.npcs.forEach(npc => npc.update());
 
         // Update Dialogue UI
         if (this.dialogueUI) {
@@ -386,7 +383,7 @@ export class World extends Phaser.Scene {
 
     }
 
-    private createAllies(): void {
+    private createNPCs(): void {
         try {
             console.log('Creating quest giver Narvark near spawn...');
             const npc1Spawn = this.tilemap.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
@@ -394,7 +391,7 @@ export class World extends Phaser.Scene {
                 console.error('NPC spawn point not found in tilemap!');
                 return;
             }
-            const questGiver = new Ally(this, npc1Spawn.x as number, npc1Spawn.y as number,).setScale(1.5);
+            const questGiver = new UnifiedNPC(this, npc1Spawn.x as number, npc1Spawn.y as number, true).setScale(1.5);
             questGiver.entity_type = 'Narvark'; // Name the quest giver
 
             // Set Narvark as static (no movement, no interaction detection)
@@ -406,10 +403,10 @@ export class World extends Phaser.Scene {
             }
 
             questGiver.showQuestIcon(); // Show exclamation mark over head
-            this.allies.push(questGiver);
+            this.npcs.push(questGiver);
             console.log('Quest giver Narvark created successfully');
         } catch (error) {
-            console.error('Error creating ally:', error);
+            console.error('Error creating NPC:', error);
         }
     }
 
@@ -536,8 +533,6 @@ export class World extends Phaser.Scene {
     }
 
     private createTreeOfLife(): void {
-        console.log('Creating Tree of Life (Top Left)...');
-
         // Create the Tree of Life in the top left corner of the map
         const treeOfLife = new Tree(this, 350, 400, 'tree-2-second')
         treeOfLife.clearFruit()
@@ -545,38 +540,19 @@ export class World extends Phaser.Scene {
         // Make it extra special - larger scale and unique properties
         treeOfLife.setScale(4); // Much larger than normal trees
         treeOfLife.setDepth(10); // Ensure it's visible above other objects
+        
+        // Set origin to center for proper positioning
+        treeOfLife.setOrigin(0.5, 0.5);
 
-        // Create the title text
-        this.createTreeOfLifeTitle(treeOfLife);
+        // Add nametag to the tree
+        treeOfLife.createNameTag('TREE OF LIFE');
+        
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
 
         console.log('Tree of Life created successfully');
     }
 
-    private createTreeOfLifeTitle(tree: Tree): void {
-        // Create the main title
-        const title = this.add.bitmapText(
-            tree.x,
-            tree.y - 180,
-            '8-bit',
-            'TREE OF LIFE',
-            32
-        ).setOrigin(0.5);
-
-        title.setDepth(tree.depth + 2);
-        title.setTint(0x00ff00); // Green color
-
-        // Add a subtle glow effect to the title
-        this.tweens.add({
-            targets: title,
-            alpha: 0.7,
-            duration: 1500,
-            yoyo: true,
-            repeat: -1
-        });
-
-    }
 
     private setupMinimap(): void {
         const minimapSize = 175;
@@ -614,9 +590,9 @@ export class World extends Phaser.Scene {
 
         // Collect debug information
         const debugInfo = {
-            entities: this.enemies.length + this.allies.length + this.items.length + this.trees.length + (this.player ? 1 : 0),
+            entities: this.enemies.length + this.npcs.length + this.items.length + this.trees.length + (this.player ? 1 : 0),
             enemies: this.enemies.length,
-            allies: this.allies.length,
+            allies: this.npcs.length,
             items: this.items.length,
             playerPosition: this.player ? { x: this.player.x, y: this.player.y } : { x: 0, y: 0 },
             playerHealth: this.player ? { current: this.player.getHealth(), max: this.player.getMaxHealth() } : { current: 0, max: 0 },
@@ -659,9 +635,9 @@ export class World extends Phaser.Scene {
             }
         });
 
-        this.allies.forEach((ally, index) => {
-            if (ally.anims.currentAnim) {
-                animations.push(`Ally${index}: ${ally.anims.currentAnim.key}`);
+        this.npcs.forEach((npc, index) => {
+            if (npc.anims.currentAnim) {
+                animations.push(`NPC${index}: ${npc.anims.currentAnim.key}`);
             }
         });
 
@@ -697,8 +673,8 @@ export class World extends Phaser.Scene {
             this.debugManager.drawCollisionBox(enemy, 0xff0000); // Red for enemies
         });
 
-        this.allies.forEach(ally => {
-            this.debugManager.drawCollisionBox(ally, 0x0000ff); // Blue for allies
+        this.npcs.forEach(npc => {
+            this.debugManager.drawCollisionBox(npc, 0x0000ff); // Blue for NPCs
         });
 
         this.trees.forEach(tree => {
@@ -716,12 +692,12 @@ export class World extends Phaser.Scene {
             );
         });
 
-        this.allies.forEach((ally, index) => {
-            const name = ally.entity_type && ally.entity_type !== 'Entity' ? ally.entity_type : `Ally ${index + 1}`;
+        this.npcs.forEach((npc, index) => {
+            const name = npc.entity_type && npc.entity_type !== 'Entity' ? npc.entity_type : `NPC ${index + 1}`;
             this.debugManager.addInfoText(
-                ally.x,
-                ally.y - 50,
-                `${name}\nHP: ${ally.getHealth()}/${ally.getMaxHealth()}`,
+                npc.x,
+                npc.y - 50,
+                `${name}\nHP: ${npc.getHealth()}/${npc.getMaxHealth()}`,
                 0x0000ff
             );
         });
@@ -759,14 +735,14 @@ export class World extends Phaser.Scene {
             this.physics.add.collider(enemy, this.player);
         });
 
-        // Ally collision with trees
-        this.allies.forEach(ally => {
-            this.physics.add.collider(ally, this.trees);
+        // NPC collision with trees
+        this.npcs.forEach(npc => {
+            this.physics.add.collider(npc, this.trees);
         });
 
-        // Ally collision with player
-        this.allies.forEach(ally => {
-            this.physics.add.collider(ally, this.player);
+        // NPC collision with player
+        this.npcs.forEach(npc => {
+            this.physics.add.collider(npc, this.player);
         });
 
         console.log('Collision detection configured for all entities');
@@ -905,25 +881,25 @@ export class World extends Phaser.Scene {
     private setupInteractionControls(): void {
         // Setup E key for interaction
         this.input.keyboard?.on('keydown-E', () => {
-            if (this.npc && this.npc.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
-                this.npc.interact();
+            if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+                this.questGiverNPC.interact();
             }
         });
 
         // Setup F key as alternative interaction
         this.input.keyboard?.on('keydown-F', () => {
-            if (this.npc && this.npc.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
-                this.npc.interact();
+            if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+                this.questGiverNPC.interact();
             }
         });
 
         // Setup mouse click interaction
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
-            if (this.npc && this.npc.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+            if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
                 // Check if click is near NPC
-                const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, this.npc.ally.x, this.npc.ally.y);
+                const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, this.questGiverNPC.x, this.questGiverNPC.y);
                 if (distance < 50) {
-                    this.npc.interact();
+                    this.questGiverNPC.interact();
                 }
             }
         });

@@ -1,6 +1,6 @@
 import Phaser from 'phaser';
 import { Player } from '../prefabs/Player';
-import { NPC } from '../prefabs/NPC';
+import { UnifiedNPC } from '../prefabs/UnifiedNPC';
 
 export interface QuestProgress {
     questId: number;
@@ -17,7 +17,7 @@ export interface QuestProgress {
 export class QuestSystem {
     private scene: Phaser.Scene;
     private player: Player;
-    private npc: NPC | null = null;
+    private npc: UnifiedNPC | null = null;
     private activeQuests: Map<number, QuestProgress> = new Map();
     private completedQuests: Set<number> = new Set();
     
@@ -49,7 +49,7 @@ export class QuestSystem {
         });
     }
 
-    public setNPC(npc: NPC): void {
+    public setNPC(npc: UnifiedNPC): void {
         this.npc = npc;
     }
 
