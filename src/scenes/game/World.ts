@@ -81,10 +81,17 @@ export class World extends Phaser.Scene {
             this.musicManager.startPlaylist();
 
             // Create game entities
+            console.log('=== STARTING ENTITY CREATION ===');
             this.createEnemies();
+            console.log('Enemies created');
             this.createAllies();
+            console.log('Allies created');
+            console.log('About to call createItems()...');
             this.createItems();
+            console.log('Items creation completed');
             this.createTrees();
+            console.log('Trees created');
+            console.log('=== ENTITY CREATION COMPLETE ===');
 
             // camera ** do not change zoom level of main camera ** o7
             this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
@@ -151,6 +158,11 @@ export class World extends Phaser.Scene {
                 }
             });
 
+            this.game.events.on('debug-clearSaveData', () => {
+                SaveSystem.forceClearSaveData();
+                console.log('🗑️ Debug event (global): Save data cleared');
+            });
+
             // Method 3: Registry change listener
             this.registry.events.on('changedata-debugCommand', (_parent: any, _key: string, data: any) => {
                 if (data && this.dayNightCycle) {
@@ -160,6 +172,9 @@ export class World extends Phaser.Scene {
                     } else if (data.type === 'setToPeakNight') {
                         this.dayNightCycle.setToPeakNight();
                         console.log('🌙 Debug event (registry): Set to peak night');
+                    } else if (data.type === 'clearSaveData') {
+                        SaveSystem.forceClearSaveData();
+                        console.log('🗑️ Debug event (registry): Save data cleared');
                     }
                 }
             });
@@ -223,12 +238,33 @@ export class World extends Phaser.Scene {
 
             let initialTime
             if (data.loadSaveData) {
+                // Clear corrupted save data before loading
+                SaveSystem.clearCorruptedSaveData();
                 this.loadSaveData();
                 const saveData = SaveSystem.loadGame();
                 if (saveData && saveData.gameState) {
                     initialTime = saveData.gameState.currentTime;
                     console.log(`Found saved time in save data: ${initialTime}`);
                 }
+                
+                // Restore QuestSystem state and active quests in QuestUI after save data is loaded
+                this.time.delayedCall(100, () => {
+                    console.log('World: Restoring QuestSystem state...');
+                    
+                    // Restore QuestSystem state
+                    const savedQuestState = localStorage.getItem('quest_system_state');
+                    if (savedQuestState) {
+                        try {
+                            const questState = JSON.parse(savedQuestState);
+                            this.questSystem.restoreQuestState(questState);
+                        } catch (error) {
+                            console.error('World: Failed to parse saved quest state:', error);
+                        }
+                    }
+                    
+                    console.log('World: Restoring active quests in QuestUI...');
+                    this.questUI.restoreActiveQuests();
+                });
             }
 
             // dont fade into the scene until everything is done loading
@@ -377,23 +413,89 @@ export class World extends Phaser.Scene {
     }
 
     private createItems(): void {
+        console.log('createItems() method called!');
         try {
+            console.log('=== CREATING ITEMS ===');
+            
             // Create collectible items from tilemap object layer
             // Uses named objects like 'bush_1' to spawn herb items
             // Positions are set visually in Tiled Map Editor
             if (this.objlayer) {
+                console.log('objlayer exists, objects count:', this.objlayer.objects.length);
                 this.objlayer.objects.forEach(element => {
                     if (element.name === 'bush_1') {
-                        const bush = new Item(this, element.x as number, element.y as number, 'mysterious herb', { sound: 'collect-herb', volume: 0.5 })
-                        bush.setScale(0.75).setSize(35, 30).anims.play('bush-1-anim')
+                        console.log('Found bush_1 at:', element.x, element.y);
+                        const bush = new Item(this, element.x as number, element.y as number, 'bush-1', { sound: 'collect-herb', volume: 0.5 })
+                        bush.setScale(0.75).setSize(35, 30)
+                        bush.anims.play('bush-1-anim', true) // Play the sparkle animation
                         this.items.push(bush)
                     }
                 })
+            } else {
+                console.log('No objlayer found, skipping tilemap herbs');
             }
+
+            // Add test herbs near Narvark for quest testing
+            console.log('Creating test herbs near Narvark...');
+            console.log('Items array before test herbs:', this.items.length);
+            this.createTestHerbs();
+            console.log('Items array after test herbs:', this.items.length);
+            console.log('Total items created:', this.items.length);
 
         } catch (error) {
             console.error('Error creating items:', error);
+            if (error instanceof Error) {
+                console.error('Error stack:', error.stack);
+            }
         }
+    }
+
+    /**
+     * Create 5 test herbs near Narvark for quest testing
+     */
+    private createTestHerbs(): void {
+        console.log('=== CREATING TEST HERBS ===');
+        console.log('createTestHerbs method called!');
+        const narvarkX = 341.818181818182;
+        const narvarkY = 344;
+        console.log('Narvark position:', narvarkX, narvarkY);
+        
+        // Create 5 herbs in a wider area around Narvark (further away to avoid dialogue interference)
+        const herbPositions = [
+            { x: narvarkX + 80, y: narvarkY - 40 },   // Right and up
+            { x: narvarkX + 100, y: narvarkY },       // Right
+            { x: narvarkX + 80, y: narvarkY + 40 },   // Right and down
+            { x: narvarkX - 80, y: narvarkY - 30 },   // Left and up
+            { x: narvarkX - 80, y: narvarkY + 30 }    // Left and down
+        ];
+
+        console.log('Creating herbs at positions:', herbPositions);
+        console.log('Camera position:', this.cameras.main.x, this.cameras.main.y);
+        console.log('Camera bounds:', this.cameras.main.getBounds());
+
+        herbPositions.forEach((pos, index) => {
+            try {
+                console.log(`Creating herb ${index + 1} at (${pos.x}, ${pos.y})`);
+                // Create test herb using animated bush-1 spritesheet
+                const herb = new Item(this, pos.x, pos.y, 'bush-1', { 
+                    sound: 'collect-herb', 
+                    volume: 0.5 
+                });
+                herb.setScale(0.75).setSize(35, 30); // Normal scale
+                herb.setVisible(true); // Ensure herb is visible
+                herb.setDepth(10); // Set high depth to ensure visibility
+                herb.anims.play('bush-1-anim', true); // Play the sparkle animation
+                this.items.push(herb);
+                console.log(`✓ Test herb ${index + 1} created successfully at (${pos.x}, ${pos.y})`);
+                console.log(`  - Herb visible: ${herb.visible}`);
+                console.log(`  - Herb depth: ${herb.depth}`);
+                console.log(`  - Herb scale: ${herb.scaleX}, ${herb.scaleY}`);
+            } catch (error) {
+                console.error(`✗ Failed to create herb ${index + 1}:`, error);
+            }
+        });
+        
+        console.log('=== TEST HERBS CREATION COMPLETE ===');
     }
 
     private createTrees(): void {

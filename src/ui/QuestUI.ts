@@ -351,4 +351,56 @@ export class QuestUI {
     public isQuestVisible(): boolean {
         return this.isVisible;
     }
+
+    /**
+     * Restores active quests from the QuestSystem after game load
+     */
+    public restoreActiveQuests(): void {
+        console.log('QuestUI: Restoring active quests from QuestSystem...');
+        
+        const questSystem = this.scene.data.get('questSystem');
+        if (!questSystem) {
+            console.log('QuestUI: No QuestSystem found, cannot restore quests');
+            return;
+        }
+        
+        const activeQuests = questSystem.getActiveQuests();
+        if (activeQuests.size === 0) {
+            console.log('QuestUI: No active quests to restore');
+            return;
+        }
+        
+        // Get the first active quest (assuming only one quest is active at a time)
+        const [questId, questProgress] = activeQuests.entries().next().value;
+        
+        if (questProgress) {
+            // Get quest data from cache
+            const questData = this.scene.cache.json.get(`quest-${questId}`);
+            if (questData) {
+                console.log(`QuestUI: Restoring quest ${questId}: ${questData.name}`);
+                console.log(`QuestUI: Quest progress: ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
+                
+                // Create quest data for QuestUI
+                const questUIData: QuestData = {
+                    id: questId.toString(),
+                    title: questData.name,
+                    description: questData.requirements,
+                    type: questData.questdata.type,
+                    amount: questData.questdata.amount,
+                    current: questProgress.currentAmount
+                };
+                
+                // Show the quest UI with restored data
+                this.showQuest(questUIData);
+                
+                // If quest is ready for completion, show the green glow
+                if (questProgress.isReadyForCompletion) {
+                    console.log('QuestUI: Quest is ready for completion, showing green glow');
+                    this.onQuestReadyForCompletion({ questId: questId, questName: questData.name });
+                }
+            } else {
+                console.error(`QuestUI: Quest data not found for quest ${questId}`);
+            }
+        }
+    }
 }

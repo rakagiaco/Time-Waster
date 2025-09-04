@@ -9,6 +9,8 @@ export class DialogueUI {
     private scene: Phaser.Scene;
     private isActive: boolean = false;
     private currentDialogue: DialogueData | null = null;
+    private npcReference: any = null; // Reference to the NPC for distance checking
+    private lastLoggedDistance: number = -1; // Track last logged distance to avoid spam
     
     // UI Elements
     private dialogueContainer: Phaser.GameObjects.Container | null = null;
@@ -18,6 +20,8 @@ export class DialogueUI {
     private continueButton: Phaser.GameObjects.Graphics | null = null;
     private continueText: Phaser.GameObjects.BitmapText | null = null;
     private rewardDisplay: Phaser.GameObjects.Container | null = null;
+    private closeButton: Phaser.GameObjects.Graphics | null = null;
+    private closeButtonText: Phaser.GameObjects.BitmapText | null = null;
     
     // Animation properties
     private textDisplaySpeed: number = 30; // Characters per second
@@ -43,8 +47,8 @@ export class DialogueUI {
     }
 
     private setupEventListeners(): void {
-        this.scene.events.on('showDialogue', (dialogue: DialogueData) => {
-            this.showDialogue(dialogue);
+        this.scene.events.on('showDialogue', (dialogue: DialogueData, npc?: any) => {
+            this.showDialogue(dialogue, npc);
         });
         
         this.scene.events.on('hideDialogue', () => {
@@ -65,16 +69,21 @@ export class DialogueUI {
         });
     }
 
-    public showDialogue(dialogue: DialogueData): void {
+    public showDialogue(dialogue: DialogueData, npc?: any): void {
         if (this.isActive) return;
         
         this.isActive = true;
         this.currentDialogue = dialogue;
+        this.npcReference = npc; // Store NPC reference for distance checking
         this.createDialogueUI();
         this.startTextAnimation(dialogue.text);
         
         console.log('DialogueUI: Showing dialogue:', dialogue.id);
         console.log('DialogueUI: Dialogue text:', dialogue.text);
+        console.log('DialogueUI: NPC reference set:', !!this.npcReference);
+        if (this.npcReference) {
+            console.log('DialogueUI: NPC reference has ally:', !!this.npcReference.ally);
+        }
     }
 
     private createDialogueUI(): void {
@@ -94,6 +103,9 @@ export class DialogueUI {
         
         // Create continue button
         this.createContinueButton();
+        
+        // Create close button
+        this.createCloseButton();
     }
 
     private createScrollBackground(): void {
@@ -214,6 +226,59 @@ export class DialogueUI {
         });
     }
 
+    private createCloseButton(): void {
+        if (!this.dialogueContainer) return;
+        
+        const buttonX = this.UI_WIDTH / 2 - 25;
+        const buttonY = -this.UI_HEIGHT / 2 + 25;
+        
+        this.closeButton = this.scene.add.graphics();
+        this.dialogueContainer.add(this.closeButton);
+        
+        // Draw close button background (small circle)
+        this.closeButton.fillStyle(0x8B4513);
+        this.closeButton.fillCircle(buttonX, buttonY, 15);
+        
+        this.closeButton.lineStyle(2, 0x654321);
+        this.closeButton.strokeCircle(buttonX, buttonY, 15);
+        
+        // Add X text
+        this.closeButtonText = this.scene.add.bitmapText(
+            buttonX, buttonY,
+            'pixel-black', 'X', 16
+        );
+        this.closeButtonText.setTint(0x000000);
+        this.closeButtonText.setOrigin(0.5, 0.5);
+        
+        this.dialogueContainer.add(this.closeButtonText);
+        
+        // Make button interactive
+        this.closeButton.setInteractive(
+            new Phaser.Geom.Circle(buttonX, buttonY, 15),
+            Phaser.Geom.Circle.Contains
+        );
+        
+        this.closeButton.on('pointerdown', () => {
+            this.hideDialogue();
+        });
+        
+        this.closeButton.on('pointerover', () => {
+            this.closeButton?.clear();
+            this.closeButton?.fillStyle(0x654321);
+            this.closeButton?.fillCircle(buttonX, buttonY, 15);
+            this.closeButton?.lineStyle(2, 0x8B4513);
+            this.closeButton?.strokeCircle(buttonX, buttonY, 15);
+        });
+        
+        this.closeButton.on('pointerout', () => {
+            this.closeButton?.clear();
+            this.closeButton?.fillStyle(0x8B4513);
+            this.closeButton?.fillCircle(buttonX, buttonY, 15);
+            this.closeButton?.lineStyle(2, 0x654321);
+            this.closeButton?.strokeCircle(buttonX, buttonY, 15);
+        });
+    }
+
     private startTextAnimation(text: string): void {
         // Break text into paragraphs (split by double newlines or periods followed by space and capital)
         this.paragraphs = this.breakIntoParagraphs(text);
@@ -285,7 +350,12 @@ export class DialogueUI {
     }
 
     public update(delta: number): void {
-        if (!this.isActive || !this.isTyping) return;
+        if (!this.isActive) return;
+        
+        // Check distance to NPC and auto-close if too far
+        this.checkDistanceAndClose();
+        
+        if (!this.isTyping) return;
         
         this.typeTimer += delta;
         const charsPerSecond = this.textDisplaySpeed;
@@ -304,6 +374,43 @@ export class DialogueUI {
                 // Show continue button to advance to next paragraph
                 this.showContinueButton();
             }
+        }
+    }
+
+    private checkDistanceAndClose(): void {
+        if (!this.npcReference) return;
+        
+        // Get player from World scene (cast to any to access player property)
+        const worldScene = this.scene as any;
+        const player = worldScene.player;
+        
+        if (!player) {
+            console.log('DialogueUI: No player found in scene');
+            return;
+        }
+        
+        const npc = this.npcReference.ally || this.npcReference;
+        
+        if (!npc) {
+            console.log('DialogueUI: No NPC found in reference');
+            return;
+        }
+        
+        const distance = Phaser.Math.Distance.Between(
+            player.x, player.y,
+            npc.x, npc.y
+        );
+        
+        // Only log distance changes of more than 5 pixels to avoid spam
+        if (Math.abs(distance - this.lastLoggedDistance) > 5) {
+            console.log(`DialogueUI: Distance to NPC: ${distance.toFixed(1)} pixels`);
+            this.lastLoggedDistance = distance;
+        }
+        
+        // Close dialogue if player is more than 80 pixels away (same as interaction range)
+        if (distance > 80) {
+            console.log('DialogueUI: Player moved too far away, closing dialogue');
+            this.hideDialogue();
         }
     }
 
@@ -594,6 +701,10 @@ export class DialogueUI {
         this.dialogueText = null;
         this.continueButton = null;
         this.continueText = null;
+        this.closeButton = null;
+        this.closeButtonText = null;
+        this.npcReference = null;
+        this.lastLoggedDistance = -1;
         
         // Emit event to notify NPC that dialogue has ended
         this.scene.events.emit('dialogueEnded');

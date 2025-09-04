@@ -66,16 +66,34 @@ export class QuestSystem {
             return;
         }
         
+        // Check player's existing inventory for quest items
+        const questItemType = questData.questdata.type;
+        const existingAmount = this.player.p1Inventory.getItemCount(questItemType);
+        const requiredAmount = questData.questdata.amount;
+        
         const questProgress: QuestProgress = {
             questId: questId,
-            currentAmount: 0,
-            requiredAmount: questData.questdata.amount,
+            currentAmount: Math.min(existingAmount, requiredAmount), // Start with existing items
+            requiredAmount: requiredAmount,
             isCompleted: false,
-            isReadyForCompletion: false
+            isReadyForCompletion: existingAmount >= requiredAmount // Check if already ready
         };
         
         this.activeQuests.set(questId, questProgress);
         console.log(`QuestSystem: Started quest ${questId}: ${questData.name}`);
+        console.log(`QuestSystem: Player already has ${existingAmount}/${requiredAmount} ${questItemType}`);
+        
+        // Always emit quest progress event to update QuestUI with current count
+        this.scene.events.emit('questProgress', questProgress.currentAmount);
+        
+        // If quest is already ready for completion, emit the event
+        if (questProgress.isReadyForCompletion) {
+            console.log(`QuestSystem: Quest ${questId} requirements already met - ready for completion`);
+            this.scene.events.emit('questReadyForCompletion', {
+                questId: questId,
+                questName: questData.name
+            });
+        }
     }
 
     public updateQuestProgress(itemType: string, amount: number): void {
@@ -94,10 +112,9 @@ export class QuestSystem {
                 questItemType.includes(currentItemType) ||
                 currentItemType.includes(questItemType)) {
                 
-                progress.currentAmount = Math.min(
-                    progress.currentAmount + amount,
-                    progress.requiredAmount
-                );
+                // Update progress based on current inventory count (not just the amount collected)
+                const currentInventoryCount = this.player.p1Inventory.getItemCount(questData.questdata.type);
+                progress.currentAmount = Math.min(currentInventoryCount, progress.requiredAmount);
                 
                 console.log(`QuestSystem: Quest ${questId} progress: ${progress.currentAmount}/${progress.requiredAmount}`);
                 
@@ -258,5 +275,47 @@ export class QuestSystem {
 
     public getQuestProgress(questId: number): QuestProgress | null {
         return this.activeQuests.get(questId) || null;
+    }
+
+    /**
+     * Saves the QuestSystem state to the player's quest status
+     */
+    public saveQuestState(): any {
+        const questState = {
+            activeQuests: Array.from(this.activeQuests.entries()),
+            completedQuests: Array.from(this.completedQuests)
+        };
+        console.log('QuestSystem: Saving quest state:', questState);
+        return questState;
+    }
+
+    /**
+     * Restores the QuestSystem state from saved data
+     */
+    public restoreQuestState(savedState: any): void {
+        if (!savedState) {
+            console.log('QuestSystem: No saved quest state to restore');
+            return;
+        }
+
+        console.log('QuestSystem: Restoring quest state:', savedState);
+
+        // Restore active quests
+        if (savedState.activeQuests && Array.isArray(savedState.activeQuests)) {
+            this.activeQuests.clear();
+            savedState.activeQuests.forEach(([questId, questProgress]: [number, QuestProgress]) => {
+                this.activeQuests.set(questId, questProgress);
+                console.log(`QuestSystem: Restored active quest ${questId}: ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
+            });
+        }
+
+        // Restore completed quests
+        if (savedState.completedQuests && Array.isArray(savedState.completedQuests)) {
+            this.completedQuests.clear();
+            savedState.completedQuests.forEach((questId: number) => {
+                this.completedQuests.add(questId);
+                console.log(`QuestSystem: Restored completed quest ${questId}`);
+            });
+        }
     }
 }

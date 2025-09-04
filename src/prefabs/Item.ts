@@ -10,9 +10,18 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         this.itemType = itemType;
         this.soundEffect = soundEffect;
         
+        console.log(`Creating Item: ${itemType} at (${x}, ${y})`);
+        
         // Add to scene
         scene.add.existing(this);
         scene.physics.add.existing(this);
+        
+        // Debug: Check if texture exists
+        if (!scene.textures.exists(itemType)) {
+            console.error(`Item texture '${itemType}' does not exist!`);
+        } else {
+            console.log(`Item texture '${itemType}' exists and loaded`);
+        }
         
         // Setup physics
         this.setCollideWorldBounds(false);
@@ -24,6 +33,10 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
     }
 
     public getItemType(): string {
+        // Map texture names to quest item types
+        if (this.itemType === 'bush-1') {
+            return 'mysterious herb'; // bush-1 texture represents mysterious herb for quests
+        }
         return this.itemType;
     }
 

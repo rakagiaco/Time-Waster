@@ -98,11 +98,15 @@ export class SaveSystem {
                         itemType: fruit.getItemType()
                     })) || []
                 })),
-                items: items.map(item => ({
-                    x: item.x,
-                    y: item.y,
-                    itemType: item.getItemType()
-                })),
+                items: items.map(item => {
+                    const itemType = item.getItemType();
+                    console.log(`Saving item: ${itemType} at (${item.x}, ${item.y})`);
+                    return {
+                        x: item.x,
+                        y: item.y,
+                        itemType: itemType
+                    };
+                }),
                 gameState: {
                     timeOfDay: gameState.timeOfDay || 'day',
                     currentTime: gameState.currentTime || 0.5,
@@ -147,6 +151,14 @@ export class SaveSystem {
             }
 
             console.log('Game loaded successfully');
+            console.log('Save data items:', saveData.items);
+            
+            // Validate save data integrity
+            if (!this.validateSaveData(saveData)) {
+                console.warn('Save data validation failed, returning null');
+                return null;
+            }
+            
             return saveData;
         } catch (error) {
             console.error('Failed to load game:', error);
@@ -167,6 +179,25 @@ export class SaveSystem {
             console.error('Failed to delete save data:', error);
             return false;
         }
+    }
+
+    public static clearCorruptedSaveData(): boolean {
+        try {
+            const saveData = this.loadGame();
+            if (saveData && !this.validateSaveData(saveData)) {
+                console.log('Clearing corrupted save data...');
+                return this.deleteSaveData();
+            }
+            return false;
+        } catch (error) {
+            console.error('Failed to clear corrupted save data:', error);
+            return false;
+        }
+    }
+
+    public static forceClearSaveData(): boolean {
+        console.log('Force clearing all save data...');
+        return this.deleteSaveData();
     }
 
     public static getSaveInfo(): { date: number; playTime: number; version: string } | null {
@@ -192,6 +223,31 @@ export class SaveSystem {
         // This would ideally track actual play time
         // For now, we'll use a simple approximation
         return Date.now() - (this.getSaveInfo()?.date || Date.now());
+    }
+
+    private static validateSaveData(saveData: SaveData): boolean {
+        try {
+            // Check if items array exists and is valid
+            if (saveData.items && Array.isArray(saveData.items)) {
+                // Check for corrupted items with undefined itemType
+                const corruptedItems = saveData.items.filter(item => !item.itemType || item.itemType === 'undefined');
+                if (corruptedItems.length > 0) {
+                    console.warn(`Found ${corruptedItems.length} corrupted items in save data`);
+                    return false;
+                }
+            }
+            
+            // Check if player data exists
+            if (!saveData.player || typeof saveData.player.x !== 'number' || typeof saveData.player.y !== 'number') {
+                console.warn('Invalid player data in save file');
+                return false;
+            }
+            
+            return true;
+        } catch (error) {
+            console.error('Error validating save data:', error);
+            return false;
+        }
     }
 
     public static applySaveData(scene: any, saveData: SaveData): void {
@@ -246,8 +302,14 @@ export class SaveSystem {
 
                 // Recreate items from save data
                 saveData.items.forEach(itemData => {
-                    const item = new Item(scene, itemData.x, itemData.y, itemData.itemType);
-                    scene.items.push(item);
+                    console.log(`Loading item: ${itemData.itemType} at (${itemData.x}, ${itemData.y})`);
+                    // Skip items with undefined itemType (corrupted save data)
+                    if (itemData.itemType && itemData.itemType !== 'undefined') {
+                        const item = new Item(scene, itemData.x, itemData.y, itemData.itemType);
+                        scene.items.push(item);
+                    } else {
+                        console.warn(`Skipping corrupted item with undefined itemType at (${itemData.x}, ${itemData.y})`);
+                    }
                 });
             }
 

@@ -617,7 +617,7 @@ export class Player extends Entity {
     }
 
     private isMysteriousHerb(itemType: string): boolean {
-        const herbTypes = ['mysterious herb', 'mysterious-herb'];
+        const herbTypes = ['mysterious herb', 'mysterious-herb', 'bush-1'];
         return herbTypes.includes(itemType);
     }
 
@@ -654,6 +654,13 @@ export class Player extends Entity {
         // Save inventory
         if (this.p1Inventory) {
             window.localStorage.setItem('existing_inv', JSON.stringify(this.p1Inventory.getData()));
+        }
+
+        // Save QuestSystem state
+        const questSystem = this.scene.data.get('questSystem');
+        if (questSystem) {
+            const questState = questSystem.saveQuestState();
+            window.localStorage.setItem('quest_system_state', JSON.stringify(questState));
         }
     }
 

@@ -7,7 +7,7 @@
     "questdata" : {
         "questnumber": 1,
         "verb" : "collect",
-        "type" : "mysterious-herb",
+        "type" : "mysterious herb",
         "amount" : 5
     }
 }

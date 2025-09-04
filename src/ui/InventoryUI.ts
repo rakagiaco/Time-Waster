@@ -481,6 +481,11 @@ export class InventoryUI {
      * Creates a medieval-styled item icon with shadows and proper scaling
      */
     private createMedievalItemIcon(itemType: string, slotX: number, slotY: number): Phaser.GameObjects.Image {
+        // Check if texture exists, create fallback if not
+        if (!this.scene.textures.exists(itemType)) {
+            this.createFallbackTexture(itemType);
+        }
+        
         const itemIcon = this.scene.add.image(
             slotX + this.slotSize / 2, 
             slotY + this.slotSize / 2, 
@@ -490,6 +495,39 @@ export class InventoryUI {
         itemIcon.setScrollFactor(0);
         
         return itemIcon;
+    }
+
+    /**
+     * Creates fallback textures for missing items
+     */
+    private createFallbackTexture(itemType: string): void {
+        if (this.scene.textures.exists(itemType)) return; // Already exists
+        
+        const graphics = this.scene.add.graphics();
+        
+        switch (itemType) {
+            case 'gold-coin':
+                // Create a gold coin texture
+                graphics.fillStyle(0xffd700); // Gold color
+                graphics.fillCircle(16, 16, 12);
+                graphics.lineStyle(2, 0xffed4e); // Lighter gold border
+                graphics.strokeCircle(16, 16, 12);
+                // Add inner detail
+                graphics.fillStyle(0xffed4e);
+                graphics.fillCircle(16, 16, 6);
+                graphics.generateTexture(itemType, 32, 32);
+                break;
+            default:
+                // Generic fallback - gray square with item type initial
+                graphics.fillStyle(0x666666);
+                graphics.fillRect(0, 0, 32, 32);
+                graphics.lineStyle(2, 0x999999);
+                graphics.strokeRect(0, 0, 32, 32);
+                graphics.generateTexture(itemType, 32, 32);
+                break;
+        }
+        
+        graphics.destroy();
     }
 
     /**

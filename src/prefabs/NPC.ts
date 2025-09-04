@@ -240,15 +240,30 @@ export class NPC {
         // Start quest in QuestSystem
         this.scene.events.emit('startQuest', this.currentQuest.id);
         
-        // Emit quest accepted event for QuestUI
-        console.log('NPC: Emitting questAccepted event for quest:', this.currentQuest.name);
-        this.scene.events.emit('questAccepted', {
-            id: this.currentQuest.id.toString(),
-            title: this.currentQuest.name,
-            description: this.currentQuest.requirements,
-            type: this.currentQuest.questData.type,
-            amount: this.currentQuest.questData.amount,
-            current: 0
+        // Wait a moment for QuestSystem to process the quest start, then emit quest accepted event
+        this.scene.time.delayedCall(50, () => {
+            // Get current progress from QuestSystem
+            const questSystem = this.scene.data.get('questSystem');
+            let currentProgress = 0;
+            if (questSystem) {
+                const activeQuests = questSystem.getActiveQuests();
+                const questProgress = activeQuests.get(this.currentQuest.id);
+                if (questProgress) {
+                    currentProgress = questProgress.currentAmount;
+                }
+            }
+            
+            // Emit quest accepted event for QuestUI with correct current progress
+            console.log('NPC: Emitting questAccepted event for quest:', this.currentQuest.name);
+            console.log('NPC: Current progress from QuestSystem:', currentProgress);
+            this.scene.events.emit('questAccepted', {
+                id: this.currentQuest.id.toString(),
+                title: this.currentQuest.name,
+                description: this.currentQuest.requirements,
+                type: this.currentQuest.questData.type,
+                amount: this.currentQuest.questData.amount,
+                current: currentProgress
+            });
         });
         
         // Just close the dialogue and return to game
@@ -405,18 +420,25 @@ export class NPC {
 
 
     private showDialogue(dialogue: DialogueData): void {
-        // Emit event to show dialogue UI
-        this.scene.events.emit('showDialogue', dialogue);
+        // Emit event to show dialogue UI with NPC reference for distance checking
+        this.scene.events.emit('showDialogue', dialogue, this);
     }
+
+    private playerInRangeLastFrame: boolean = false;
 
     public update(): void {
         // Check for interaction
-        if (this.player && this.isPlayerInRange() && !this.isInteracting) {
-            // Show interaction prompt
+        const playerInRange = this.player && this.isPlayerInRange() && !this.isInteracting;
+        
+        if (playerInRange && !this.playerInRangeLastFrame) {
+            // Player just entered range - show interaction prompt
             this.showInteractionPrompt();
-        } else {
+        } else if (!playerInRange && this.playerInRangeLastFrame) {
+            // Player just left range - hide interaction prompt
             this.hideInteractionPrompt();
         }
+        
+        this.playerInRangeLastFrame = playerInRange;
     }
 
     private showInteractionPrompt(): void {
