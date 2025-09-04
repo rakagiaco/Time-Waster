@@ -52,6 +52,7 @@ export class NPC {
 
     private hasHadInitialConversation: boolean = false;
     private questAccepted: boolean = false;
+    private questDeclined: boolean = false;
     
     constructor(scene: Phaser.Scene, ally: any) {
         this.scene = scene;
@@ -151,6 +152,10 @@ export class NPC {
             console.log('NPC: First time meeting, showing quest offer');
             this.startQuestOfferDialogue();
             this.hasHadInitialConversation = true;
+        } else if (this.questDeclined) {
+            // Player previously declined quest - show return dialogue
+            console.log('NPC: Return visit after quest decline, showing return dialogue');
+            this.startReturnDialogue();
         } else {
             // Return visit - check if there's a quest to offer
             if (this.currentQuest) {
@@ -208,6 +213,9 @@ export class NPC {
     public startQuestDeclinedDialogue(): void {
         console.log('NPC: Starting quest declined dialogue');
         
+        // Mark quest as declined
+        this.questDeclined = true;
+        
         // Hide current dialogue first
         this.scene.events.emit('hideDialogue');
         
@@ -234,8 +242,9 @@ export class NPC {
         
         console.log('NPC: Quest accepted, closing dialogue and returning to game');
         
-        // Mark quest as accepted
+        // Mark quest as accepted and reset declined flag
         this.questAccepted = true;
+        this.questDeclined = false;
         
         // Start quest in QuestSystem
         this.scene.events.emit('startQuest', this.currentQuest.id);
@@ -372,6 +381,7 @@ export class NPC {
             
             // Reset quest acceptance state for the new quest
             this.questAccepted = false;
+            this.questDeclined = false;
             
             console.log('NPC: Advanced to next quest:', this.currentQuest.name);
             console.log('NPC: Reset quest acceptance state for new quest');
@@ -381,6 +391,7 @@ export class NPC {
         } else {
             this.currentQuest = null;
             this.questAccepted = false;
+            this.questDeclined = false;
             console.log('NPC: All quests completed!');
         }
     }
