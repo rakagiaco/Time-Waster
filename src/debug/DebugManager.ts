@@ -91,21 +91,21 @@ export class DebugManager {
             this.toggle();
         });
 
-        // Additional debug keys
-        this.scene.input.keyboard?.on('keydown-F2', () => {
+        // Additional debug keys (using Ctrl+Number combinations to avoid browser conflicts)
+        this.scene.input.keyboard?.on('keydown-CONTROL-TWO', () => {
             this.toggleCollisionBoxes();
         });
 
-        this.scene.input.keyboard?.on('keydown-F3', () => {
+        this.scene.input.keyboard?.on('keydown-CONTROL-THREE', () => {
             this.togglePathVisualization();
         });
 
         // Day/Night cycle toggles
-        this.scene.input.keyboard?.on('keydown-F4', () => {
+        this.scene.input.keyboard?.on('keydown-CONTROL-FOUR', () => {
             this.toggleToPeakDay();
         });
 
-        this.scene.input.keyboard?.on('keydown-F5', () => {
+        this.scene.input.keyboard?.on('keydown-CONTROL-FIVE', () => {
             this.toggleToPeakNight();
         });
     }
@@ -240,10 +240,10 @@ export class DebugManager {
             <div class="debug-section">
                 <div class="debug-label">Debug Controls:</div>
                 <div class="debug-value">
-                    <button id="debug-collision-btn" style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision Boxes (F2)</button>
-                    <button id="debug-path-btn" style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths (F3)</button>
-                    <button id="debug-day-btn" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Day (F4)</button>
-                    <button id="debug-night-btn" style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Night (F5)</button>
+                    <button id="debug-collision-btn" style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision Boxes (Ctrl+2)</button>
+                    <button id="debug-path-btn" style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths (Ctrl+3)</button>
+                    <button id="debug-day-btn" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Day (Ctrl+4)</button>
+                    <button id="debug-night-btn" style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Night (Ctrl+5)</button>
                 </div>
             </div>
             
