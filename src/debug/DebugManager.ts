@@ -36,9 +36,6 @@ export class DebugManager {
     private debugPanelElement!: HTMLElement;
     private debugContentElement!: HTMLElement;
     private debugGraphics!: Phaser.GameObjects.Graphics;
-    // private collisionBoxes: Phaser.GameObjects.Graphics[] = [];
-    // private pathVisualizations: Phaser.GameObjects.Graphics[] = [];
-    // private infoTexts: Phaser.GameObjects.BitmapText[] = [];
 
     // Debug info storage
     private debugInfo: DebugInfo = {
@@ -219,25 +216,12 @@ export class DebugManager {
     }
 
     private attachButtonListeners(): void {
-        // const collisionBtn = document.getElementById('debug-collision-btn');
-        // const pathBtn = document.getElementById('debug-path-btn');
         const dayBtn = document.getElementById('debug-day-btn');
         const nightBtn = document.getElementById('debug-night-btn');
         const normalTimeBtn = document.getElementById('debug-normal-time-btn');
 
         console.log("Attaching button listeners", { dayBtn, nightBtn, normalTimeBtn });
-        // if (collisionBtn) {
-        //     collisionBtn.onclick = () => {
-        //         this.toggleCollisionBoxes();
-        //     };
-        // }
-
-        // if (pathBtn) {
-        //     pathBtn.onclick = () => {
-        //         this.togglePathVisualization();
-        //     };
-        // }
-
+      
         if (dayBtn) {
             dayBtn.addEventListener("click", () => {
                 console.log("Day button clicked")
@@ -259,104 +243,6 @@ export class DebugManager {
             };
         }
     }
-
-    // public drawCollisionBox(entity: Phaser.Physics.Arcade.Sprite, color: number = 0xff0000): void {
-    //     if (!this.isEnabled) return;
-
-    //     const graphics = this.scene.add.graphics();
-    //     graphics.lineStyle(2, color, 1);
-    //     graphics.strokeRect(
-    //         entity.x - entity.width / 2,
-    //         entity.y - entity.height / 2,
-    //         entity.width,
-    //         entity.height
-    //     );
-    //     graphics.setScrollFactor(0);
-    //     graphics.setDepth(9998);
-
-    //     this.collisionBoxes.push(graphics);
-    // }
-
-
-    // public drawCircle(centerX: number, centerY: number, radius: number, color: number = 0xffff00): void {
-    //     if (!this.isEnabled) return;
-
-    //     const graphics = this.scene.add.graphics();
-    //     graphics.lineStyle(2, color, 1);
-    //     graphics.strokeCircle(centerX, centerY, radius);
-    //     graphics.setScrollFactor(0);
-    //     graphics.setDepth(9996);
-
-    //     this.collisionBoxes.push(graphics);
-    // }
-
-    // public drawPath(path: { x: number; y: number }[], color: number = 0x00ff00): void {
-    //     if (!this.isEnabled || path.length < 2) return;
-
-    //     const graphics = this.scene.add.graphics();
-    //     graphics.lineStyle(3, color, 0.8);
-
-    //     // Draw path lines
-    //     for (let i = 0; i < path.length - 1; i++) {
-    //         graphics.moveTo(path[i].x, path[i].y);
-    //         graphics.lineTo(path[i + 1].x, path[i + 1].y);
-    //     }
-
-    //     // Draw waypoint markers
-    //     graphics.fillStyle(color, 0.6);
-    //     path.forEach((point) => {
-    //         graphics.fillCircle(point.x, point.y, 4);
-    //     });
-
-    //     graphics.setScrollFactor(0);
-    //     graphics.setDepth(9995);
-
-    //     this.pathVisualizations.push(graphics);
-    // }
-
-    // public addInfoText(x: number, y: number, text: string, color: number = 0xffffff): void {
-    //     if (!this.isEnabled) return;
-
-    //     const infoText = this.scene.add.bitmapText(x, y, 'pixel-white', text, 10);
-    //     infoText.setTint(color);
-    //     infoText.setScrollFactor(0);
-    //     infoText.setDepth(10001);
-
-    //     this.infoTexts.push(infoText);
-    // }
-
-    // public toggleCollisionBoxes(): void {
-    //     if (!this.isEnabled) return;
-
-    //     this.collisionBoxes.forEach(box => {
-    //         box.setVisible(!box.visible);
-    //     });
-    // }
-
-    // public togglePathVisualization(): void {
-    //     if (!this.isEnabled) return;
-
-    //     this.pathVisualizations.forEach(path => {
-    //         path.setVisible(!path.visible);
-    //     });
-    // }
-
-    // public clearVisualDebug(): void {
-    //     // Clear collision boxes
-    //     this.collisionBoxes.forEach(box => box.destroy());
-    //     this.collisionBoxes = [];
-
-    //     // Clear path visualizations
-    //     this.pathVisualizations.forEach(path => path.destroy());
-    //     this.pathVisualizations = [];
-
-    //     // Clear info texts
-    //     this.infoTexts.forEach(text => text.destroy());
-    //     this.infoTexts = [];
-
-    //     // Clear debug graphics
-    //     this.debugGraphics.clear();
-    // }
 
     public update(): void {
         if (!this.isEnabled) return;
