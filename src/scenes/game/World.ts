@@ -541,6 +541,9 @@ export class World extends Phaser.Scene {
         this.miniMapCamera.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
         this.miniMapCamera.setZoom(0.25);
         this.miniMapCamera.startFollow(this.player, true, 0.1, 0.1);
+        
+        // Ensure minimap camera is isolated from any shake effects
+        this.miniMapCamera.setPosition(minimapX, minimapY);
 
         // Create circular mask for the minimap
         this.minimapMask = this.add.graphics();

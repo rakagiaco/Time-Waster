@@ -1104,19 +1104,24 @@ export class Enemy extends Entity {
     }
 
     private createScreenShake(): void {
-        // Get the main camera
+        // Get the main camera only - minimap camera should not be affected
         const camera = this.scene.cameras.main;
+        
+        // Store original scroll position
+        const originalScrollX = camera.scrollX;
+        const originalScrollY = camera.scrollY;
 
-        // Create screen shake effect
+        // Create screen shake effect using scroll position instead of camera position
         this.scene.tweens.add({
             targets: camera,
-            x: camera.x + (Math.random() - 0.5) * 10,
-            y: camera.y + (Math.random() - 0.5) * 10,
+            scrollX: originalScrollX + (Math.random() - 0.5) * 10,
+            scrollY: originalScrollY + (Math.random() - 0.5) * 10,
             duration: 100,
             yoyo: true,
             repeat: 2,
             onComplete: () => {
-                camera.setPosition(camera.x, camera.y);
+                // Reset to original scroll position
+                camera.setScroll(originalScrollX, originalScrollY);
             }
         });
     }
