@@ -494,6 +494,9 @@ export class InventoryUI {
         itemIcon.setScale(0.8); // Good size for medieval slots
         itemIcon.setScrollFactor(0);
         
+        // Apply visual modifications to fruit types to make them distinct
+        this.applyFruitVisualModifications(itemIcon, itemType);
+        
         return itemIcon;
     }
 
@@ -518,16 +521,63 @@ export class InventoryUI {
                 graphics.generateTexture(itemType, 32, 32);
                 break;
             default:
-                // Generic fallback - gray square with item type initial
-                graphics.fillStyle(0x666666);
-                graphics.fillRect(0, 0, 32, 32);
-                graphics.lineStyle(2, 0x999999);
+                // Missing texture indicator - red and white checkerboard pattern
+                graphics.fillStyle(0xff0000); // Red
+                graphics.fillRect(0, 0, 16, 16);
+                graphics.fillRect(16, 16, 16, 16);
+                graphics.fillStyle(0xffffff); // White
+                graphics.fillRect(16, 0, 16, 16);
+                graphics.fillRect(0, 16, 16, 16);
+                
+                // Add border
+                graphics.lineStyle(2, 0x000000);
                 graphics.strokeRect(0, 0, 32, 32);
+                
+                // Add "?" in the center
+                graphics.fillStyle(0x000000);
+                graphics.fillRect(14, 8, 4, 16);
+                graphics.fillRect(12, 10, 8, 4);
+                graphics.fillRect(12, 18, 8, 4);
+                graphics.fillRect(12, 22, 4, 2);
+                
                 graphics.generateTexture(itemType, 32, 32);
                 break;
         }
         
         graphics.destroy();
+    }
+
+    private applyFruitVisualModifications(itemIcon: Phaser.GameObjects.Image, itemType: string): void {
+        // Apply different visual modifications to make fruit types distinct
+        switch (itemType) {
+            case 'apple':
+                // Red tint for apples
+                itemIcon.setTint(0xff6b6b);
+                break;
+            case 'pinecone':
+                // Brown tint for pinecones
+                itemIcon.setTint(0x8b4513);
+                break;
+            case 'ancient-fruit':
+                // Purple tint for ancient fruit
+                itemIcon.setTint(0x9b59b6);
+                break;
+            case 'cherry':
+                // Pink tint for cherries
+                itemIcon.setTint(0xff69b4);
+                break;
+            case 'tree-of-life-fruit':
+                // Golden tint for Tree of Life fruit
+                itemIcon.setTint(0xffd700);
+                break;
+            case 'fruit':
+                // No tint for generic fruit
+                itemIcon.clearTint();
+                break;
+            default:
+                // No modification for other items
+                break;
+        }
     }
 
     /**

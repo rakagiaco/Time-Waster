@@ -16,12 +16,16 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         scene.add.existing(this);
         scene.physics.add.existing(this);
         
-        // Debug: Check if texture exists
+        // Check if texture exists, create fallback if not
         if (!scene.textures.exists(itemType)) {
-            console.error(`Item texture '${itemType}' does not exist!`);
+            console.warn(`Item texture '${itemType}' does not exist, creating fallback texture`);
+            this.createMissingTextureFallback(itemType);
         } else {
             console.log(`Item texture '${itemType}' exists and loaded`);
         }
+        
+        // Apply visual modifications to fruit types to make them distinct
+        this.applyFruitVisualModifications(itemType);
         
         // Setup physics
         this.setCollideWorldBounds(false);
@@ -56,5 +60,66 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
 
     public update(): void {
         // Item update logic if needed
+    }
+
+    private createMissingTextureFallback(itemType: string): void {
+        if (this.scene.textures.exists(itemType)) return; // Already exists
+        
+        const graphics = this.scene.add.graphics();
+        
+        // Create missing texture indicator - red and white checkerboard pattern
+        graphics.fillStyle(0xff0000); // Red
+        graphics.fillRect(0, 0, 8, 8);
+        graphics.fillRect(8, 8, 8, 8);
+        graphics.fillStyle(0xffffff); // White
+        graphics.fillRect(8, 0, 8, 8);
+        graphics.fillRect(0, 8, 8, 8);
+        
+        // Add border
+        graphics.lineStyle(1, 0x000000);
+        graphics.strokeRect(0, 0, 16, 16);
+        
+        // Add "?" in the center
+        graphics.fillStyle(0x000000);
+        graphics.fillRect(7, 4, 2, 8);
+        graphics.fillRect(6, 5, 4, 2);
+        graphics.fillRect(6, 9, 4, 2);
+        graphics.fillRect(6, 11, 2, 1);
+        
+        graphics.generateTexture(itemType, 16, 16);
+        graphics.destroy();
+    }
+
+    private applyFruitVisualModifications(itemType: string): void {
+        // Apply different visual modifications to make fruit types distinct
+        switch (itemType) {
+            case 'apple':
+                // Red tint for apples
+                this.setTint(0xff6b6b);
+                break;
+            case 'pinecone':
+                // Brown tint for pinecones
+                this.setTint(0x8b4513);
+                break;
+            case 'ancient-fruit':
+                // Purple tint for ancient fruit
+                this.setTint(0x9b59b6);
+                break;
+            case 'cherry':
+                // Pink tint for cherries
+                this.setTint(0xff69b4);
+                break;
+            case 'tree-of-life-fruit':
+                // Golden tint for Tree of Life fruit
+                this.setTint(0xffd700);
+                break;
+            case 'fruit':
+                // No tint for generic fruit
+                this.clearTint();
+                break;
+            default:
+                // No modification for other items
+                break;
+        }
     }
 }

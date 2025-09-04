@@ -339,6 +339,11 @@ export class Enemy extends Entity {
     private currentPath: { x: number; y: number }[] = [];
     private currentWaypointIndex: number = 0;
     private pathfindingEnabled: boolean = true;
+    
+    // Enhanced AI properties
+    private patrolPattern: 'horizontal' | 'circular' | 'random' | 'stationary' = 'horizontal';
+    private patrolCenter: { x: number; y: number } = { x: 0, y: 0 };
+    private patrolRadius: number = 50;
 
     constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
         super(scene, x, y, texture);
@@ -354,6 +359,9 @@ export class Enemy extends Entity {
 
         // Set detection distance based on enemy type
         this.setDetectionDistance();
+
+        // Setup patrol pattern and center
+        this.setupPatrolPattern();
 
         // Setup state machine
         this.setupStateMachine();
@@ -379,6 +387,27 @@ export class Enemy extends Entity {
         }
     }
 
+    private setupPatrolPattern(): void {
+        // Set patrol center to current position
+        this.patrolCenter = { x: this.x, y: this.y };
+        
+        // Randomly assign patrol pattern for variety
+        const patterns: ('horizontal' | 'circular' | 'random' | 'stationary')[] = 
+            ['horizontal', 'circular', 'random', 'stationary'];
+        this.patrolPattern = patterns[Math.floor(Math.random() * patterns.length)];
+        
+        // Set patrol radius based on enemy type
+        if (this.isBoss) {
+            this.patrolRadius = 80;
+        } else if (this.entity_type === 'Nepian Observer') {
+            this.patrolRadius = 60;
+        } else {
+            this.patrolRadius = 40 + Math.random() * 30; // Random radius between 40-70
+        }
+        
+        console.log(`Enemy ${this.entity_type} using ${this.patrolPattern} patrol pattern with radius ${this.patrolRadius}`);
+    }
+
     private setupStateMachine(): void {
         const states = {
             'patrolling': new EnemyPatrolState(),
@@ -396,7 +425,7 @@ export class Enemy extends Entity {
     }
 
     private setupPhysics(): void {
-        this.setCollideWorldBounds(false);
+        this.setCollideWorldBounds(true); // Enable world bounds collision
         this.setSize(16, 16);
         this.setOffset(8, 8);
     }
@@ -647,8 +676,26 @@ export class Enemy extends Entity {
     }
 
     public patrol(): void {
-        // Enhanced patrol movement with more dynamic behavior
-        if (this.patrolTimer > 2000 + Math.random() * 1000) { // Random patrol duration
+        // Enhanced patrol movement with multiple patterns
+        switch (this.patrolPattern) {
+            case 'horizontal':
+                this.patrolHorizontal();
+                break;
+            case 'circular':
+                this.patrolCircular();
+                break;
+            case 'random':
+                this.patrolRandom();
+                break;
+            case 'stationary':
+                this.patrolStationary();
+                break;
+        }
+    }
+
+    private patrolHorizontal(): void {
+        // Traditional horizontal patrol with direction changes
+        if (this.patrolTimer > 2000 + Math.random() * 1000) {
             this.patrolDirection *= -1;
             this.patrolTimer = 0;
 
@@ -659,9 +706,82 @@ export class Enemy extends Entity {
             }
         }
 
-        // Add slight vertical movement for more natural patrol
-        const verticalMovement = Math.sin(this.patrolTimer * 0.001) * 10;
-        this.setVelocity(this.VELOCITY * 0.7 * this.patrolDirection, verticalMovement);
+        const baseVelocity = this.VELOCITY * 0.7 * this.patrolDirection;
+        const verticalVariation = Math.sin(this.patrolTimer * 0.0005) * 5;
+        
+        this.setVelocity(baseVelocity, verticalVariation);
+    }
+
+    private patrolCircular(): void {
+        // Circular patrol around the center point
+        const angle = (this.patrolTimer * 0.001) % (Math.PI * 2);
+        const radius = this.patrolRadius;
+        
+        const targetX = this.patrolCenter.x + Math.cos(angle) * radius;
+        const targetY = this.patrolCenter.y + Math.sin(angle) * radius;
+        
+        const dx = targetX - this.x;
+        const dy = targetY - this.y;
+        const distance = Math.sqrt(dx * dx + dy * dy);
+        
+        if (distance > 5) {
+            const vx = (dx / distance) * this.VELOCITY * 0.5;
+            const vy = (dy / distance) * this.VELOCITY * 0.5;
+            this.setVelocity(vx, vy);
+        } else {
+            this.setVelocity(0, 0);
+        }
+    }
+
+    private patrolRandom(): void {
+        // Random movement with occasional direction changes
+        if (this.patrolTimer > 1500 + Math.random() * 1000) {
+            this.patrolDirection = Math.random() > 0.5 ? 1 : -1;
+            this.patrolTimer = 0;
+            
+            // Sometimes pause
+            if (Math.random() < 0.4) {
+                this.setVelocity(0, 0);
+                return;
+            }
+        }
+
+        // Random movement in both directions
+        const vx = (Math.random() - 0.5) * this.VELOCITY * 0.6;
+        const vy = (Math.random() - 0.5) * this.VELOCITY * 0.6;
+        
+        this.setVelocity(vx, vy);
+    }
+
+    private patrolStationary(): void {
+        // Stationary enemies that only move when player is nearby
+        const distanceToCenter = Phaser.Math.Distance.Between(
+            this.x, this.y, 
+            this.patrolCenter.x, this.patrolCenter.y
+        );
+        
+        // If too far from center, move back
+        if (distanceToCenter > this.patrolRadius) {
+            const dx = this.patrolCenter.x - this.x;
+            const dy = this.patrolCenter.y - this.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            if (distance > 0) {
+                const vx = (dx / distance) * this.VELOCITY * 0.3;
+                const vy = (dy / distance) * this.VELOCITY * 0.3;
+                this.setVelocity(vx, vy);
+            }
+        } else {
+            // Small random movements to stay active
+            if (this.patrolTimer > 3000) {
+                const vx = (Math.random() - 0.5) * this.VELOCITY * 0.2;
+                const vy = (Math.random() - 0.5) * this.VELOCITY * 0.2;
+                this.setVelocity(vx, vy);
+                this.patrolTimer = 0;
+            } else {
+                this.setVelocity(0, 0);
+            }
+        }
     }
 
     public pursuePlayer(): void {

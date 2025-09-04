@@ -53,6 +53,7 @@ export class NPC {
     private hasHadInitialConversation: boolean = false;
     private questAccepted: boolean = false;
     private questDeclined: boolean = false;
+    private interactionPrompt: Phaser.GameObjects.Container | null = null;
     
     constructor(scene: Phaser.Scene, ally: any) {
         this.scene = scene;
@@ -438,6 +439,9 @@ export class NPC {
     private playerInRangeLastFrame: boolean = false;
 
     public update(): void {
+        // Update interaction prompt position
+        this.updatePosition();
+        
         // Check for interaction
         const playerInRange = this.player && this.isPlayerInRange() && !this.isInteracting;
         
@@ -453,17 +457,79 @@ export class NPC {
     }
 
     private showInteractionPrompt(): void {
-        // Could add visual prompt here
+        // Create medieval-themed visual prompt above NPC's head
+        if (!this.interactionPrompt) {
+            this.interactionPrompt = this.scene.add.container(this.ally.x, this.ally.y - 40);
+            
+            // Create medieval shield-like background (smaller size)
+            const bg = this.scene.add.graphics();
+            
+            // Outer bronze ring
+            bg.fillStyle(0x8B4513, 0.9); // Bronze color
+            bg.fillCircle(0, 0, 16);
+            
+            // Inner dark leather background
+            bg.fillStyle(0x2F1F14, 0.95); // Dark brown leather
+            bg.fillCircle(0, 0, 13);
+            
+            // Inner highlight ring
+            bg.lineStyle(1, 0x4A3C28, 0.8); // Lighter brown highlight
+            bg.strokeCircle(0, 0, 12);
+            
+            // Outer bronze border
+            bg.lineStyle(2, 0xCD853F, 1); // Light bronze border
+            bg.strokeCircle(0, 0, 16);
+            
+            // Decorative corner studs (medieval style) - smaller
+            bg.fillStyle(0x696969, 1); // Dim gray for metal studs
+            bg.fillCircle(-10, -10, 1);
+            bg.fillCircle(10, -10, 1);
+            bg.fillCircle(-10, 10, 1);
+            bg.fillCircle(10, 10, 1);
+            
+            // Create "E" text - centered properly in the circle (much smaller)
+            const eText = this.scene.add.bitmapText(0, 0, 'pixel-white', 'E', 8);
+            eText.setOrigin(0.5, 0.5);
+            
+            // Add subtle glow effect (smaller)
+            const glow = this.scene.add.graphics();
+            glow.fillStyle(0xFFD700, 0.3); // Golden glow
+            glow.fillCircle(0, 0, 20);
+            glow.setBlendMode(Phaser.BlendModes.ADD);
+            
+            this.interactionPrompt.add([glow, bg, eText]);
+            this.interactionPrompt.setDepth(1000); // High depth to appear above everything
+        }
+        
+        this.interactionPrompt.setVisible(true);
         console.log('NPC: Player in range - press E to interact');
     }
 
     private hideInteractionPrompt(): void {
         // Hide interaction prompt
+        if (this.interactionPrompt) {
+            this.interactionPrompt.setVisible(false);
+        }
     }
 
     public endInteraction(): void {
         this.isInteracting = false;
         this.scene.events.emit('hideDialogue');
+    }
+
+    public destroy(): void {
+        // Clean up interaction prompt
+        if (this.interactionPrompt) {
+            this.interactionPrompt.destroy();
+            this.interactionPrompt = null;
+        }
+    }
+
+    public updatePosition(): void {
+        // Update interaction prompt position to follow NPC
+        if (this.interactionPrompt) {
+            this.interactionPrompt.setPosition(this.ally.x, this.ally.y - 40);
+        }
     }
 
     public getCurrentQuest(): QuestData | null {

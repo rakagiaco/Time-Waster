@@ -220,6 +220,7 @@ export class World extends Phaser.Scene {
             console.log('Setting up pathfinding system...');
             this.pathfinding = new Pathfinding(this);
             this.pathfinding.setObstacles(this.trees);
+            this.data.set('pathfinding', this.pathfinding); // Store in scene data for enemy access
             console.log('Pathfinding system setup complete');
 
             // Setup Collision Detection
@@ -376,9 +377,9 @@ export class World extends Phaser.Scene {
                 if (element.name === 'boss_spawn') {
                     this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1').setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim') as Enemy)
                 } else if (element.name === 'enemy_spawn') {
-                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1-anim').setScale(1.25).anims.play('enemy-idle-anim') as Enemy)
+                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1-anim').setScale(1.5).anims.play('enemy-idle-anim') as Enemy)
                 } else if (element.name === 'enemy_spawn_2') {
-                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-2-anim').setScale(1.25).anims.play('enemy2-idle-anim') as Enemy)
+                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-2-anim').setScale(1.5).anims.play('enemy2-idle-anim') as Enemy)
                 }
             })
         }
@@ -426,7 +427,7 @@ export class World extends Phaser.Scene {
                     if (element.name === 'bush_1') {
                         console.log('Found bush_1 at:', element.x, element.y);
                         const bush = new Item(this, element.x as number, element.y as number, 'bush-1', { sound: 'collect-herb', volume: 0.5 })
-                        bush.setScale(0.75).setSize(35, 30)
+                        bush.setScale(0.5).setSize(35, 30) // Smaller scale for herbs
                         bush.anims.play('bush-1-anim', true) // Play the sparkle animation
                         this.items.push(bush)
                     }
@@ -481,7 +482,7 @@ export class World extends Phaser.Scene {
                     sound: 'collect-herb', 
                     volume: 0.5 
                 });
-                herb.setScale(0.75).setSize(35, 30); // Normal scale
+                herb.setScale(0.5).setSize(35, 30); // Smaller scale for herbs
                 herb.setVisible(true); // Ensure herb is visible
                 herb.setDepth(10); // Set high depth to ensure visibility
                 herb.anims.play('bush-1-anim', true); // Play the sparkle animation
@@ -557,7 +558,7 @@ export class World extends Phaser.Scene {
         // Create the main title
         const title = this.add.bitmapText(
             tree.x,
-            tree.y - 120,
+            tree.y - 180,
             '8-bit',
             'TREE OF LIFE',
             32
@@ -575,27 +576,6 @@ export class World extends Phaser.Scene {
             repeat: -1
         });
 
-        // Create a subtitle
-        const subtitle = this.add.bitmapText(
-            tree.x,
-            tree.y - 90,
-            '8-bit',
-            'Ancient & Sacred',
-            16
-        ).setOrigin(0.5);
-
-        subtitle.setDepth(tree.depth + 2);
-        subtitle.setTint(0x90EE90); // Light green color
-
-        // Add floating animation to the subtitle
-        this.tweens.add({
-            targets: subtitle,
-            y: subtitle.y - 5,
-            duration: 2000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
     }
 
     private setupMinimap(): void {
