@@ -16,11 +16,11 @@
             display: flex;
             font-family: 'Courier New', monospace;
         }
-        
+
         #gameContainer {
             flex: 1;
         }
-        
+
         #debugPanel {
             width: 350px;
             height: 100vh;
@@ -34,29 +34,29 @@
             overflow-y: auto;
             display: none;
         }
-        
+
         #debugPanel h3 {
             color: #00ff00;
             margin-top: 0;
             margin-bottom: 15px;
             font-size: 16px;
         }
-        
+
         #debugPanel .debug-section {
             margin-bottom: 15px;
             padding-bottom: 10px;
             border-bottom: 1px solid #444;
         }
-        
+
         #debugPanel .debug-section:last-child {
             border-bottom: none;
         }
-        
+
         #debugPanel .debug-label {
             color: #ffff00;
             font-weight: bold;
         }
-        
+
         #debugPanel .debug-value {
             color: #ffffff;
         }
@@ -68,11 +68,33 @@
 
     <div id="gameContainer">
     </div>
-    
+
     <div id="debugPanel">
         <h3>DEBUG MODE</h3>
         <div id="debugContent">
             <!-- Debug information will be populated here -->
+        </div>
+
+        <div class="debug-buttons">
+            <div class="debug-label">Debug Controls:</div>
+            <div class="debug-value">
+                <!-- <button id="debug-collision-btn"
+                    style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision
+                    Boxes (Alt+2)</button>
+                <button id="debug-path-btn"
+                    style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths
+                    (Alt+3)</button> -->
+                <button id="debug-day-btn"
+                    style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak
+                    Day (Alt+4)</button>
+                <button id="debug-night-btn"
+                    style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak
+                    Night (Alt+5)</button>
+                <button id="debug-normal-time-btn"
+                    style="background: #FF5722; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Normal
+                    Time</button>
+                <br><small style="color: #888;">Press T to force reset if time is frozen</small>
+            </div>
         </div>
     </div>
 

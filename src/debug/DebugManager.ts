@@ -36,9 +36,9 @@ export class DebugManager {
     private debugPanelElement!: HTMLElement;
     private debugContentElement!: HTMLElement;
     private debugGraphics!: Phaser.GameObjects.Graphics;
-    private collisionBoxes: Phaser.GameObjects.Graphics[] = [];
-    private pathVisualizations: Phaser.GameObjects.Graphics[] = [];
-    private infoTexts: Phaser.GameObjects.BitmapText[] = [];
+    // private collisionBoxes: Phaser.GameObjects.Graphics[] = [];
+    // private pathVisualizations: Phaser.GameObjects.Graphics[] = [];
+    // private infoTexts: Phaser.GameObjects.BitmapText[] = [];
 
     // Debug info storage
     private debugInfo: DebugInfo = {
@@ -62,6 +62,7 @@ export class DebugManager {
         this.setupExternalDebugPanel();
         this.setupDebugGraphics();
         this.setupKeybinds();
+        this.attachButtonListeners()
     }
 
     private setupExternalDebugPanel(): void {
@@ -90,24 +91,6 @@ export class DebugManager {
         this.scene.input.keyboard?.on('keydown-BACKTICK', () => {
             this.toggle();
         });
-
-        // Additional debug keys (using Alt+Number combinations to avoid browser conflicts)
-        this.scene.input.keyboard?.on('keydown-ALT-TWO', () => {
-            this.toggleCollisionBoxes();
-        });
-
-        this.scene.input.keyboard?.on('keydown-ALT-THREE', () => {
-            this.togglePathVisualization();
-        });
-
-        // Day/Night cycle toggles
-        this.scene.input.keyboard?.on('keydown-ALT-FOUR', () => {
-            this.toggleToPeakDay();
-        });
-
-        this.scene.input.keyboard?.on('keydown-ALT-FIVE', () => {
-            this.toggleToPeakNight();
-        });
     }
 
     public toggle(): void {
@@ -122,20 +105,14 @@ export class DebugManager {
         if (this.isEnabled) {
             this.updateDebugDisplay();
         } else {
-            this.clearVisualDebug();
-        }
+            // this.clearVisualDebug();
 
-        if (this.isEnabled) {
-            this.scene.events.emit('debug-enabled');
-        } else {
-            this.scene.events.emit('debug-disabled');
         }
     }
 
     public isDebugEnabled(): boolean {
         return this.isEnabled;
     }
-
 
 
     public updateDebugInfo(info: Partial<DebugInfo>): void {
@@ -236,63 +213,38 @@ export class DebugManager {
                 <div class="debug-label">Pathfinding:</div>
                 <div class="debug-value">${this.debugInfo.enemiesWithPaths || 0} enemies with paths, ${this.debugInfo.totalObstacles || 0} obstacles</div>
             </div>
-            
-            <div class="debug-section">
-                <div class="debug-label">Debug Controls:</div>
-                <div class="debug-value">
-                    <button id="debug-collision-btn" style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision Boxes (Alt+2)</button>
-                    <button id="debug-path-btn" style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths (Alt+3)</button>
-                    <button id="debug-day-btn" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Day (Alt+4)</button>
-                    <button id="debug-night-btn" style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Night (Alt+5)</button>
-                    <button id="debug-normal-time-btn" style="background: #FF5722; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Normal Time</button>
-                    <br><small style="color: #888;">Press T to force reset if time is frozen</small>
-                </div>
-            </div>
-            
-
         `;
 
         this.debugContentElement.innerHTML = html;
-
-        // Set up button listeners after HTML is updated
-        this.setupDebugButtons();
-    }
-
-    private setupDebugButtons(): void {
-        if (!this.debugContentElement) {
-            console.warn('Debug content element not available yet, skipping button setup');
-            return;
-        }
-
-        // Wait a bit for the DOM to be fully updated
-        setTimeout(() => {
-            this.attachButtonListeners();
-        }, 200);
     }
 
     private attachButtonListeners(): void {
-        const collisionBtn = document.getElementById('debug-collision-btn');
-        const pathBtn = document.getElementById('debug-path-btn');
+        // const collisionBtn = document.getElementById('debug-collision-btn');
+        // const pathBtn = document.getElementById('debug-path-btn');
         const dayBtn = document.getElementById('debug-day-btn');
         const nightBtn = document.getElementById('debug-night-btn');
         const normalTimeBtn = document.getElementById('debug-normal-time-btn');
 
-        if (collisionBtn) {
-            collisionBtn.onclick = () => {
-                this.toggleCollisionBoxes();
-            };
-        }
+        console.log("Attaching button listeners", { dayBtn, nightBtn, normalTimeBtn });
+        // if (collisionBtn) {
+        //     collisionBtn.onclick = () => {
+        //         this.toggleCollisionBoxes();
+        //     };
+        // }
 
-        if (pathBtn) {
-            pathBtn.onclick = () => {
-                this.togglePathVisualization();
-            };
-        }
+        // if (pathBtn) {
+        //     pathBtn.onclick = () => {
+        //         this.togglePathVisualization();
+        //     };
+        // }
 
         if (dayBtn) {
-            dayBtn.onclick = () => {
-                this.toggleToPeakDay();
-            };
+            dayBtn.addEventListener("click", () => {
+                console.log("Day button clicked")
+                this.toggleToPeakDay()
+            })
+        } else {
+            console.log("Day button not found")
         }
 
         if (nightBtn) {
@@ -308,103 +260,103 @@ export class DebugManager {
         }
     }
 
-    public drawCollisionBox(entity: Phaser.Physics.Arcade.Sprite, color: number = 0xff0000): void {
-        if (!this.isEnabled) return;
+    // public drawCollisionBox(entity: Phaser.Physics.Arcade.Sprite, color: number = 0xff0000): void {
+    //     if (!this.isEnabled) return;
 
-        const graphics = this.scene.add.graphics();
-        graphics.lineStyle(2, color, 1);
-        graphics.strokeRect(
-            entity.x - entity.width / 2,
-            entity.y - entity.height / 2,
-            entity.width,
-            entity.height
-        );
-        graphics.setScrollFactor(0);
-        graphics.setDepth(9998);
+    //     const graphics = this.scene.add.graphics();
+    //     graphics.lineStyle(2, color, 1);
+    //     graphics.strokeRect(
+    //         entity.x - entity.width / 2,
+    //         entity.y - entity.height / 2,
+    //         entity.width,
+    //         entity.height
+    //     );
+    //     graphics.setScrollFactor(0);
+    //     graphics.setDepth(9998);
 
-        this.collisionBoxes.push(graphics);
-    }
+    //     this.collisionBoxes.push(graphics);
+    // }
 
 
-    public drawCircle(centerX: number, centerY: number, radius: number, color: number = 0xffff00): void {
-        if (!this.isEnabled) return;
+    // public drawCircle(centerX: number, centerY: number, radius: number, color: number = 0xffff00): void {
+    //     if (!this.isEnabled) return;
 
-        const graphics = this.scene.add.graphics();
-        graphics.lineStyle(2, color, 1);
-        graphics.strokeCircle(centerX, centerY, radius);
-        graphics.setScrollFactor(0);
-        graphics.setDepth(9996);
+    //     const graphics = this.scene.add.graphics();
+    //     graphics.lineStyle(2, color, 1);
+    //     graphics.strokeCircle(centerX, centerY, radius);
+    //     graphics.setScrollFactor(0);
+    //     graphics.setDepth(9996);
 
-        this.collisionBoxes.push(graphics);
-    }
+    //     this.collisionBoxes.push(graphics);
+    // }
 
-    public drawPath(path: { x: number; y: number }[], color: number = 0x00ff00): void {
-        if (!this.isEnabled || path.length < 2) return;
+    // public drawPath(path: { x: number; y: number }[], color: number = 0x00ff00): void {
+    //     if (!this.isEnabled || path.length < 2) return;
 
-        const graphics = this.scene.add.graphics();
-        graphics.lineStyle(3, color, 0.8);
+    //     const graphics = this.scene.add.graphics();
+    //     graphics.lineStyle(3, color, 0.8);
 
-        // Draw path lines
-        for (let i = 0; i < path.length - 1; i++) {
-            graphics.moveTo(path[i].x, path[i].y);
-            graphics.lineTo(path[i + 1].x, path[i + 1].y);
-        }
+    //     // Draw path lines
+    //     for (let i = 0; i < path.length - 1; i++) {
+    //         graphics.moveTo(path[i].x, path[i].y);
+    //         graphics.lineTo(path[i + 1].x, path[i + 1].y);
+    //     }
 
-        // Draw waypoint markers
-        graphics.fillStyle(color, 0.6);
-        path.forEach((point) => {
-            graphics.fillCircle(point.x, point.y, 4);
-        });
+    //     // Draw waypoint markers
+    //     graphics.fillStyle(color, 0.6);
+    //     path.forEach((point) => {
+    //         graphics.fillCircle(point.x, point.y, 4);
+    //     });
 
-        graphics.setScrollFactor(0);
-        graphics.setDepth(9995);
+    //     graphics.setScrollFactor(0);
+    //     graphics.setDepth(9995);
 
-        this.pathVisualizations.push(graphics);
-    }
+    //     this.pathVisualizations.push(graphics);
+    // }
 
-    public addInfoText(x: number, y: number, text: string, color: number = 0xffffff): void {
-        if (!this.isEnabled) return;
+    // public addInfoText(x: number, y: number, text: string, color: number = 0xffffff): void {
+    //     if (!this.isEnabled) return;
 
-        const infoText = this.scene.add.bitmapText(x, y, 'pixel-white', text, 10);
-        infoText.setTint(color);
-        infoText.setScrollFactor(0);
-        infoText.setDepth(10001);
+    //     const infoText = this.scene.add.bitmapText(x, y, 'pixel-white', text, 10);
+    //     infoText.setTint(color);
+    //     infoText.setScrollFactor(0);
+    //     infoText.setDepth(10001);
 
-        this.infoTexts.push(infoText);
-    }
+    //     this.infoTexts.push(infoText);
+    // }
 
-    public toggleCollisionBoxes(): void {
-        if (!this.isEnabled) return;
+    // public toggleCollisionBoxes(): void {
+    //     if (!this.isEnabled) return;
 
-        this.collisionBoxes.forEach(box => {
-            box.setVisible(!box.visible);
-        });
-    }
+    //     this.collisionBoxes.forEach(box => {
+    //         box.setVisible(!box.visible);
+    //     });
+    // }
 
-    public togglePathVisualization(): void {
-        if (!this.isEnabled) return;
+    // public togglePathVisualization(): void {
+    //     if (!this.isEnabled) return;
 
-        this.pathVisualizations.forEach(path => {
-            path.setVisible(!path.visible);
-        });
-    }
+    //     this.pathVisualizations.forEach(path => {
+    //         path.setVisible(!path.visible);
+    //     });
+    // }
 
-    public clearVisualDebug(): void {
-        // Clear collision boxes
-        this.collisionBoxes.forEach(box => box.destroy());
-        this.collisionBoxes = [];
+    // public clearVisualDebug(): void {
+    //     // Clear collision boxes
+    //     this.collisionBoxes.forEach(box => box.destroy());
+    //     this.collisionBoxes = [];
 
-        // Clear path visualizations
-        this.pathVisualizations.forEach(path => path.destroy());
-        this.pathVisualizations = [];
+    //     // Clear path visualizations
+    //     this.pathVisualizations.forEach(path => path.destroy());
+    //     this.pathVisualizations = [];
 
-        // Clear info texts
-        this.infoTexts.forEach(text => text.destroy());
-        this.infoTexts = [];
+    //     // Clear info texts
+    //     this.infoTexts.forEach(text => text.destroy());
+    //     this.infoTexts = [];
 
-        // Clear debug graphics
-        this.debugGraphics.clear();
-    }
+    //     // Clear debug graphics
+    //     this.debugGraphics.clear();
+    // }
 
     public update(): void {
         if (!this.isEnabled) return;
@@ -413,64 +365,23 @@ export class DebugManager {
         this.debugInfo.fps = Math.round(this.scene.game.loop.actualFps);
 
         // Clear previous frame's visual debug
-        this.clearVisualDebug();
+        // this.clearVisualDebug();
     }
 
     private toggleToPeakDay(): void {
-
-        // Method 1: Scene-level event
         this.scene.events.emit('debug-setToPeakDay');
-
-        // Method 2: Global game-level event (works across all scenes)
-        this.scene.game.events.emit('debug-setToPeakDay');
-
-        // Method 3: Registry-based global signal
-        this.scene.registry.set('debugCommand', { type: 'setToPeakDay', timestamp: Date.now() });
-
-        // Method 4: Direct access as backup
-        const worldScene = this.scene as any;
-        if (worldScene.dayNightCycle) {
-            worldScene.dayNightCycle.setToPeakDay();
-        }
     }
 
     private toggleToPeakNight(): void {
-
-        // Method 1: Scene-level event
         this.scene.events.emit('debug-setToPeakNight');
-
-        // Method 2: Global game-level event (works across all scenes)
-        this.scene.game.events.emit('debug-setToPeakNight');
-
-        // Method 3: Registry-based global signal
-        this.scene.registry.set('debugCommand', { type: 'setToPeakNight', timestamp: Date.now() });
-
-        // Method 4: Direct access as backup
-        const worldScene = this.scene as any;
-        if (worldScene.dayNightCycle) {
-            worldScene.dayNightCycle.setToPeakNight();
-        }
     }
 
     private disableDebugMode(): void {
-        // Method 1: Scene-level event
         this.scene.events.emit('debug-disableTimeOverride');
-
-        // Method 2: Global game-level event (works across all scenes)
-        this.scene.game.events.emit('debug-disableTimeOverride');
-
-        // Method 3: Registry-based global signal
-        this.scene.registry.set('debugCommand', { type: 'disableTimeOverride', timestamp: Date.now() });
-
-        // Method 4: Direct access as backup
-        const worldScene = this.scene as any;
-        if (worldScene.dayNightCycle) {
-            worldScene.dayNightCycle.disableDebugMode();
-        }
     }
 
     public destroy(): void {
-        this.clearVisualDebug();
+        // this.clearVisualDebug();
         this.debugGraphics.destroy();
 
         // Hide the external debug panel
