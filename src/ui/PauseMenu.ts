@@ -51,8 +51,8 @@ export class PauseMenu {
 
         this.isVisible = true;
         this.createMenu();
-        // Don't pause the scene, just slow down time
-        this.scene.physics.world.timeScale = 0.1;
+        // Don't use timeScale as it causes movement issues
+        // The pause menu will overlay on top of the game
     }
 
     public hide(): void {
@@ -60,8 +60,7 @@ export class PauseMenu {
 
         this.isVisible = false;
         this.destroyMenu();
-        // Resume normal time
-        this.scene.physics.world.timeScale = 1;
+        // No timeScale to reset
     }
 
     private createMenu(): void {

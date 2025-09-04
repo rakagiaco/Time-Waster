@@ -52,6 +52,12 @@ class PlayerIdleState extends State {
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
+        // Don't process input if pause menu is open
+        const worldScene = _scene as any;
+        if (worldScene.pauseMenu && worldScene.pauseMenu.isMenuVisible()) {
+            return;
+        }
+
         // Check for movement input (with null checks)
         if ((keyUp && keyUp.isDown) || (keyDown && keyDown.isDown) || (keyLeft && keyLeft.isDown) || (keyRight && keyRight.isDown)) {
             player.animsFSM.transition('walking');
@@ -84,6 +90,14 @@ class PlayerWalkingState extends State {
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
+        // Don't process input if pause menu is open
+        const worldScene = _scene as any;
+        if (worldScene.pauseMenu && worldScene.pauseMenu.isMenuVisible()) {
+            // Stop movement when pause menu is open
+            player.setVelocity(0, 0);
+            return;
+        }
+
         // Handle movement (with null checks)
         if (keyUp && keyDown && keyLeft && keyRight) {
             updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight);
@@ -134,6 +148,14 @@ class PlayerSprintingState extends State {
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
+        // Don't process input if pause menu is open
+        const worldScene = _scene as any;
+        if (worldScene.pauseMenu && worldScene.pauseMenu.isMenuVisible()) {
+            // Stop movement when pause menu is open
+            player.setVelocity(0, 0);
+            return;
+        }
+
         // Handle sprint movement (faster) - with null checks
         if (keyUp && keyDown && keyLeft && keyRight) {
             updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight, true);
