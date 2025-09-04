@@ -267,7 +267,6 @@ export class UnifiedNPC extends Entity {
         if (!this.player || this.isInteracting) return;
         
         this.isInteracting = true;
-        // console.log('NPC: Player interaction started');
         
         if (this.isQuestGiver) {
             this.handleQuestInteraction();
@@ -277,36 +276,27 @@ export class UnifiedNPC extends Entity {
     }
 
     private handleQuestInteraction(): void {
-        // console.log('NPC: Quest accepted:', this.hasAcceptedQuest());
-        // console.log('NPC: Has had initial conversation:', this.hasHadInitialConversation);
-        // console.log('NPC: Current quest:', this.currentQuest?.name);
         
         // Check if player has accepted the quest
         if (this.hasAcceptedQuest()) {
             // Check if quest is completed
             if (this.isQuestCompleted()) {
-                // console.log('NPC: Quest is completed, showing completion dialogue');
                 this.startQuestCompleteDialogue();
             } else {
-                // console.log('NPC: Quest is incomplete, showing progress dialogue');
                 this.startQuestIncompleteDialogue();
             }
         } else if (!this.hasHadInitialConversation) {
             // First time meeting - show full quest offer
-            // console.log('NPC: First time meeting, showing quest offer');
             this.startQuestOfferDialogue();
             this.hasHadInitialConversation = true;
         } else if (this.questDeclined) {
             // Player previously declined quest - show return dialogue
-            // console.log('NPC: Return visit after quest decline, showing return dialogue');
             this.startReturnDialogue();
         } else {
             // Return visit - check if there's a quest to offer
             if (this.currentQuest) {
-                // console.log('NPC: Return visit with available quest, showing quest offer');
                 this.startQuestOfferDialogue();
             } else {
-                // console.log('NPC: Return visit, no quest available, showing general dialogue');
                 this.startReturnDialogue();
             }
         }
@@ -314,7 +304,6 @@ export class UnifiedNPC extends Entity {
 
     private handleBasicInteraction(): void {
         // Default interaction for non-quest NPCs
-        // console.log('NPC: Basic interaction triggered');
     }
 
     // Quest System Methods
@@ -359,7 +348,6 @@ export class UnifiedNPC extends Entity {
     }
 
     public startQuestDeclinedDialogue(): void {
-        // console.log('NPC: Starting quest declined dialogue');
         
         // Mark quest as declined
         this.questDeclined = true;
@@ -380,7 +368,6 @@ export class UnifiedNPC extends Entity {
                 ]
             };
             
-            // console.log('NPC: Showing snarky remark dialogue');
             this.showDialogue(dialogue);
         });
     }
@@ -388,7 +375,6 @@ export class UnifiedNPC extends Entity {
     public startQuestAcceptedDialogue(): void {
         if (!this.currentQuest) return;
         
-        // console.log('NPC: Quest accepted, closing dialogue and returning to game');
         
         // Mark quest as accepted and reset declined flag
         this.questAccepted = true;
@@ -411,8 +397,6 @@ export class UnifiedNPC extends Entity {
             }
             
             // Emit quest accepted event for QuestUI with correct current progress
-            // console.log('NPC: Emitting questAccepted event for quest:', this.currentQuest.name);
-            // console.log('NPC: Current progress from QuestSystem:', currentProgress);
             if (this.currentQuest) {
                 this.scene.events.emit('questAccepted', {
                     id: this.currentQuest.id.toString(),
@@ -430,7 +414,6 @@ export class UnifiedNPC extends Entity {
     }
 
     private completeQuest(): void {
-        // console.log('NPC: completeQuest method called');
         if (!this.currentQuest) {
             return;
         }
@@ -445,12 +428,10 @@ export class UnifiedNPC extends Entity {
                 this.completedQuests.add(this.currentQuest.id);
                 
                 // Quest completed - reward will be handled by completeQuestAndReward method
-                // console.log('NPC: Quest completed through quest system');
                 
                 // Move to next quest
                 this.advanceToNextQuest();
             } else {
-                // console.log('NPC: Quest completion failed - not ready or missing items');
             }
         } else {
             console.error('NPC: Quest system not found');
@@ -464,13 +445,10 @@ export class UnifiedNPC extends Entity {
         const reward = this.currentDialogue.reward;
         this.player.p1Inventory.add(reward.type, reward.amount);
         
-        // console.log(`NPC: Added reward to player inventory: ${reward.amount} ${reward.type}`);
-        // console.log('NPC: Player accepted reward, closing dialogue and returning to game');
         this.scene.events.emit('hideDialogue');
     }
 
     private completeQuestAndReward(): void {
-        // console.log('NPC: completeQuestAndReward method called');
         if (!this.currentQuest) {
             return;
         }
@@ -487,17 +465,14 @@ export class UnifiedNPC extends Entity {
                 // Add reward to player inventory immediately
                 if (this.player) {
                     this.player.p1Inventory.add('gold-coin', 10);
-                    // console.log('NPC: Added 10 gold coins to player inventory');
                 }
                 
                 // Close dialogue and return to game
-                // console.log('NPC: Quest completed and reward given, closing dialogue');
                 this.scene.events.emit('hideDialogue');
                 
                 // Move to next quest
                 this.advanceToNextQuest();
             } else {
-                // console.log('NPC: Quest completion failed - not ready or missing items');
             }
         } else {
             console.error('NPC: Quest system not found');
@@ -527,8 +502,6 @@ export class UnifiedNPC extends Entity {
             this.questAccepted = false;
             this.questDeclined = false;
             
-            // console.log('NPC: Advanced to next quest:', this.currentQuest.name);
-            // console.log('NPC: Reset quest acceptance state for new quest');
             
             // Show placeholder dialogue for next quest
             this.showNextQuestPlaceholder();
@@ -536,7 +509,6 @@ export class UnifiedNPC extends Entity {
             this.currentQuest = null;
             this.questAccepted = false;
             this.questDeclined = false;
-            // console.log('NPC: All quests completed!');
         }
     }
 
@@ -560,7 +532,6 @@ export class UnifiedNPC extends Entity {
                 ]
             };
             
-            // console.log('NPC: Showing next quest placeholder dialogue');
             this.showDialogue(dialogue);
         });
     }
@@ -588,14 +559,12 @@ export class UnifiedNPC extends Entity {
         const questSystem = this.scene.data.get('questSystem');
         if (questSystem) {
             const isReady = questSystem.isQuestReadyForCompletion(this.currentQuest.id);
-            // console.log(`NPC: Quest ${this.currentQuest.id} ready for completion: ${isReady}`);
             return isReady;
         }
         
         // Fallback to checking inventory
         const progress = this.getQuestProgress();
         const isComplete = progress >= this.currentQuest.questData.amount;
-        // console.log(`NPC: Quest progress: ${progress}/${this.currentQuest.questData.amount}, complete: ${isComplete}`);
         return isComplete;
     }
 

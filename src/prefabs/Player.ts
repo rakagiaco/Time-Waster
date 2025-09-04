@@ -376,6 +376,9 @@ export class Player extends Entity {
         // Update state machine
         this.animsFSM.step();
 
+        // Update weapon position continuously to follow player movement
+        this.updateWeaponPosition();
+
         // Update invincibility frames
         if (this.invincibilityFrames) {
             this.invincibilityTimer -= this.scene.game.loop.delta;
@@ -606,16 +609,7 @@ export class Player extends Entity {
         // Position weapon on player's hip/back
         this.updateWeaponPosition();
         
-        // Apply rarity glow if applicable
-        if (weaponName.includes('uncommon')) {
-            this.equippedWeapon.setTint(0x00FF00); // Green
-        } else if (weaponName.includes('rare')) {
-            this.equippedWeapon.setTint(0x0080FF); // Blue
-        } else if (weaponName.includes('epic')) {
-            this.equippedWeapon.setTint(0x8000FF); // Purple
-        } else if (weaponName.includes('legendary')) {
-            this.equippedWeapon.setTint(0xFF8000); // Orange/Gold
-        }
+        // No tint effects - swords use natural colors
     }
 
     /**

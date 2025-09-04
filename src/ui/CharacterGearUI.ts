@@ -780,7 +780,6 @@ export class CharacterGearUI {
      */
     private handleArmorSlotClick(): void {
         // Armor slot clicked
-        // TODO: Implement armor equipping logic
     }
 
     /**
@@ -788,14 +787,12 @@ export class CharacterGearUI {
      */
     private handleAccessorySlotClick(): void {
         // Accessory slot clicked
-        // TODO: Implement accessory equipping logic
     }
 
     /**
      * Equip an item to a slot
      */
     public equipItem(_slotType: 'weapon' | 'armor' | 'accessory', _itemName: string): boolean {
-        // TODO: Implement item equipping logic
         // Equipping item to slot
         return true;
     }
@@ -804,7 +801,6 @@ export class CharacterGearUI {
      * Unequip an item from a slot
      */
     public unequipItem(_slotType: 'weapon' | 'armor' | 'accessory'): boolean {
-        // TODO: Implement item unequipping logic
         // Unequipping from slot
         return true;
     }
@@ -854,16 +850,19 @@ export class CharacterGearUI {
     public getGearSlotState(): any {
         return {
             weapon: {
+                item: this.weaponSlot.item,
                 itemType: this.weaponSlot.itemType,
                 count: this.weaponSlot.count,
                 equipped: this.weaponSlot.equipped
             },
             armor: {
+                item: this.armorSlot.item,
                 itemType: this.armorSlot.itemType,
                 count: this.armorSlot.count,
                 equipped: this.armorSlot.equipped
             },
             accessory: {
+                item: this.accessorySlot.item,
                 itemType: this.accessorySlot.itemType,
                 count: this.accessorySlot.count,
                 equipped: this.accessorySlot.equipped
@@ -876,27 +875,27 @@ export class CharacterGearUI {
      */
     public loadGearSlotState(gearSlotState: any): void {
         if (gearSlotState.weapon) {
+            this.weaponSlot.item = gearSlotState.weapon.item || gearSlotState.weapon.itemType;
             this.weaponSlot.itemType = gearSlotState.weapon.itemType;
-            this.weaponSlot.item = gearSlotState.weapon.itemType;
             this.weaponSlot.count = gearSlotState.weapon.count;
             this.weaponSlot.equipped = gearSlotState.weapon.equipped;
             
             // Equip weapon on player if it's equipped
-            if (this.weaponSlot.equipped && this.weaponSlot.itemType && this.player) {
-                this.player.equipWeapon(this.weaponSlot.itemType);
+            if (this.weaponSlot.equipped && this.weaponSlot.item && this.player) {
+                this.player.equipWeapon(this.weaponSlot.item);
             }
         }
         
         if (gearSlotState.armor) {
+            this.armorSlot.item = gearSlotState.armor.item || gearSlotState.armor.itemType;
             this.armorSlot.itemType = gearSlotState.armor.itemType;
-            this.armorSlot.item = gearSlotState.armor.itemType;
             this.armorSlot.count = gearSlotState.armor.count;
             this.armorSlot.equipped = gearSlotState.armor.equipped;
         }
         
         if (gearSlotState.accessory) {
+            this.accessorySlot.item = gearSlotState.accessory.item || gearSlotState.accessory.itemType;
             this.accessorySlot.itemType = gearSlotState.accessory.itemType;
-            this.accessorySlot.item = gearSlotState.accessory.itemType;
             this.accessorySlot.count = gearSlotState.accessory.count;
             this.accessorySlot.equipped = gearSlotState.accessory.equipped;
         }

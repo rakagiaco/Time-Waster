@@ -196,13 +196,10 @@ export class World extends Phaser.Scene {
             });
 
             // Setup Lantern
-            // console.log('Setting up lantern...');
             this.lantern = new Lantern(this, this.player);
             this.player.lantern = this.lantern; // Connect lantern to player
-            // console.log('Lantern setup complete');
 
             // Setup Quest System and NPC
-            // console.log('Setting up quest system...');
             this.questSystem = new QuestSystem(this, this.player);
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
             
@@ -225,7 +222,6 @@ export class World extends Phaser.Scene {
                 this.questGiverNPC.setPlayer(this.player);
                 this.questSystem.setNPC(this.questGiverNPC);
                 this.data.set('npc', this.questGiverNPC);
-                // console.log('Narvark NPC system initialized');
             } else {
                 console.error('Narvark NPC not found!');
             }
@@ -418,7 +414,6 @@ export class World extends Phaser.Scene {
 
     private createNPCs(): void {
         try {
-            // console.log('Creating quest giver Narvark near spawn...');
             const npc1Spawn = this.tilemap.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
             if (!npc1Spawn) {
                 console.error('NPC spawn point not found in tilemap!');
@@ -437,7 +432,6 @@ export class World extends Phaser.Scene {
 
             questGiver.showQuestIcon(); // Show exclamation mark over head
             this.npcs.push(questGiver);
-            // console.log('Quest giver Narvark created successfully');
         } catch (error) {
             console.error('Error creating NPC:', error);
         }
@@ -583,7 +577,6 @@ export class World extends Phaser.Scene {
      * Create fruit spawn point
      */
     private createFruitSpawnPoint(x: number, y: number): void {
-        // console.log(`Creating fruit spawn point at (${x}, ${y})`);
         
         const fruit = new Item(this, x, y, 'fruit', { 
             sound: 'collect-herb', 
@@ -619,7 +612,6 @@ export class World extends Phaser.Scene {
      * Create 5 test herbs near Narvark for quest testing
      */
     private createTestHerbs(): void {
-        // TODO: Get Narvark position from tilemap object layer instead of hardcoding
         const narvarkX = 341.818181818182;
         const narvarkY = 344;
         
@@ -632,9 +624,6 @@ export class World extends Phaser.Scene {
             { x: narvarkX - 80, y: narvarkY + 30 }    // Left and down
         ];
 
-        // console.log('Creating herbs at positions:', herbPositions);
-        // console.log('Camera position:', this.cameras.main.x, this.cameras.main.y);
-        // console.log('Camera bounds:', this.cameras.main.getBounds());
 
         herbPositions.forEach((pos, index) => {
             try {
@@ -1064,7 +1053,6 @@ export class World extends Phaser.Scene {
     }
 
     private createTreeOfLife(): void {
-        // TODO: Get Tree of Life position from tilemap object layer instead of hardcoding
         const treeOfLife = new Tree(this, 350, 400, 'tree-2-second')
         treeOfLife.clearFruit()
 
@@ -1307,17 +1295,12 @@ export class World extends Phaser.Scene {
             });
         });
 
-        // console.log('Collision detection configured for all entities');
     }
 
     private loadSaveData(): void {
         const saveData = SaveSystem.loadGame();
         if (saveData) {
-            // console.log('Applying save data...');
             SaveSystem.applySaveData(this, saveData);
-            // console.log('Save data applied successfully');
-        } else {
-            // console.log('No save data found or failed to load');
         }
     }
 
@@ -1492,8 +1475,6 @@ export class World extends Phaser.Scene {
         });
     }
 
-    // TODO: Implement createQuestHerbs() method to spawn quest herbs from tilemap
-    // private createQuestHerbs(): void {}
 
     private setupInteractionControls(): void {
         // Setup E key for interaction
@@ -1555,11 +1536,9 @@ export class World extends Phaser.Scene {
                 ease: 'Power2',
                 onComplete: () => {
                     fadeOverlay.destroy();
-                    // console.log('Game fade in complete');
                 }
             });
 
-            // console.log('Starting game fade in...');
 
         } catch (error) {
             console.error('Error in game fade in:', error);
@@ -1570,11 +1549,9 @@ export class World extends Phaser.Scene {
      * Clean up resources when scene is destroyed
      */
     shutdown(): void {
-        // console.log('World scene shutting down...');
 
         // Stop music manager with fade out
         if (this.musicManager) {
-            // console.log('Stopping shuffle playlist...');
             this.musicManager.stopPlaylist();
         }
 
@@ -1583,6 +1560,5 @@ export class World extends Phaser.Scene {
             this.dayNightCycle.destroy();
         }
 
-        // console.log('World scene cleanup complete');
     }
 }
