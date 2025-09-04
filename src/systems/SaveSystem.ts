@@ -284,6 +284,12 @@ export class SaveSystem {
                 player.questStatus = saveData.player.questStatus;
             }
 
+            // Apply gear slot data
+            if (scene.characterGearUI && saveData.player.gearSlots) {
+                scene.characterGearUI.loadGearSlotState(saveData.player.gearSlots);
+                console.log('Gear slot state restored');
+            }
+
             // Apply enemy data
             if (scene.enemies) {
                 saveData.enemies.forEach((enemyData, index) => {

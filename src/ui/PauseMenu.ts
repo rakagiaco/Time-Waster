@@ -288,8 +288,12 @@ export class PauseMenu {
                 cameraY: worldScene.cameras.main.scrollY
             };
 
+            // Get gear slot state from character gear UI
+            const gearSlotState = worldScene.characterGearUI ? 
+                worldScene.characterGearUI.getGearSlotState() : null;
+
             // Call SaveSystem with proper parameters
-            const success = SaveSystem.saveGame(player, enemies, trees, items, gameState);
+            const success = SaveSystem.saveGame(player, enemies, trees, items, gameState, gearSlotState);
 
             if (!success) {
                 console.error('Failed to save game');

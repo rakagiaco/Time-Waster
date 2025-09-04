@@ -738,8 +738,10 @@ export class CharacterGearUI {
             // Map to appropriate sword texture based on rarity
             switch (rarity) {
                 case 'common':
+                    textureName = 'medieval-sword-common'; // 64x128 high-res version
+                    break;
                 case 'uncommon':
-                    textureName = 'medieval-sword-icon'; // 32x32 icon version
+                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
                     break;
                 case 'rare':
                     textureName = 'medieval-sword-rare'; // 64x128 high-res version
@@ -751,7 +753,7 @@ export class CharacterGearUI {
                     textureName = 'medieval-sword-legendary'; // 64x128 high-res version
                     break;
                 default:
-                    textureName = 'medieval-sword-icon';
+                    textureName = 'medieval-sword-common';
             }
         }
         
@@ -759,12 +761,8 @@ export class CharacterGearUI {
         const weaponIcon = this.scene.add.image(0, -8, textureName);
         weaponIcon.setOrigin(0.5, 0.5);
         
-        // Use different scales for different texture sizes
-        if (textureName === 'medieval-sword-icon') {
-            weaponIcon.setScale(0.6); // 32x32 icon
-        } else {
-            weaponIcon.setScale(0.3); // 64x128 high-res swords
-        }
+        // All swords are now high-resolution (64x128), use consistent scale
+        weaponIcon.setScale(0.2); // 64x128 high-res swords - smaller scale to fit in slot
         
         weaponIcon.setScrollFactor(0);
         this.weaponSlotUI.add(weaponIcon);

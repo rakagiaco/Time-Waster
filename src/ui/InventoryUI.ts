@@ -731,23 +731,7 @@ export class InventoryUI {
         
         itemIcon.setScrollFactor(0);
         
-        // Apply rarity glow for weapons
-        if (itemType.startsWith('weapon_')) {
-            const parts = itemType.split('_');
-            const rarity = parts[2];
-            const glowColors = {
-                common: 0xFFFFFF,    // White
-                uncommon: 0x00FF00,  // Green
-                rare: 0x0080FF,      // Blue
-                epic: 0x8000FF,      // Purple
-                legendary: 0xFF8000  // Orange/Gold
-            };
-            const glowColor = glowColors[rarity as keyof typeof glowColors] || 0xFFFFFF;
-            if (rarity !== 'common') {
-                itemIcon.setTint(glowColor);
-                itemIcon.setAlpha(0.9);
-            }
-        }
+        // Weapon glow effects removed - swords now use natural colors
         
         return itemIcon;
     }
@@ -1856,13 +1840,13 @@ export class InventoryUI {
         const screenX = inventoryX + itemX;
         const screenY = inventoryY + itemY;
         
-        // Position progress bar at the bottom of the slot, centered horizontally
+        // Position progress bar to the right side of the slot, centered vertically
         // Keep it within the slot boundaries
         const progressBarHeight = 6; // Height of the progress bar
         
         this.consumptionProgressBar.setPosition(
-            screenX, // Center horizontally on the item
-            screenY + this.slotSize / 2 - progressBarHeight / 2 - 2 // Bottom of slot with small margin
+            screenX + this.slotSize / 2 - progressBarHeight / 2 - 2, // Shift to the right side of the slot
+            screenY // Keep vertical position centered on the item
         );
     }
 

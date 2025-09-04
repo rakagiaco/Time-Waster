@@ -266,6 +266,18 @@ export class DebugManager {
         this.scene.events.emit('debug-disableTimeOverride');
     }
 
+    public drawCollisionBox(entity: any, color: number): void {
+        if (!this.isEnabled || !this.debugGraphics || !entity) return;
+
+        // Get entity bounds
+        const bounds = entity.getBounds ? entity.getBounds() : null;
+        if (!bounds) return;
+
+        // Set line style and draw rectangle
+        this.debugGraphics.lineStyle(2, color, 1);
+        this.debugGraphics.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
+    }
+
     public destroy(): void {
         // this.clearVisualDebug();
         this.debugGraphics.destroy();

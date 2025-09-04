@@ -432,17 +432,14 @@ export class UnifiedNPC extends Entity {
     private completeQuest(): void {
         // console.log('NPC: completeQuest method called');
         if (!this.currentQuest) {
-            // console.log('NPC: No current quest found');
             return;
         }
         
-        // console.log(`NPC: Attempting to complete quest ${this.currentQuest.id}`);
         
         // Use the quest system to complete the quest
         const questSystem = this.scene.data.get('questSystem');
         if (questSystem) {
             const success = questSystem.completeQuestAtNPC(this.currentQuest.id);
-            // console.log(`NPC: Quest completion result: ${success}`);
             if (success) {
                 // Mark quest as completed in NPC
                 this.completedQuests.add(this.currentQuest.id);
@@ -475,17 +472,14 @@ export class UnifiedNPC extends Entity {
     private completeQuestAndReward(): void {
         // console.log('NPC: completeQuestAndReward method called');
         if (!this.currentQuest) {
-            // console.log('NPC: No current quest found');
             return;
         }
         
-        // console.log(`NPC: Attempting to complete quest ${this.currentQuest.id} and give reward`);
         
         // Use the quest system to complete the quest
         const questSystem = this.scene.data.get('questSystem');
         if (questSystem) {
             const success = questSystem.completeQuestAtNPC(this.currentQuest.id);
-            // console.log(`NPC: Quest completion result: ${success}`);
             if (success) {
                 // Mark quest as completed in NPC
                 this.completedQuests.add(this.currentQuest.id);

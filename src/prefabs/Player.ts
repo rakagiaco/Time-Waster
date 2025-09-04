@@ -584,8 +584,12 @@ export class Player extends Entity {
      */
     private createWeaponAttachment(weaponName: string): void {
         // Determine weapon texture based on name
-        let weaponTexture = 'medieval-sword-icon';
-        if (weaponName.includes('rare')) {
+        let weaponTexture = 'medieval-sword-common';
+        if (weaponName.includes('common')) {
+            weaponTexture = 'medieval-sword-common';
+        } else if (weaponName.includes('uncommon')) {
+            weaponTexture = 'medieval-sword-uncommon';
+        } else if (weaponName.includes('rare')) {
             weaponTexture = 'medieval-sword-rare';
         } else if (weaponName.includes('epic')) {
             weaponTexture = 'medieval-sword-epic';
@@ -594,7 +598,7 @@ export class Player extends Entity {
         }
         
         // Create weapon sprite attached to player
-        this.equippedWeapon = this.scene.add.image(0, 0, weaponTexture);
+        this.equippedWeapon = this.scene.add.image(this.x, this.y, weaponTexture);
         this.equippedWeapon.setOrigin(0.5, 0.8); // Anchor at bottom center
         this.equippedWeapon.setScale(0.4); // Smaller than world sword
         this.equippedWeapon.setDepth(this.depth + 1); // Above player
@@ -623,19 +627,19 @@ export class Player extends Entity {
         // Position weapon on player's hip/back based on direction
         switch (this.lastDirection) {
             case 'down':
-                this.equippedWeapon.setPosition(8, 8); // Right hip
+                this.equippedWeapon.setPosition(this.x + 8, this.y + 8); // Right hip
                 this.equippedWeapon.setRotation(0);
                 break;
             case 'up':
-                this.equippedWeapon.setPosition(-8, -8); // Left shoulder/back
+                this.equippedWeapon.setPosition(this.x - 8, this.y - 8); // Left shoulder/back
                 this.equippedWeapon.setRotation(Math.PI);
                 break;
             case 'left':
-                this.equippedWeapon.setPosition(-8, 4); // Left hip
+                this.equippedWeapon.setPosition(this.x - 8, this.y + 4); // Left hip
                 this.equippedWeapon.setRotation(-Math.PI / 2);
                 break;
             case 'right':
-                this.equippedWeapon.setPosition(8, 4); // Right hip
+                this.equippedWeapon.setPosition(this.x + 8, this.y + 4); // Right hip
                 this.equippedWeapon.setRotation(Math.PI / 2);
                 break;
         }

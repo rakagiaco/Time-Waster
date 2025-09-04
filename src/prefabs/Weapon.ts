@@ -41,6 +41,8 @@ export class MedievalSword extends Item {
         graphics.setPosition(-1000, -1000);
         // Make graphics invisible during texture generation
         graphics.setVisible(false);
+        // Set depth to be behind everything
+        graphics.setDepth(-1000);
         
         // Create high-resolution full-size sword (64x128)
         this.drawDetailedSword(graphics, 64, 128);
@@ -52,6 +54,14 @@ export class MedievalSword extends Item {
         graphics.generateTexture('medieval-sword-icon', 32, 32);
         
         // Create different sword variants for different rarities
+        graphics.clear();
+        this.drawCommonSword(graphics, 64, 128);
+        graphics.generateTexture('medieval-sword-common', 64, 128);
+        
+        graphics.clear();
+        this.drawUncommonSword(graphics, 64, 128);
+        graphics.generateTexture('medieval-sword-uncommon', 64, 128);
+        
         graphics.clear();
         this.drawRareSword(graphics, 64, 128);
         graphics.generateTexture('medieval-sword-rare', 64, 128);
@@ -684,9 +694,180 @@ export class MedievalSword extends Item {
         graphics.strokeCircle(centerX, bladeLength + guardHeight + handleLength + pommelSize/2, pommelSize/2 + 2);
     }
 
+    /**
+     * Draws a common sword with basic steel design
+     */
+    private static drawCommonSword(graphics: Phaser.GameObjects.Graphics, width: number, height: number): void {
+        const centerX = width / 2;
+        const bladeWidth = 6;
+        const bladeLength = height * 0.65;
+        const guardWidth = 24;
+        const guardHeight = 12;
+        const handleLength = height * 0.25;
+        const pommelSize = 12;
+        
+        // === BLADE ===
+        // Main blade body with basic steel color
+        graphics.fillStyle(0xB0B0B0); // Basic steel gray
+        graphics.fillRect(centerX - bladeWidth/2, 0, bladeWidth, bladeLength);
+        
+        // Blade edges - simple highlight
+        graphics.fillStyle(0xC0C0C0); // Light steel
+        graphics.fillRect(centerX - bladeWidth/2, 0, 1, bladeLength);
+        graphics.fillRect(centerX + bladeWidth/2 - 1, 0, 1, bladeLength);
+        
+        // Simple fuller
+        graphics.fillStyle(0x909090); // Darker gray
+        graphics.fillRect(centerX - 1, 10, 2, bladeLength - 20);
+        
+        // Blade tip
+        graphics.fillStyle(0xD0D0D0);
+        graphics.fillTriangle(
+            centerX - bladeWidth/2, bladeLength - 6,
+            centerX + bladeWidth/2, bladeLength - 6,
+            centerX, bladeLength
+        );
+        
+        // === CROSSGUARD ===
+        // Main crossguard body - basic steel
+        graphics.fillStyle(0xB0B0B0); // Basic steel
+        graphics.fillRect(centerX - guardWidth/2, bladeLength, guardWidth, guardHeight);
+        
+        // Crossguard edges - darker steel
+        graphics.fillStyle(0x808080); // Dark steel
+        graphics.fillRect(centerX - guardWidth/2, bladeLength, guardWidth, 1);
+        graphics.fillRect(centerX - guardWidth/2, bladeLength + guardHeight - 1, guardWidth, 1);
+        graphics.fillRect(centerX - guardWidth/2, bladeLength, 1, guardHeight);
+        graphics.fillRect(centerX + guardWidth/2 - 1, bladeLength, 1, guardHeight);
+        
+        // Center opening
+        graphics.fillStyle(0x000000);
+        graphics.fillRect(centerX - 3, bladeLength, 6, guardHeight);
+        
+        // === HANDLE ===
+        // Main handle - dark brown
+        graphics.fillStyle(0x8B4513);
+        graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight, bladeWidth, handleLength);
+        
+        // Simple leather wrapping
+        graphics.fillStyle(0x654321);
+        for (let i = 0; i < handleLength; i += 6) {
+            graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight + i, bladeWidth, 2);
+        }
+        
+        // === POMMEL ===
+        // Main pommel body - basic steel
+        graphics.fillStyle(0xB0B0B0);
+        graphics.fillCircle(centerX, bladeLength + guardHeight + handleLength + pommelSize/2, pommelSize/2);
+        
+        // Pommel rim - darker steel
+        graphics.fillStyle(0x808080);
+        graphics.lineStyle(2, 0x808080);
+        graphics.strokeCircle(centerX, bladeLength + guardHeight + handleLength + pommelSize/2, pommelSize/2);
+    }
+
+    /**
+     * Draws an uncommon sword with improved steel and simple decorations
+     */
+    private static drawUncommonSword(graphics: Phaser.GameObjects.Graphics, width: number, height: number): void {
+        const centerX = width / 2;
+        const bladeWidth = 7;
+        const bladeLength = height * 0.65;
+        const guardWidth = 26;
+        const guardHeight = 13;
+        const handleLength = height * 0.25;
+        const pommelSize = 13;
+        
+        // === BLADE ===
+        // Main blade body with improved steel color
+        graphics.fillStyle(0xB8B8B8); // Improved steel gray
+        graphics.fillRect(centerX - bladeWidth/2, 0, bladeWidth, bladeLength);
+        
+        // Blade edges - better highlight
+        graphics.fillStyle(0xC8C8C8); // Light steel
+        graphics.fillRect(centerX - bladeWidth/2, 0, 1, bladeLength);
+        graphics.fillRect(centerX + bladeWidth/2 - 1, 0, 1, bladeLength);
+        
+        graphics.fillStyle(0xD8D8D8); // Secondary edge
+        graphics.fillRect(centerX - bladeWidth/2 + 1, 0, 1, bladeLength);
+        graphics.fillRect(centerX + bladeWidth/2 - 2, 0, 1, bladeLength);
+        
+        // Fuller with better detail
+        graphics.fillStyle(0x989898); // Darker gray
+        graphics.fillRect(centerX - 2, 8, 4, bladeLength - 16);
+        
+        // Simple engravings
+        graphics.fillStyle(0xD0D0D0);
+        graphics.fillRect(centerX - 1, 15, 2, 1);
+        graphics.fillRect(centerX - 1, 25, 2, 1);
+        graphics.fillRect(centerX - 1, 35, 2, 1);
+        
+        // Blade tip
+        graphics.fillStyle(0xE0E0E0);
+        graphics.fillTriangle(
+            centerX - bladeWidth/2, bladeLength - 7,
+            centerX + bladeWidth/2, bladeLength - 7,
+            centerX, bladeLength
+        );
+        
+        // === CROSSGUARD ===
+        // Main crossguard body - improved steel
+        graphics.fillStyle(0xB8B8B8); // Improved steel
+        graphics.fillRect(centerX - guardWidth/2, bladeLength, guardWidth, guardHeight);
+        
+        // Crossguard edges - darker steel
+        graphics.fillStyle(0x808080); // Dark steel
+        graphics.fillRect(centerX - guardWidth/2, bladeLength, guardWidth, 2);
+        graphics.fillRect(centerX - guardWidth/2, bladeLength + guardHeight - 2, guardWidth, 2);
+        graphics.fillRect(centerX - guardWidth/2, bladeLength, 2, guardHeight);
+        graphics.fillRect(centerX + guardWidth/2 - 2, bladeLength, 2, guardHeight);
+        
+        // Center opening
+        graphics.fillStyle(0x000000);
+        graphics.fillRect(centerX - 3, bladeLength, 6, guardHeight);
+        
+        // Simple decorative elements
+        graphics.fillStyle(0xC8C8C8); // Light steel
+        graphics.fillRect(centerX - guardWidth/2 + 4, bladeLength + 2, 4, guardHeight - 4);
+        graphics.fillRect(centerX + guardWidth/2 - 8, bladeLength + 2, 4, guardHeight - 4);
+        
+        // === HANDLE ===
+        // Main handle - dark brown with better wrapping
+        graphics.fillStyle(0x8B4513);
+        graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight, bladeWidth, handleLength);
+        
+        // Better leather wrapping
+        graphics.fillStyle(0x654321);
+        for (let i = 0; i < handleLength; i += 4) {
+            graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight + i, bladeWidth, 1);
+        }
+        
+        // Silver wire accents
+        graphics.fillStyle(0xC0C0C0);
+        graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight + 2, bladeWidth, 1);
+        graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight + 6, bladeWidth, 1);
+        graphics.fillRect(centerX - bladeWidth/2, bladeLength + guardHeight + 10, bladeWidth, 1);
+        
+        // === POMMEL ===
+        // Main pommel body - improved steel
+        graphics.fillStyle(0xB8B8B8);
+        graphics.fillCircle(centerX, bladeLength + guardHeight + handleLength + pommelSize/2, pommelSize/2);
+        
+        // Pommel rim - darker steel
+        graphics.fillStyle(0x808080);
+        graphics.lineStyle(2, 0x808080);
+        graphics.strokeCircle(centerX, bladeLength + guardHeight + handleLength + pommelSize/2, pommelSize/2);
+        
+        // Simple center decoration
+        graphics.fillStyle(0xE0E0E0);
+        graphics.fillCircle(centerX, bladeLength + guardHeight + handleLength + pommelSize/2, 3);
+    }
+
     constructor(scene: Phaser.Scene, x: number, y: number, rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' = 'common') {
-        // Generate sword sprites first, before creating the item
-        MedievalSword.generateSwordTextures(scene);
+        // Generate sword sprites first, before creating the item (only if not already generated)
+        if (!scene.textures.exists('medieval-sword') || !scene.textures.exists('medieval-sword-icon')) {
+            MedievalSword.generateSwordTextures(scene);
+        }
         
         // Choose texture based on rarity (static method, no 'this' needed)
         const textureKey = MedievalSword.getTextureKeyForRarity(rarity);
@@ -708,8 +889,9 @@ export class MedievalSword extends Item {
     private static getTextureKeyForRarity(rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary'): string {
         switch (rarity) {
             case 'common':
+                return 'medieval-sword-common';
             case 'uncommon':
-                return 'medieval-sword';
+                return 'medieval-sword-uncommon';
             case 'rare':
                 return 'medieval-sword-rare';
             case 'epic':
@@ -717,7 +899,7 @@ export class MedievalSword extends Item {
             case 'legendary':
                 return 'medieval-sword-legendary';
             default:
-                return 'medieval-sword';
+                return 'medieval-sword-common';
         }
     }
 
@@ -784,44 +966,12 @@ export class MedievalSword extends Item {
         this.setData('weaponType', 'sword');
         this.setData('rarity', this.weaponStats.rarity);
         
-        // Add glow effect for higher rarity items
-        this.addRarityGlow();
+        // Glow effects removed - swords now use natural colors
         
         // Set up tooltip data
         this.setupTooltipData();
     }
 
-    /**
-     * Adds a glow effect based on weapon rarity
-     */
-    private addRarityGlow(): void {
-        const glowColors = {
-            common: 0xFFFFFF,    // White
-            uncommon: 0x00FF00,  // Green
-            rare: 0x0080FF,      // Blue
-            epic: 0x8000FF,      // Purple
-            legendary: 0xFF8000  // Orange/Gold
-        };
-
-        const glowColor = glowColors[this.weaponStats.rarity];
-        
-        if (this.weaponStats.rarity !== 'common') {
-            this.setTint(glowColor);
-            this.setAlpha(0.9);
-            
-            // Add pulsing effect for epic and legendary
-            if (this.weaponStats.rarity === 'epic' || this.weaponStats.rarity === 'legendary') {
-                this.scene.tweens.add({
-                    targets: this,
-                    alpha: 1.0,
-                    duration: 1000,
-                    yoyo: true,
-                    repeat: -1,
-                    ease: 'Sine.easeInOut'
-                });
-            }
-        }
-    }
 
     /**
      * Sets up tooltip data for the weapon
@@ -941,8 +1091,7 @@ export class MedievalSword extends Item {
             this.weaponStats.durability = this.weaponStats.maxDurability;
         }
         
-        // Restore appearance
-        this.addRarityGlow();
+        // Restore appearance - glow effects removed
         this.setupTooltipData();
     }
 
