@@ -91,21 +91,21 @@ export class DebugManager {
             this.toggle();
         });
 
-        // Additional debug keys (using Ctrl+Number combinations to avoid browser conflicts)
-        this.scene.input.keyboard?.on('keydown-CONTROL-TWO', () => {
+        // Additional debug keys (using Alt+Number combinations to avoid browser conflicts)
+        this.scene.input.keyboard?.on('keydown-ALT-TWO', () => {
             this.toggleCollisionBoxes();
         });
 
-        this.scene.input.keyboard?.on('keydown-CONTROL-THREE', () => {
+        this.scene.input.keyboard?.on('keydown-ALT-THREE', () => {
             this.togglePathVisualization();
         });
 
         // Day/Night cycle toggles
-        this.scene.input.keyboard?.on('keydown-CONTROL-FOUR', () => {
+        this.scene.input.keyboard?.on('keydown-ALT-FOUR', () => {
             this.toggleToPeakDay();
         });
 
-        this.scene.input.keyboard?.on('keydown-CONTROL-FIVE', () => {
+        this.scene.input.keyboard?.on('keydown-ALT-FIVE', () => {
             this.toggleToPeakNight();
         });
     }
@@ -240,10 +240,12 @@ export class DebugManager {
             <div class="debug-section">
                 <div class="debug-label">Debug Controls:</div>
                 <div class="debug-value">
-                    <button id="debug-collision-btn" style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision Boxes (Ctrl+2)</button>
-                    <button id="debug-path-btn" style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths (Ctrl+3)</button>
-                    <button id="debug-day-btn" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Day (Ctrl+4)</button>
-                    <button id="debug-night-btn" style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Night (Ctrl+5)</button>
+                    <button id="debug-collision-btn" style="background: #FF9800; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Collision Boxes (Alt+2)</button>
+                    <button id="debug-path-btn" style="background: #9C27B0; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Paths (Alt+3)</button>
+                    <button id="debug-day-btn" style="background: #4CAF50; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Day (Alt+4)</button>
+                    <button id="debug-night-btn" style="background: #2196F3; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Peak Night (Alt+5)</button>
+                    <button id="debug-normal-time-btn" style="background: #FF5722; color: white; border: none; padding: 5px 10px; margin: 2px; cursor: pointer; border-radius: 3px;">Normal Time</button>
+                    <br><small style="color: #888;">Press T to force reset if time is frozen</small>
                 </div>
             </div>
             
@@ -273,6 +275,7 @@ export class DebugManager {
         const pathBtn = document.getElementById('debug-path-btn');
         const dayBtn = document.getElementById('debug-day-btn');
         const nightBtn = document.getElementById('debug-night-btn');
+        const normalTimeBtn = document.getElementById('debug-normal-time-btn');
 
         if (collisionBtn) {
             collisionBtn.onclick = () => {
@@ -295,6 +298,12 @@ export class DebugManager {
         if (nightBtn) {
             nightBtn.onclick = () => {
                 this.toggleToPeakNight();
+            };
+        }
+
+        if (normalTimeBtn) {
+            normalTimeBtn.onclick = () => {
+                this.disableDebugMode();
             };
         }
     }
@@ -440,6 +449,23 @@ export class DebugManager {
         const worldScene = this.scene as any;
         if (worldScene.dayNightCycle) {
             worldScene.dayNightCycle.setToPeakNight();
+        }
+    }
+
+    private disableDebugMode(): void {
+        // Method 1: Scene-level event
+        this.scene.events.emit('debug-disableTimeOverride');
+
+        // Method 2: Global game-level event (works across all scenes)
+        this.scene.game.events.emit('debug-disableTimeOverride');
+
+        // Method 3: Registry-based global signal
+        this.scene.registry.set('debugCommand', { type: 'disableTimeOverride', timestamp: Date.now() });
+
+        // Method 4: Direct access as backup
+        const worldScene = this.scene as any;
+        if (worldScene.dayNightCycle) {
+            worldScene.dayNightCycle.disableDebugMode();
         }
     }
 

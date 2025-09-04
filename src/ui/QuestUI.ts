@@ -72,14 +72,12 @@ export class QuestUI {
         this.isVisible = false;
         this.currentQuest = null;
         this.destroyQuestUI();
-        console.log('QuestUI: Hiding quest UI');
     }
 
     public updateQuestProgress(current: number): void {
         if (this.currentQuest) {
             this.currentQuest.current = current;
             this.updateQuestDisplay();
-            console.log('QuestUI: Updated quest progress:', current, '/', this.currentQuest.amount);
         }
     }
 
@@ -301,7 +299,6 @@ export class QuestUI {
                 const questSystem = this.scene.data.get('questSystem');
                 const hasOtherActiveQuests = questSystem && questSystem.getActiveQuests().size > 0;
                 
-                console.log(`QuestUI: Other active quests: ${hasOtherActiveQuests ? 'Yes' : 'No'}`);
                 
                 if (hasOtherActiveQuests) {
                     // Hide after 3 seconds if there are other quests
@@ -325,7 +322,6 @@ export class QuestUI {
     private swipeOutQuest(): void {
         if (!this.questContainer) return;
         
-        console.log('QuestUI: Starting swipe-out animation');
         
         // Get the current position
         this.questContainer.x;
@@ -338,7 +334,6 @@ export class QuestUI {
             duration: 800,
             ease: 'Power2.easeInOut',
             onComplete: () => {
-                console.log('QuestUI: Swipe-out animation complete');
                 this.hideQuest();
             }
         });
@@ -356,17 +351,13 @@ export class QuestUI {
      * Restores active quests from the QuestSystem after game load
      */
     public restoreActiveQuests(): void {
-        console.log('QuestUI: Restoring active quests from QuestSystem...');
-        
         const questSystem = this.scene.data.get('questSystem');
         if (!questSystem) {
-            console.log('QuestUI: No QuestSystem found, cannot restore quests');
             return;
         }
         
         const activeQuests = questSystem.getActiveQuests();
         if (activeQuests.size === 0) {
-            console.log('QuestUI: No active quests to restore');
             return;
         }
         
@@ -377,8 +368,6 @@ export class QuestUI {
             // Get quest data from cache
             const questData = this.scene.cache.json.get(`quest-${questId}`);
             if (questData) {
-                console.log(`QuestUI: Restoring quest ${questId}: ${questData.name}`);
-                console.log(`QuestUI: Quest progress: ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
                 
                 // Create quest data for QuestUI
                 const questUIData: QuestData = {
@@ -395,7 +384,6 @@ export class QuestUI {
                 
                 // If quest is ready for completion, show the green glow
                 if (questProgress.isReadyForCompletion) {
-                    console.log('QuestUI: Quest is ready for completion, showing green glow');
                     this.onQuestReadyForCompletion({ questId: questId, questName: questData.name });
                 }
             } else {

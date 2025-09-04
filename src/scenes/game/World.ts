@@ -68,11 +68,19 @@ export class World extends Phaser.Scene {
             // Create tilemap
             this.createTilemap();
 
-            // player
+            // player - spawn position should come from tilemap or config
             this.player = new Player(this, 500, 400, data.inv, data.qobj);
 
-            // Day/Night Cycle
-            this.dayNightCycle = new DayNightCycle(this, undefined);
+            // Day/Night Cycle - get saved time if available
+            let savedTime: number | undefined = undefined;
+            if (data.loadSaveData) {
+                const saveData = SaveSystem.loadGame();
+                if (saveData && saveData.gameState) {
+                    savedTime = saveData.gameState.currentTime;
+                    console.log(`Found saved time in save data: ${savedTime}`);
+                }
+            }
+            this.dayNightCycle = new DayNightCycle(this, savedTime);
 
             // Music Manager
             this.musicManager = new MusicManager(this);
@@ -80,19 +88,12 @@ export class World extends Phaser.Scene {
             this.musicManager.startPlaylist();
 
             // Create game entities
-            console.log('=== STARTING ENTITY CREATION ===');
             this.createEnemies();
-            console.log('Enemies created');
             this.createNPCs();
-            console.log('Allies created');
-            console.log('About to call createItems()...');
             this.createItems();
-            console.log('Items creation completed');
             this.createTrees();
-            console.log('Trees created');
-            console.log('=== ENTITY CREATION COMPLETE ===');
 
-            // camera ** do not change zoom level of main camera ** o7
+            // camera setup
             this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
             this.cameras.main.startFollow(this.player);
@@ -101,15 +102,11 @@ export class World extends Phaser.Scene {
             this.setupMinimap();
 
             // Setup debug manager
-            console.log('Setting up debug manager...');
             this.debugManager = new DebugManager(this);
-            console.log('Debug manager setup complete');
 
             // Setup inventory UI
-            console.log('Setting up inventory UI...');
             this.inventoryUI = new InventoryUI(this);
             this.inventoryUI.setPlayer(this.player);
-            console.log('Inventory UI setup complete');
 
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
@@ -154,6 +151,13 @@ export class World extends Phaser.Scene {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakNight();
                     console.log('🌙 Debug event (global): Set to peak night');
+                }
+            });
+
+            this.game.events.on('debug-disableTimeOverride', () => {
+                if (this.dayNightCycle) {
+                    this.dayNightCycle.disableDebugMode();
+                    console.log('🕐 Debug event (global): Disabled time override');
                 }
             });
 
@@ -236,16 +240,10 @@ export class World extends Phaser.Scene {
             this.questUI = new QuestUI(this);
             console.log('Quest UI setup complete');
 
-            let initialTime
             if (data.loadSaveData) {
                 // Clear corrupted save data before loading
                 SaveSystem.clearCorruptedSaveData();
                 this.loadSaveData();
-                const saveData = SaveSystem.loadGame();
-                if (saveData && saveData.gameState) {
-                    initialTime = saveData.gameState.currentTime;
-                    console.log(`Found saved time in save data: ${initialTime}`);
-                }
                 
                 // Restore QuestSystem state and active quests in QuestUI after save data is loaded
                 this.time.delayedCall(100, () => {
@@ -357,7 +355,6 @@ export class World extends Phaser.Scene {
         if (this.tileset) {
             this.tilemap.createLayer('Background', this.tileset, 0, 0);
             this.objlayer = this.tilemap.getObjectLayer('Player/NPC')
-            // o7
         }
     }
 
@@ -429,16 +426,10 @@ export class World extends Phaser.Scene {
                         this.items.push(bush)
                     }
                 })
-            } else {
-                console.log('No objlayer found, skipping tilemap herbs');
             }
 
             // Add test herbs near Narvark for quest testing
-            console.log('Creating test herbs near Narvark...');
-            console.log('Items array before test herbs:', this.items.length);
             this.createTestHerbs();
-            console.log('Items array after test herbs:', this.items.length);
-            console.log('Total items created:', this.items.length);
 
         } catch (error) {
             console.error('Error creating items:', error);
@@ -454,6 +445,7 @@ export class World extends Phaser.Scene {
     private createTestHerbs(): void {
         console.log('=== CREATING TEST HERBS ===');
         console.log('createTestHerbs method called!');
+        // TODO: Get Narvark position from tilemap object layer instead of hardcoding
         const narvarkX = 341.818181818182;
         const narvarkY = 344;
         console.log('Narvark position:', narvarkX, narvarkY);
@@ -502,25 +494,11 @@ export class World extends Phaser.Scene {
             // Uses 'tree_1', 'tree_2' etc. objects placed in Tiled
             if (this.objlayer) {
                 this.objlayer.objects.forEach(element => {
-                    // if (element.name === 'pond') {
-                    //     this.ponds.push(this.physics.add.sprite(element.x, element.y, 'water-pond', 0).setSize(22, 22).setScale(2.5).setImmovable(true).anims.play('water-moving', true))
                     if (element.name === 'tree_1') {
                         this.trees.push(new Tree(this, element.x as number, element.y as number, 'tree-1'));
                     } else if (element.name === 'tree_2') {
                         this.trees.push(new Tree(this, element.x as number, element.y as number, 'tree-2'));
                     } else if (element.name === 'tree_3') {
-                        // TODO : logic for interacting with trees can be baked into tree prefab
-                        // let x = this.physics.add.sprite(element.x, element.y, 'tree-3', 0).setSize(30, 2).setOffset(15, 62).setDepth(2).setScale(2.5).setImmovable(true).setInteractive().on('pointerdown', () => {
-                        //     if (listen(this, x)) {
-                        //         toggleCursor(this)
-                        //         x.anims.play('tree-3-anim')
-                        //         this.time.delayedCall(2000, () => {
-                        //             let y = new Item(this, x.x, x.y, 'fruit', 0, 'fruit', true, true).setAlpha(0)
-                        //             this.p1.windowOpen ? undefined : createLootInterfaceWindow(y, this)
-                        //         })
-                        //         x.input.enabled = false
-                        //     }
-                        // })
                         this.trees.push(new Tree(this, element.x as number, element.y as number, 'tree-3'));
                     }
                 })
@@ -533,7 +511,7 @@ export class World extends Phaser.Scene {
     }
 
     private createTreeOfLife(): void {
-        // Create the Tree of Life in the top left corner of the map
+        // TODO: Get Tree of Life position from tilemap object layer instead of hardcoding
         const treeOfLife = new Tree(this, 350, 400, 'tree-2-second')
         treeOfLife.clearFruit()
 
@@ -550,7 +528,6 @@ export class World extends Phaser.Scene {
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
 
-        console.log('Tree of Life created successfully');
     }
 
 
@@ -875,7 +852,7 @@ export class World extends Phaser.Scene {
         return this.questUI;
     }
 
-    // o7
+    // TODO: Implement createQuestHerbs() method to spawn quest herbs from tilemap
     // private createQuestHerbs(): void {}
 
     private setupInteractionControls(): void {
@@ -904,7 +881,14 @@ export class World extends Phaser.Scene {
             }
         });
 
-        console.log('Interaction controls setup complete');
+        // Setup T key to force reset debug mode (in case time gets stuck)
+        this.input.keyboard?.on('keydown-T', () => {
+            if (this.dayNightCycle) {
+                this.dayNightCycle.forceResetDebugMode();
+                console.log('Pressed T - Force reset debug mode');
+            }
+        });
+
     }
 
     /**

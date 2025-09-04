@@ -285,13 +285,8 @@ export class DialogueUI {
         this.currentParagraphIndex = 0;
         this.isWaitingForInput = false;
         
-        console.log('DialogueUI: Starting paragraph-based dialogue with', this.paragraphs.length, 'paragraphs');
-        
         if (this.dialogueText) {
             this.dialogueText.setText('');
-            console.log('DialogueUI: Dialogue text element created');
-        } else {
-            console.error('DialogueUI: Dialogue text element is null!');
         }
         
         // Start with the first paragraph
@@ -346,7 +341,6 @@ export class DialogueUI {
         this.typeTimer = 0;
         this.isWaitingForInput = false;
         
-        console.log(`DialogueUI: Showing paragraph ${this.currentParagraphIndex + 1}/${this.paragraphs.length}`);
     }
 
     public update(delta: number): void {
@@ -385,14 +379,12 @@ export class DialogueUI {
         const player = worldScene.player;
         
         if (!player) {
-            console.log('DialogueUI: No player found in scene');
             return;
         }
         
         const npc = this.npcReference.ally || this.npcReference;
         
         if (!npc) {
-            console.log('DialogueUI: No NPC found in reference');
             return;
         }
         
@@ -402,14 +394,8 @@ export class DialogueUI {
         );
         
         // Only log distance changes of more than 5 pixels to avoid spam
-        if (Math.abs(distance - this.lastLoggedDistance) > 5) {
-            console.log(`DialogueUI: Distance to NPC: ${distance.toFixed(1)} pixels`);
-            this.lastLoggedDistance = distance;
-        }
-        
         // Close dialogue if player is more than 80 pixels away (same as interaction range)
         if (distance > 80) {
-            console.log('DialogueUI: Player moved too far away, closing dialogue');
             this.hideDialogue();
         }
     }
@@ -498,7 +484,6 @@ export class DialogueUI {
             );
             
             buttonBg.on('pointerdown', () => {
-                console.log('DialogueUI: Button clicked:', response.text);
                 this.handleResponse(response);
             });
             
@@ -597,27 +582,20 @@ export class DialogueUI {
     }
 
     private handleResponse(response: DialogueResponse): void {
-        console.log('DialogueUI: Response selected:', response.text);
-        console.log('DialogueUI: Response action:', response.action);
-        console.log('DialogueUI: Response nextDialogueId:', response.nextDialogueId);
         
         // Check conditions
         if (response.condition && !response.condition()) {
-            console.log('DialogueUI: Response condition not met');
             return;
         }
         
         // Handle actions
         if (response.action) {
-            console.log('DialogueUI: Emitting dialogueAction event:', response.action);
             this.scene.events.emit('dialogueAction', response.action);
             
             // Direct handling for specific actions
             if (response.action === 'show_snarky_remark') {
-                console.log('DialogueUI: Direct handling of show_snarky_remark action');
                 if (this.scene.data && this.scene.data.get('npc')) {
                     const npc = this.scene.data.get('npc');
-                    console.log('DialogueUI: Found NPC, calling startQuestDeclinedDialogue directly');
                     npc.startQuestDeclinedDialogue();
                 }
             }
@@ -625,18 +603,15 @@ export class DialogueUI {
         
         // Handle next dialogue
         if (response.nextDialogueId) {
-            console.log('DialogueUI: Emitting dialogueNext event:', response.nextDialogueId);
             this.scene.events.emit('dialogueNext', response.nextDialogueId);
             
             // Also try to find and call the NPC directly
             if (this.scene.data && this.scene.data.get('npc')) {
                 const npc = this.scene.data.get('npc');
-                console.log('DialogueUI: Found NPC in scene data, calling handleDialogueNext directly');
                 npc.handleDialogueNext(response.nextDialogueId);
                 
                 // Direct handling for quest_accepted
                 if (response.nextDialogueId === 'quest_accepted') {
-                    console.log('DialogueUI: Direct handling of quest_accepted');
                     npc.startQuestAcceptedDialogue();
                 }
             }
@@ -644,7 +619,6 @@ export class DialogueUI {
         
         // Close dialogue if no next dialogue
         if (!response.nextDialogueId && !response.action) {
-            console.log('DialogueUI: No next dialogue or action, closing dialogue');
             this.hideDialogue();
         }
     }
@@ -709,7 +683,6 @@ export class DialogueUI {
         // Emit event to notify NPC that dialogue has ended
         this.scene.events.emit('dialogueEnded');
         
-        console.log('DialogueUI: Dialogue hidden');
     }
 
     public isDialogueActive(): boolean {

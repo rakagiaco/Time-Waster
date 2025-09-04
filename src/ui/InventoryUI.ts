@@ -883,7 +883,6 @@ export class InventoryUI {
         const maxHealth = this.player.getMaxHitPoints();
         
         if (currentHealth >= maxHealth) {
-            console.log(`Player health is already full (${currentHealth}/${maxHealth}) - cannot consume fruit`);
             // Show feedback that health is already full
             this.showHealthFullFeedback();
             return;
@@ -895,7 +894,6 @@ export class InventoryUI {
         
         // Only proceed if we can actually restore health
         if (actualHealthRestore <= 0) {
-            console.log(`No health can be restored - player at max health`);
             this.showHealthFullFeedback();
             return;
         }
@@ -915,7 +913,6 @@ export class InventoryUI {
         // Update inventory display
         this.updateInventoryDisplay();
 
-        console.log(`Consumed ${fruitType} and restored ${actualHealthRestore} health (${currentHealth + actualHealthRestore}/${maxHealth})`);
     }
 
     private getHealthRestoreAmount(fruitType: string): number {

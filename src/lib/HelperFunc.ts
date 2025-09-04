@@ -10,9 +10,7 @@
  * - UI and Interface Management
  * - Player Detection and AI
  * - Movement and Physics
- * - Quest System
  * - Audio Management
- * - Cleanup Utilities
  */
 
 import { Scene } from 'phaser';
@@ -64,22 +62,25 @@ export function createLootInterfaceWindow(item: GameItem, contextScene: GameScen
     })
 
     itemImg = contextScene.add.image(contextScene.cameras.main.scrollX + contextScene.cameras.main.width / 2, contextScene.cameras.main.scrollY + contextScene.cameras.main.height / 2, item.item_type).setOrigin(0.5).setInteractive().setDepth(2).on('pointerdown', () => {
-        let invUpd = player
-        invUpd.p1Inventory.add(item.item_type, 1)
-        let alias = player.questStatus
-
-        if (alias.finished === false) {
-            if (alias.currentQuest.verb === 'collect' && alias.currentQuest.type == item.item_type) {
-                if (alias.currentQuest.ammount > alias.currentQuest.actual) {
-                    alias.currentQuest.actual += 1
+        // Add item to player inventory
+        player.p1Inventory.add(item.item_type, 1)
+        
+        // Update quest progress if applicable
+        const questStatus = player.questStatus
+        if (questStatus.finished === false && questStatus.currentQuest) {
+            if (questStatus.currentQuest.verb === 'collect' && questStatus.currentQuest.type === item.item_type) {
+                if (questStatus.currentQuest.ammount > questStatus.currentQuest.actual) {
+                    questStatus.currentQuest.actual += 1
                 }
             }
         }
 
+        // Play sound effect if available
         if (item.soundEffect !== undefined) {
             contextScene.sound.play(item.soundEffect.sound, { volume: item.soundEffect.volume })
         }
 
+        // Clean up and close window
         toggleCursor(contextScene)
         window.destroy()
         closeBTN.destroy()
@@ -191,11 +192,7 @@ export function listen(scene: GameScene, listener: any): boolean {
         }
     }
 
-    const isInRange = distance <= effectiveDetectionDistance;
-
-
-
-    return isInRange;
+    return distance <= effectiveDetectionDistance;
 }
 
 // =============================================================================
@@ -244,26 +241,17 @@ export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.
         return new Phaser.Math.Vector2(0, 0);
     }
 
-    let pos = toknock.getPosition()
-    let epos = knocker.getPosition()
+    const pos = toknock.getPosition();
+    const epos = knocker.getPosition();
+    const returnVec = new Phaser.Math.Vector2(0);
 
-    let returnVec = new Phaser.Math.Vector2(0)
-    //xpos
-    if (pos[0] < (epos[0] + 10)) {
-        returnVec.x = -1
-    } else {
-        returnVec.x = 1
-    }
+    // Determine X direction
+    returnVec.x = pos[0] < (epos[0] + 10) ? -1 : 1;
+    
+    // Determine Y direction  
+    returnVec.y = pos[1] < (epos[1] + 10) ? -1 : 1;
 
-    if (pos[1] < (epos[1] + 10)) {
-        returnVec.y = -1
-    } else {
-        returnVec.y = 1
-    }
-
-    returnVec.normalize()
-
-    return returnVec
+    return returnVec.normalize();
 }
 
 /**
@@ -275,8 +263,8 @@ export function determineKnockbackDirection(toknock: any, knocker: any): Phaser.
  * @param scene - The scene to apply cursor changes to
  */
 export function toggleCursor(scene: Scene): void {
-    scene.input.setDefaultCursor('url(assets/img/cursor-2.png), pointer')
-    scene.time.delayedCall(GameConfig.TIMING.CURSOR_ANIMATION_DURATION, () => { scene.input.setDefaultCursor('url(assets/img/cursor.png), pointer') })
+    scene.input.setDefaultCursor('url(/img/cursor-2.png), pointer')
+    scene.time.delayedCall(GameConfig.TIMING.CURSOR_ANIMATION_DURATION, () => { scene.input.setDefaultCursor('url(/img/cursor.png), pointer') })
 }
 
 // =============================================================================
@@ -356,8 +344,9 @@ export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.K
 
     // Normalize diagonal movement to prevent faster diagonal speed
     if (vx !== 0 && vy !== 0) {
-        vx *= 0.707; // 1/√2 ≈ 0.707
-        vy *= 0.707;
+        const diagonalMultiplier = 0.707; // 1/√2 ≈ 0.707
+        vx *= diagonalMultiplier;
+        vy *= diagonalMultiplier;
     }
 
     // Apply calculated velocity to player
@@ -465,3 +454,4 @@ export function clearAllInterval(_scene: Scene, enemies: any[], player: any): vo
         clearInterval(player.SPRINT_INTERVAL_ID)
     }
 }
+

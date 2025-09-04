@@ -318,7 +318,7 @@ export class SaveSystem {
             
             // Restore day/night cycle
             if (scene.dayNightCycle) {
-                scene.dayNightCycle.setTime(saveData.gameState.currentTime);
+                scene.dayNightCycle.restoreSavedTime(saveData.gameState.currentTime);
                 scene.dayNightCycle.setDarknessIntensity(saveData.gameState.darknessIntensity);
                 console.log(`Time of day restored: ${saveData.gameState.timeOfDay} (${saveData.gameState.currentTime})`);
             }

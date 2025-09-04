@@ -64,7 +64,7 @@ export class DayNightCycle {
             nightDuration: 12 * 60 * 1000,       // 12 minutes of darkness
             transitionDuration: 2 * 60 * 1000,   // 2 minutes for dawn/dusk
         };
-
+    
         // comment this in for 1 minute cycles fo testing
         // this.config = {
         //     cycleDuration: 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
@@ -76,10 +76,10 @@ export class DayNightCycle {
         // Set initial time (for save game restoration or custom start time)
         if (initialTime !== undefined) {
             this.currentTime = initialTime;
-            console.log(`DayNightCycle initialized with saved time: ${initialTime}`);
+            console.log(`DayNightCycle initialized with saved time: ${initialTime} (${(initialTime * 24).toFixed(1)} hours)`);
         } else {
             this.currentTime = 0.5
-            console.log(`DayNightCycle initialized with default time: ${this.currentTime}`);
+            console.log(`DayNightCycle initialized with default time: ${this.currentTime} (${(this.currentTime * 24).toFixed(1)} hours)`);
         }
 
         // Initialize visual components and controls
@@ -109,6 +109,10 @@ export class DayNightCycle {
     public update(delta: number): void {
         if (this.debugMode && this.debugTimeOverride !== null) {
             this.currentTime = this.debugTimeOverride;
+            // Debug: Log when time is frozen
+            if (Math.random() < 0.001) { // Log occasionally to avoid spam
+                console.log(`DayNightCycle: Time frozen at debug override: ${(this.debugTimeOverride * 24).toFixed(1)}h`);
+            }
         } else {
             // Update time based on cycle duration
             this.currentTime += delta / this.config.cycleDuration;
@@ -149,12 +153,12 @@ export class DayNightCycle {
                 // Dusk transition (7 PM to 9 PM)
                 const duskProgress = (currentHour - duskStart) / (nightStart - duskStart);
                 this.darknessIntensity = duskProgress * 0.95;
-                this.isDay = true
+                this.isDay = false; // Should be false during dusk
             } else if (currentHour >= dawnStart && currentHour < dayStart) {
                 // Dawn transition (5 AM to 7 AM)
                 const dawnProgress = (currentHour - dawnStart) / (dayStart - dawnStart);
                 this.darknessIntensity = 0.95 * (1 - dawnProgress);
-                this.isDay = false;
+                this.isDay = true; // Should be true during dawn
             }
         }
 
@@ -180,6 +184,11 @@ export class DayNightCycle {
         if (this.darknessIntensity > 0) {
             this.overlay.fillStyle(0x000000, this.darknessIntensity); // Pure black for maximum darkness
             this.overlay.fillRect(0, 0, width, height);
+        }
+        
+        // Debug logging for darkness intensity
+        if (this.darknessIntensity > 0.1) {
+            console.log(`DayNightCycle: Drawing darkness overlay with intensity ${this.darknessIntensity.toFixed(2)}`);
         }
     }
 
@@ -223,18 +232,45 @@ export class DayNightCycle {
     }
 
     public setToPeakDay(): void {
+        this.debugMode = true;
         this.debugTimeOverride = 0.5; // 12 PM (noon) - true peak day
         console.log('Set to peak day (12 PM noon)');
     }
 
     public setToPeakNight(): void {
+        this.debugMode = true;
         this.debugTimeOverride = 0.0; // 12 AM (midnight) - true peak night
         console.log('Set to peak night (12 AM midnight)');
     }
 
     public setTime(time: number): void {
+        this.debugMode = true;
         this.debugTimeOverride = Math.max(0, Math.min(1, time));
         console.log(`Set time to ${(time * 24).toFixed(1)} hours`);
+    }
+
+    /**
+     * Restores saved time without enabling debug mode (for save game loading)
+     * @param time - Time position to restore (0-1)
+     */
+    public restoreSavedTime(time: number): void {
+        this.currentTime = Math.max(0, Math.min(1, time));
+        // Ensure debug mode is disabled so time can progress normally
+        this.debugMode = false;
+        this.debugTimeOverride = null;
+        console.log(`Restored saved time: ${(time * 24).toFixed(1)} hours - time will progress normally`);
+    }
+
+    public disableDebugMode(): void {
+        this.debugMode = false;
+        this.debugTimeOverride = null;
+        console.log('Debug mode disabled - returning to normal time progression');
+    }
+
+    public forceResetDebugMode(): void {
+        this.debugMode = false;
+        this.debugTimeOverride = null;
+        console.log('FORCE RESET: Debug mode disabled - time should now progress normally');
     }
 
     public setDarknessIntensity(intensity: number): void {

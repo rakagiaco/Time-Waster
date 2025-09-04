@@ -69,11 +69,8 @@ export class MusicManager {
         // Add random delay to simulate "slot machine" effect
         const delay = Math.random() * 1000 + 500; // 0.5-1.5 second delay
         
-        console.log(`MusicManager: Slot machine rolling... (${Math.round(delay)}ms delay)`);
-        
         // Use setTimeout to create the slot machine effect
         this.scene.time.delayedCall(delay, () => {
-            console.log('MusicManager: Slot machine stopped! Playing first song...');
             this.playFirstRandomSong();
         });
     }
@@ -95,13 +92,10 @@ export class MusicManager {
         // Add to appropriate played list based on which playlist it belongs to
         if (this.daySongs.includes(selectedSong)) {
             this.dayPlayedSongs.push(selectedSong);
-            console.log('MusicManager: First song from day playlist');
         } else {
             this.nightPlayedSongs.push(selectedSong);
-            console.log('MusicManager: First song from night playlist');
         }
         
-        console.log(`MusicManager: First random song selected: ${selectedSong}`);
         this.playSong(selectedSong);
     }
 
@@ -109,7 +103,6 @@ export class MusicManager {
      * Reset the music manager for a fresh start
      */
     public reset(): void {
-        console.log('MusicManager: Resetting for fresh start');
         this.stopPlaylist();
         this.dayPlayedSongs = [];
         this.nightPlayedSongs = [];
@@ -125,7 +118,6 @@ export class MusicManager {
         }
         
         this.isPlaying = false;
-        console.log('MusicManager: Stopping shuffle playlist');
         
         if (this.currentMusic) {
             this.fadeOutAndStop();
@@ -139,13 +131,15 @@ export class MusicManager {
         const wasNight = this.isNightTime;
         this.isNightTime = isNight;
         
-        console.log(`MusicManager: Time updated - isNight: ${isNight}`);
+        // Only log when time actually changes
+        if (wasNight !== isNight) {
+            // Time changed
+        }
         
         // If time changed and we're playing, consider switching songs
         if (this.isPlaying && wasNight !== isNight) {
             // Small chance to switch songs when time changes
             if (Math.random() < 0.3) {
-                console.log('MusicManager: Time changed, switching song');
                 this.playNextSong();
             }
         }
@@ -167,18 +161,15 @@ export class MusicManager {
             // Night time with night priority
             playlist = this.nightSongs;
             playedSongs = this.nightPlayedSongs;
-            console.log('MusicManager: Using night playlist (priority)');
         } else {
             // Day time or night time without priority
             playlist = this.daySongs;
             playedSongs = this.dayPlayedSongs;
-            console.log('MusicManager: Using day playlist');
         }
 
         // Reset played songs if all have been played
         if (playedSongs.length >= playlist.length) {
             playedSongs.length = 0;
-            console.log('MusicManager: Reset played songs for', this.isNightTime ? 'night' : 'day');
         }
 
         // Get available songs (not recently played)
@@ -188,7 +179,6 @@ export class MusicManager {
         const selectedSong = availableSongs[Math.floor(Math.random() * availableSongs.length)];
         playedSongs.push(selectedSong);
         
-        console.log(`MusicManager: Selected song: ${selectedSong}`);
         this.playSong(selectedSong);
     }
 
@@ -210,7 +200,6 @@ export class MusicManager {
         // Set up end event to play next song
         this.currentMusic.on('complete', () => {
             if (this.isPlaying) {
-                console.log('MusicManager: Song ended, playing next');
                 this.playNextSong();
             }
         });
@@ -228,7 +217,6 @@ export class MusicManager {
             }
         });
         
-        console.log(`MusicManager: Playing ${songKey}`);
     }
 
     /**
@@ -250,11 +238,7 @@ export class MusicManager {
             volume: this.TARGET_VOLUME,
             duration: this.FADE_DURATION,
             ease: 'Power2',
-            onStart: () => {
-                console.log('MusicManager: Starting fade in to volume', this.TARGET_VOLUME);
-            },
             onComplete: () => {
-                console.log('MusicManager: Fade in complete');
                 this.fadeTween = null;
             }
         });
@@ -271,7 +255,6 @@ export class MusicManager {
             this.fadeTween.stop();
         }
 
-        console.log('MusicManager: Starting fade out');
 
         this.fadeTween = this.scene.tweens.add({
             targets: this.currentMusic,
@@ -280,7 +263,6 @@ export class MusicManager {
             ease: 'Power2',
             onComplete: () => {
                 if (this.currentMusic) {
-                    console.log('MusicManager: Fade out complete, stopping music');
                     this.currentMusic.stop();
                     this.currentMusic.destroy();
                     this.currentMusic = null;
