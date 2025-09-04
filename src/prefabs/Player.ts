@@ -100,7 +100,12 @@ class PlayerWalkingState extends State {
 
         // Handle movement (with null checks)
         if (keyUp && keyDown && keyLeft && keyRight) {
+            const oldDirection = player.lastDirection;
             updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight);
+            // Update weapon position if direction changed
+            if (oldDirection !== player.lastDirection) {
+                player.updateWeaponPosition();
+            }
         } else {
             // If keys aren't ready yet, just stop movement
             player.setVelocity(0, 0);
@@ -183,8 +188,6 @@ class PlayerAttackingLightState extends State {
         // Check if animation exists before playing
         if (player.anims.exists('player-light-attack')) {
             player.anims.play('player-light-attack', true);
-        } else {
-            console.warn('Animation "player-light-attack" not found');
         }
 
         // Play attack sound
@@ -211,8 +214,6 @@ class PlayerAttackingHeavyState extends State {
         // Check if animation exists before playing
         if (player.anims.exists('player-heavy-attack')) {
             player.anims.play('player-heavy-attack', true);
-        } else {
-            console.warn('Animation "player-heavy-attack" not found');
         }
 
         // Play attack sound
@@ -250,6 +251,7 @@ export class Player extends Entity {
     public knockbackTimer: number = 0;
     public lanternSprite: Phaser.GameObjects.Graphics | null = null;
     public lastDirection: string = 'down'; // Track last movement direction for idle animation
+    public equippedWeapon: Phaser.GameObjects.Image | null = null;
 
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
@@ -554,6 +556,91 @@ export class Player extends Entity {
         return this.p1Inventory;
     }
 
+    /**
+     * Equip a weapon and attach it visually to the player
+     */
+    public equipWeapon(weaponName: string): void {
+        // Remove existing equipped weapon
+        this.unequipWeapon();
+        
+        // Create visual weapon attachment
+        this.createWeaponAttachment(weaponName);
+        
+        console.log(`Player equipped weapon: ${weaponName}`);
+    }
+
+    /**
+     * Unequip current weapon
+     */
+    public unequipWeapon(): void {
+        if (this.equippedWeapon) {
+            this.equippedWeapon.destroy();
+            this.equippedWeapon = null;
+        }
+    }
+
+    /**
+     * Create visual weapon attachment on player
+     */
+    private createWeaponAttachment(weaponName: string): void {
+        // Determine weapon texture based on name
+        let weaponTexture = 'medieval-sword-icon';
+        if (weaponName.includes('rare')) {
+            weaponTexture = 'medieval-sword-rare';
+        } else if (weaponName.includes('epic')) {
+            weaponTexture = 'medieval-sword-epic';
+        } else if (weaponName.includes('legendary')) {
+            weaponTexture = 'medieval-sword-legendary';
+        }
+        
+        // Create weapon sprite attached to player
+        this.equippedWeapon = this.scene.add.image(0, 0, weaponTexture);
+        this.equippedWeapon.setOrigin(0.5, 0.8); // Anchor at bottom center
+        this.equippedWeapon.setScale(0.4); // Smaller than world sword
+        this.equippedWeapon.setDepth(this.depth + 1); // Above player
+        
+        // Position weapon on player's hip/back
+        this.updateWeaponPosition();
+        
+        // Apply rarity glow if applicable
+        if (weaponName.includes('uncommon')) {
+            this.equippedWeapon.setTint(0x00FF00); // Green
+        } else if (weaponName.includes('rare')) {
+            this.equippedWeapon.setTint(0x0080FF); // Blue
+        } else if (weaponName.includes('epic')) {
+            this.equippedWeapon.setTint(0x8000FF); // Purple
+        } else if (weaponName.includes('legendary')) {
+            this.equippedWeapon.setTint(0xFF8000); // Orange/Gold
+        }
+    }
+
+    /**
+     * Update weapon position based on player direction
+     */
+    public updateWeaponPosition(): void {
+        if (!this.equippedWeapon) return;
+        
+        // Position weapon on player's hip/back based on direction
+        switch (this.lastDirection) {
+            case 'down':
+                this.equippedWeapon.setPosition(8, 8); // Right hip
+                this.equippedWeapon.setRotation(0);
+                break;
+            case 'up':
+                this.equippedWeapon.setPosition(-8, -8); // Left shoulder/back
+                this.equippedWeapon.setRotation(Math.PI);
+                break;
+            case 'left':
+                this.equippedWeapon.setPosition(-8, 4); // Left hip
+                this.equippedWeapon.setRotation(-Math.PI / 2);
+                break;
+            case 'right':
+                this.equippedWeapon.setPosition(8, 4); // Right hip
+                this.equippedWeapon.setRotation(Math.PI / 2);
+                break;
+        }
+    }
+
     public getPosition(): [number, number] {
         return [this.x, this.y];
     }
@@ -576,6 +663,7 @@ export class Player extends Entity {
     public performProximityPickup(): void {
         const pickupRadius = 60; // Proximity radius for pickup
         let itemsCollected = 0;
+        const collectedItems = new Map<string, number>(); // Track items by type and count
 
         // Set pickup cooldown
         this.pickupCooldown = true;
@@ -592,19 +680,25 @@ export class Player extends Entity {
                 if (distance <= pickupRadius) {
                     const itemType = item.getItemType();
                     
-                    // Check if it's a collectible item (fruit or mysterious herb)
-                    if (this.isFruitItem(itemType) || this.isMysteriousHerb(itemType)) {
-                        // Add to inventory
+                    // Check if it's a collectible item (fruit, mysterious herb, or sword)
+                    if (this.isFruitItem(itemType) || this.isMysteriousHerb(itemType) || this.isSwordItem(item)) {
+                        // Handle all items (including swords) as regular items
                         this.p1Inventory.add(itemType, 1);
+                        
+                        // Track collected items for consolidated feedback
+                        if (this.isSwordItem(item)) {
+                            const rarity = item.getData('rarity');
+                            const swordName = this.getSwordNameFromRarity(rarity);
+                            collectedItems.set(swordName, (collectedItems.get(swordName) || 0) + 1);
+                        } else {
+                            collectedItems.set(itemType, (collectedItems.get(itemType) || 0) + 1);
+                        }
 
                         // Play collection sound
                         const soundEffect = item.getSoundEffect();
                         if (soundEffect) {
                             this.scene.sound.play(soundEffect.sound, { volume: soundEffect.volume });
                         }
-
-                        // Show pickup feedback
-                        this.showPickupFeedback(itemType, item.x, item.y);
 
                         // Emit item collected event for quest system
                         this.scene.events.emit('itemCollected', itemType, 1);
@@ -616,6 +710,11 @@ export class Player extends Entity {
                 }
             }
         });
+
+        // Show consolidated pickup feedback
+        if (itemsCollected > 0) {
+            this.showConsolidatedPickupFeedback(collectedItems);
+        }
 
         // Show general pickup feedback if items were collected
         if (itemsCollected > 0) {
@@ -643,26 +742,52 @@ export class Player extends Entity {
         return herbTypes.includes(itemType);
     }
 
-    private showPickupFeedback(itemType: string, x: number, y: number): void {
-        // Create floating text showing item pickup
-        const pickupText = this.scene.add.bitmapText(
-            x + Phaser.Math.Between(-10, 10),
-            y - 20,
-            'pixel-white',
-            `+${itemType}`,
-            12
-        );
-        pickupText.setOrigin(0.5);
+    private isSwordItem(item: Item): boolean {
+        // Check if the item is a sword by looking at its data properties
+        return item.getData('isWeapon') === true && item.getData('weaponType') === 'sword';
+    }
 
-        // Animate the text floating up and fading out
-        this.scene.tweens.add({
-            targets: pickupText,
-            y: pickupText.y - 20,
-            alpha: 0,
-            duration: 1000,
-            ease: 'Power2',
-            onComplete: () => {
-                pickupText.destroy();
+    private getSwordNameFromRarity(rarity: string): string {
+        const names = {
+            common: 'Iron Sword',
+            uncommon: 'Steel Sword',
+            rare: 'Silver Sword',
+            epic: 'Mithril Sword',
+            legendary: 'Excalibur'
+        };
+        return names[rarity as keyof typeof names] || 'Sword';
+    }
+
+
+    private showConsolidatedPickupFeedback(collectedItems: Map<string, number>): void {
+        // Create individual +1 messages for each item collected
+        let yOffset = 0;
+        
+        collectedItems.forEach((count, itemType) => {
+            // Create a separate +1 message for each individual item
+            for (let i = 0; i < count; i++) {
+                const pickupText = this.scene.add.bitmapText(
+                    this.x + Phaser.Math.Between(-10, 10),
+                    this.y - 50 - yOffset,
+                    'pixel-white',
+                    `+1 ${itemType}`,
+                    12
+                );
+                pickupText.setOrigin(0.5);
+
+                // Animate the text floating up and fading out
+                this.scene.tweens.add({
+                    targets: pickupText,
+                    y: pickupText.y - 30,
+                    alpha: 0,
+                    duration: 1500,
+                    ease: 'Power2',
+                    onComplete: () => {
+                        pickupText.destroy();
+                    }
+                });
+                
+                yOffset += 20; // Space out multiple messages
             }
         });
     }

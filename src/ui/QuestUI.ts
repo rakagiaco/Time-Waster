@@ -54,18 +54,18 @@ export class QuestUI {
     }
 
     public showQuest(questData: QuestData): void {
-        console.log('QuestUI: showQuest called with quest:', questData.title);
-        console.log('QuestUI: Current visibility state:', this.isVisible);
+        // showQuest called with quest
+        // Current visibility state
         
         if (this.isVisible) {
-            console.log('QuestUI: Quest UI already visible, hiding first');
+            // Quest UI already visible, hiding first
             this.hideQuest();
         }
         
         this.currentQuest = questData;
         this.isVisible = true;
         this.createQuestUI();
-        console.log('QuestUI: Quest UI shown successfully');
+        // Quest UI shown successfully
     }
 
     public hideQuest(): void {

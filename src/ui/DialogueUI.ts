@@ -1,5 +1,21 @@
 import Phaser from 'phaser';
-import { DialogueData, DialogueResponse } from '../prefabs/NPC';
+// import { DialogueData, DialogueResponse } from '../prefabs/NPC';
+
+// Local type definitions
+export interface DialogueData {
+    id: string;
+    text: string;
+    responses?: DialogueResponse[];
+    reward?: any;
+}
+
+export interface DialogueResponse {
+    text: string;
+    action: string;
+    nextDialogue?: string;
+    nextDialogueId?: string;
+    condition?: () => boolean;
+}
 
 /**
  * DialogueUI - Handles scrolling dialogue with button responses
@@ -10,7 +26,8 @@ export class DialogueUI {
     private isActive: boolean = false;
     private currentDialogue: DialogueData | null = null;
     private npcReference: any = null; // Reference to the NPC for distance checking
-    private lastLoggedDistance: number = -1; // Track last logged distance to avoid spam
+    // @ts-ignore - Intentionally unused for future functionality
+    private _lastLoggedDistance: number = -1; // Track last logged distance to avoid spam
     
     // UI Elements
     private dialogueContainer: Phaser.GameObjects.Container | null = null;
@@ -78,11 +95,11 @@ export class DialogueUI {
         this.createDialogueUI();
         this.startTextAnimation(dialogue.text);
         
-        console.log('DialogueUI: Showing dialogue:', dialogue.id);
-        console.log('DialogueUI: Dialogue text:', dialogue.text);
-        console.log('DialogueUI: NPC reference set:', !!this.npcReference);
+        // Showing dialogue
+        // Dialogue text
+        // NPC reference set
         if (this.npcReference) {
-            console.log('DialogueUI: NPC reference has ally:', !!this.npcReference.ally);
+            // NPC reference has ally
         }
     }
 
@@ -449,7 +466,7 @@ export class DialogueUI {
         const buttonSpacing = 50;
         const startY = this.UI_HEIGHT / 2 - 80;
         
-        responses.forEach((response, index) => {
+        responses.forEach((response: DialogueResponse, index: number) => {
             const buttonY = startY - (index * buttonSpacing);
             
             const buttonContainer = this.scene.add.container(0, buttonY);
@@ -678,7 +695,7 @@ export class DialogueUI {
         this.closeButton = null;
         this.closeButtonText = null;
         this.npcReference = null;
-        this.lastLoggedDistance = -1;
+        this._lastLoggedDistance = -1;
         
         // Emit event to notify NPC that dialogue has ended
         this.scene.events.emit('dialogueEnded');

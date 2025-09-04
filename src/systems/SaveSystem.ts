@@ -11,6 +11,23 @@ export interface SaveData {
         maxHealth: number;
         inventory: [string, number][];
         questStatus: any;
+        gearSlots: {
+            weapon: {
+                itemType: string | null;
+                count: number;
+                equipped: boolean;
+            };
+            armor: {
+                itemType: string | null;
+                count: number;
+                equipped: boolean;
+            };
+            accessory: {
+                itemType: string | null;
+                count: number;
+                equipped: boolean;
+            };
+        };
     };
     enemies: Array<{
         x: number;
@@ -66,7 +83,8 @@ export class SaveSystem {
         enemies: Enemy[], 
         trees: Tree[], 
         items: Item[], 
-        gameState: any
+        gameState: any,
+        gearSlotState?: any
     ): boolean {
         try {
             const saveData: SaveData = {
@@ -76,7 +94,12 @@ export class SaveSystem {
                     health: player.getHealth(),
                     maxHealth: player.getMaxHealth(),
                     inventory: player.p1Inventory.getInventoryData(),
-                    questStatus: player.questStatus
+                    questStatus: player.questStatus,
+                    gearSlots: gearSlotState || {
+                        weapon: { itemType: null, count: 0, equipped: false },
+                        armor: { itemType: null, count: 0, equipped: false },
+                        accessory: { itemType: null, count: 0, equipped: false }
+                    }
                 },
                 enemies: enemies.map(enemy => ({
                     x: enemy.x,
@@ -294,11 +317,33 @@ export class SaveSystem {
                 });
             }
 
-            // Apply item data
+            // Apply item data - PRESERVE newly spawned items that weren't saved
             if (scene.items) {
-                // Clear existing items
-                scene.items.forEach((item: Item) => item.destroy());
-                scene.items = [];
+                console.log(`SaveSystem: Before applying save data - ${scene.items.length} items exist`);
+                
+                // Get list of saved item positions to avoid duplicates
+                const savedItemPositions = new Set<string>();
+                saveData.items.forEach(itemData => {
+                    if (itemData.itemType && itemData.itemType !== 'undefined') {
+                        savedItemPositions.add(`${itemData.x},${itemData.y}`);
+                    }
+                });
+                console.log(`SaveSystem: Found ${savedItemPositions.size} saved item positions`);
+
+                // Remove only items that were saved (to avoid duplicates)
+                const itemsToRemove: Item[] = [];
+                scene.items.forEach((item: Item) => {
+                    const itemPosition = `${item.x},${item.y}`;
+                    if (savedItemPositions.has(itemPosition)) {
+                        itemsToRemove.push(item);
+                    }
+                });
+                console.log(`SaveSystem: Removing ${itemsToRemove.length} duplicate items`);
+                
+                // Destroy saved items to avoid duplicates
+                itemsToRemove.forEach((item: Item) => item.destroy());
+                scene.items = scene.items.filter((item: Item) => !itemsToRemove.includes(item));
+                console.log(`SaveSystem: After removing duplicates - ${scene.items.length} items remain`);
 
                 // Recreate items from save data
                 saveData.items.forEach(itemData => {
@@ -311,6 +356,7 @@ export class SaveSystem {
                         console.warn(`Skipping corrupted item with undefined itemType at (${itemData.x}, ${itemData.y})`);
                     }
                 });
+                console.log(`SaveSystem: After loading save data - ${scene.items.length} total items`);
             }
 
             // Apply comprehensive game state

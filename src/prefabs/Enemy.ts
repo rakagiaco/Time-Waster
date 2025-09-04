@@ -13,10 +13,9 @@ class EnemyPatrolState extends State {
         enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1; // Random initial direction
 
         // Check if animation exists before playing
-        if (enemy.anims.exists('enemy-1-walk')) {
-            enemy.anims.play('enemy-1-walk', true);
-        } else {
-            console.warn('Animation "enemy-1-walk" not found');
+        const walkAnim = enemy.getWalkAnimationName();
+        if (enemy.anims.exists(walkAnim)) {
+            enemy.anims.play(walkAnim, true);
         }
     }
 
@@ -24,11 +23,11 @@ class EnemyPatrolState extends State {
         // Check if player is detected (with safety check)
         try {
             if (listen(scene as any, enemy)) {
-                enemy.animsFSM.transition('alert');
+                enemy.safeTransitionToState('alert');
                 return;
             }
         } catch (error) {
-            console.warn('Error in listen function for enemy patrolling:', error);
+            // Silently handle listen function errors during patrolling
         }
 
         // Enhanced patrol movement with more dynamic behavior
@@ -42,9 +41,8 @@ class EnemyAlertState extends State {
         enemy.alertTimer = 0;
 
         // Play alert animation or sound
-        if (enemy.anims.exists('enemy-1-idle')) {
-            enemy.anims.play('enemy-1-idle', true);
-        }
+        const idleAnim = enemy.getIdleAnimationName();
+        enemy.safePlayAnimation(idleAnim);
 
         // Show alert indicator (could be a visual effect)
         enemy.showAlertIndicator();
@@ -56,18 +54,18 @@ class EnemyAlertState extends State {
         // Check if player is still in detection range
         try {
             if (!listen(scene as any, enemy)) {
-                console.log(`Enemy ${enemy.entity_type} lost player, returning to patrol`);
-                enemy.animsFSM.transition('patrolling');
+                // console.log(`Enemy ${enemy.entity_type} lost player, returning to patrol`);
+                enemy.safeTransitionToState('patrolling');
                 return;
             }
         } catch (error) {
-            console.warn('Error in listen function for enemy alert:', error);
+            // Silently handle listen function errors during alert
         }
 
         // After alert period, transition to pursuing
         if (enemy.alertTimer > 500) { // 0.5 second alert period
-            console.log(`Enemy ${enemy.entity_type} transitioning from alert to pursuing`);
-            enemy.animsFSM.transition('pursuing');
+            // console.log(`Enemy ${enemy.entity_type} transitioning from alert to pursuing`);
+            enemy.safeTransitionToState('pursuing');
         }
     }
 }
@@ -78,11 +76,8 @@ class EnemyPursuingState extends State {
         enemy.lastPlayerPosition = { x: 0, y: 0 };
 
         // Check if animation exists before playing
-        if (enemy.anims.exists('enemy-1-walk')) {
-            enemy.anims.play('enemy-1-walk', true);
-        } else {
-            console.warn('Animation "enemy-1-walk" not found');
-        }
+        const walkAnim = enemy.getWalkAnimationName();
+        enemy.safePlayAnimation(walkAnim);
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -91,16 +86,16 @@ class EnemyPursuingState extends State {
         // Check if player is out of range (with safety check)
         try {
             if (!listen(scene as any, enemy)) {
-                enemy.animsFSM.transition('searching');
+                enemy.safeTransitionToState('searching');
                 return;
             }
         } catch (error) {
-            console.warn('Error in listen function for enemy pursuing:', error);
+            // Silently handle listen function errors during pursuing
         }
 
         // Check if close enough to attack
         if (enemy.isPlayerInAttackRange()) {
-            enemy.animsFSM.transition('attacking');
+            enemy.safeTransitionToState('attacking');
             return;
         }
 
@@ -109,7 +104,7 @@ class EnemyPursuingState extends State {
 
         // If pursuing for too long without reaching player, try different approach
         if (enemy.pursuitTimer > 5000) { // 5 seconds
-            enemy.animsFSM.transition('flanking');
+            enemy.safeTransitionToState('flanking');
         }
     }
 }
@@ -122,9 +117,8 @@ class EnemySearchingState extends State {
         enemy.lastKnownPlayerPosition = enemy.lastPlayerPosition;
 
         // Play search animation
-        if (enemy.anims.exists('enemy-1-idle')) {
-            enemy.anims.play('enemy-1-idle', true);
-        }
+        const idleAnim = enemy.getIdleAnimationName();
+        enemy.safePlayAnimation(idleAnim);
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -133,11 +127,11 @@ class EnemySearchingState extends State {
         // Check if player is detected again
         try {
             if (listen(scene as any, enemy)) {
-                enemy.animsFSM.transition('pursuing');
+                enemy.safeTransitionToState('pursuing');
                 return;
             }
         } catch (error) {
-            console.warn('Error in listen function for enemy searching:', error);
+            // Silently handle listen function errors during searching
         }
 
         // Search behavior - move towards last known position
@@ -152,16 +146,16 @@ class EnemySearchingState extends State {
                 enemy.setVelocity(vx, vy);
             } else {
                 // Reached last known position, give up and patrol
-                enemy.animsFSM.transition('patrolling');
+                enemy.safeTransitionToState('patrolling');
             }
         } else {
             // No last known position, just patrol
-            enemy.animsFSM.transition('patrolling');
+            enemy.safeTransitionToState('patrolling');
         }
 
         // Give up searching after a while
         if (enemy.searchTimer > 3000) { // 3 seconds
-            enemy.animsFSM.transition('patrolling');
+            enemy.safeTransitionToState('patrolling');
         }
     }
 }
@@ -172,9 +166,8 @@ class EnemyFlankingState extends State {
         enemy.flankDirection = Math.random() > 0.5 ? 1 : -1;
 
         // Play different animation for flanking
-        if (enemy.anims.exists('enemy-1-walk')) {
-            enemy.anims.play('enemy-1-walk', true);
-        }
+        const walkAnim = enemy.getWalkAnimationName();
+        enemy.safePlayAnimation(walkAnim);
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -183,16 +176,16 @@ class EnemyFlankingState extends State {
         // Check if player is out of range
         try {
             if (!listen(scene as any, enemy)) {
-                enemy.animsFSM.transition('patrolling');
+                enemy.safeTransitionToState('patrolling');
                 return;
             }
         } catch (error) {
-            console.warn('Error in listen function for enemy flanking:', error);
+            // Silently handle listen function errors during flanking
         }
 
         // Check if close enough to attack
         if (enemy.isPlayerInAttackRange()) {
-            enemy.animsFSM.transition('attacking');
+            enemy.safeTransitionToState('attacking');
             return;
         }
 
@@ -201,7 +194,7 @@ class EnemyFlankingState extends State {
 
         // Return to normal pursuit after flanking attempt
         if (enemy.flankTimer > 2000) { // 2 seconds
-            enemy.animsFSM.transition('pursuing');
+            enemy.safeTransitionToState('pursuing');
         }
     }
 }
@@ -217,18 +210,18 @@ class EnemyAttackingState extends State {
 
         // Check if player is still in attack range
         if (!enemy.isPlayerInAttackRange()) {
-            enemy.animsFSM.transition('pursuing');
+            enemy.safeTransitionToState('pursuing');
             return;
         }
 
         // Check if player is out of detection range
         try {
             if (!listen(scene as any, enemy)) {
-                enemy.animsFSM.transition('patrolling');
+                enemy.safeTransitionToState('patrolling');
                 return;
             }
         } catch (error) {
-            console.warn('Error in listen function for enemy attacking:', error);
+            // Silently handle listen function errors during attacking
         }
 
         // Attack cooldown and combo system
@@ -237,7 +230,7 @@ class EnemyAttackingState extends State {
             if (enemy.attackTimer > 1000 && Math.random() < 0.3) {
                 enemy.performComboAttack();
             } else {
-                enemy.animsFSM.transition('pursuing');
+                enemy.safeTransitionToState('pursuing');
             }
         }
     }
@@ -246,17 +239,14 @@ class EnemyAttackingState extends State {
 class EnemyDeadState extends State {
     enter(scene: Phaser.Scene, enemy: Enemy): void {
         // Check if animation exists before playing
-        if (enemy.anims.exists('enemy-1-death')) {
-            enemy.anims.play('enemy-1-death', true);
-        } else {
-            console.warn('Animation "enemy-1-death" not found');
-        }
+        const deathAnim = enemy.getDeathAnimationName();
+        enemy.safePlayAnimation(deathAnim);
 
         enemy.setVelocity(0, 0);
 
         // Set death timer
         scene.time.delayedCall(GameConfig.TIMING.ENEMY_DEATH_DELAY, () => {
-            enemy.animsFSM.transition('fading');
+            enemy.safeTransitionToState('fading');
         });
     }
 
@@ -273,7 +263,7 @@ class EnemyFadingState extends State {
             alpha: 0,
             duration: GameConfig.TIMING.ENEMY_FADE_DELAY,
             onComplete: () => {
-                enemy.animsFSM.transition('reviving');
+                enemy.safeTransitionToState('reviving');
             }
         });
     }
@@ -290,7 +280,7 @@ class EnemyRevivingState extends State {
 
         // Set revive timer
         scene.time.delayedCall(GameConfig.TIMING.ENEMY_REVIVE_DELAY, () => {
-            enemy.animsFSM.transition('patrolling');
+            enemy.safeTransitionToState('patrolling');
         });
     }
 
@@ -301,7 +291,7 @@ class EnemyRevivingState extends State {
 
 export class Enemy extends Entity {
     public animsFSM!: StateMachine;
-    private player: any;
+    private player: any; // TODO: Replace with proper Player type when available
     public patrolDirection: number = 1;
     public patrolTimer: number = 0;
     private attackCooldown: boolean = false;
@@ -313,8 +303,6 @@ export class Enemy extends Entity {
     public attackPower: number = 10;
     public lightAttack_dmg: number = 0;
     public heavyAttack_dmg: number = 0;
-    public FSM: any; // StateMachine
-    public INTERVAL_ID: any;
 
     // Enhanced AI properties
     public alertTimer: number = 0;
@@ -405,23 +393,50 @@ export class Enemy extends Entity {
             this.patrolRadius = 40 + Math.random() * 30; // Random radius between 40-70
         }
         
-        console.log(`Enemy ${this.entity_type} using ${this.patrolPattern} patrol pattern with radius ${this.patrolRadius}`);
+        // console.log(`Enemy ${this.entity_type} using ${this.patrolPattern} patrol pattern with radius ${this.patrolRadius}`);
     }
 
     private setupStateMachine(): void {
-        const states = {
-            'patrolling': new EnemyPatrolState(),
-            'alert': new EnemyAlertState(),
-            'pursuing': new EnemyPursuingState(),
-            'searching': new EnemySearchingState(),
-            'flanking': new EnemyFlankingState(),
-            'attacking': new EnemyAttackingState(),
-            'dead': new EnemyDeadState(),
-            'fading': new EnemyFadingState(),
-            'reviving': new EnemyRevivingState()
-        };
+        try {
+            const states = {
+                'patrolling': new EnemyPatrolState(),
+                'alert': new EnemyAlertState(),
+                'pursuing': new EnemyPursuingState(),
+                'searching': new EnemySearchingState(),
+                'flanking': new EnemyFlankingState(),
+                'attacking': new EnemyAttackingState(),
+                'dead': new EnemyDeadState(),
+                'fading': new EnemyFadingState(),
+                'reviving': new EnemyRevivingState()
+            };
 
-        this.animsFSM = new StateMachine('patrolling', states, [this.scene, this]);
+            this.animsFSM = new StateMachine('patrolling', states, [this.scene, this]);
+            // console.log(`State machine initialized for ${this.entity_type}`);
+        } catch (error) {
+            console.error('Error setting up state machine:', error);
+            // Create a minimal fallback state machine
+            this.animsFSM = new StateMachine('patrolling', {
+                'patrolling': new EnemyPatrolState()
+            }, [this.scene, this]);
+        }
+    }
+
+    /**
+     * Safely transition to a new state with validation
+     */
+    public safeTransitionToState(stateName: string): boolean {
+        try {
+            if (this.animsFSM) {
+                this.animsFSM.transition(stateName);
+                return true;
+            } else {
+                // State machine not initialized
+                return false;
+            }
+        } catch (error) {
+            console.error(`Error transitioning to state ${stateName}:`, error);
+            return false;
+        }
     }
 
     private setupPhysics(): void {
@@ -431,22 +446,42 @@ export class Enemy extends Entity {
     }
 
     private findPlayer(): void {
-        // Find player in the scene - try multiple approaches
-        this.player = this.scene.children.getByName('player') ||
-            this.scene.children.getByName('Player') ||
-            (this.scene as any).player ||
-            (this.scene as any).p1;
+        // Find player in the scene - try multiple approaches with proper validation
+        try {
+            // Try scene properties first
+            if ((this.scene as any).player) {
+                this.player = (this.scene as any).player;
+            } else if ((this.scene as any).p1) {
+                this.player = (this.scene as any).p1;
+            } else {
+                // Search through children by name
+                this.player = this.scene.children.getByName('player') ||
+                    this.scene.children.getByName('Player');
+            }
 
-        // If still not found, search through all children
-        if (!this.player) {
-            this.scene.children.list.forEach(child => {
-                if (child.constructor.name === 'Player') {
-                    this.player = child;
+            // If still not found, search through all children by constructor name
+            if (!this.player) {
+                this.scene.children.list.forEach(child => {
+                    if (child.constructor.name === 'Player' && !this.player) {
+                        this.player = child;
+                    }
+                });
+            }
+
+            // Validate player object
+            if (this.player) {
+                // Check if player has required methods
+                if (typeof this.player.x !== 'number' || typeof this.player.y !== 'number') {
+                    // Player found but missing position properties
+                    this.player = null;
                 }
-            });
-        }
+            }
 
-        console.log('Enemy found player:', !!this.player, this.player?.constructor.name);
+            // console.log('Enemy found player:', !!this.player, this.player?.constructor.name);
+        } catch (error) {
+            console.error('Error finding player:', error);
+            this.player = null;
+        }
     }
 
     public update(): void {
@@ -492,7 +527,7 @@ export class Enemy extends Entity {
                 if (enemy.animsFSM.state === 'patrolling') {
                     // Chance for nearby enemies to join the pursuit
                     if (Math.random() < 0.3) {
-                        enemy.animsFSM.transition('alert');
+                        enemy.safeTransitionToState('alert');
                     }
                 }
             });
@@ -522,35 +557,51 @@ export class Enemy extends Entity {
     }
 
     private applyNightStats(): void {
-        if (this.nightStatsApplied) return;
+        if (this.nightStatsApplied) {
+            // console.log(`${this.entity_type} night stats already applied, skipping`);
+            return;
+        }
 
-        // Apply speed bonus
-        this.VELOCITY = this.baseVelocity * GameConfig.COMBAT.NIGHT_SPEED_MULTIPLIER;
+        try {
+            // Apply speed bonus
+            this.VELOCITY = this.baseVelocity * GameConfig.COMBAT.NIGHT_SPEED_MULTIPLIER;
 
-        // Apply damage bonus
-        this.attackPower = this.baseAttackPower * GameConfig.COMBAT.NIGHT_DAMAGE_MULTIPLIER;
+            // Apply damage bonus
+            this.attackPower = this.baseAttackPower * GameConfig.COMBAT.NIGHT_DAMAGE_MULTIPLIER;
 
-        this.nightStatsApplied = true;
+            this.nightStatsApplied = true;
 
-        // Visual indicator for night-time enhancement
-        this.setTint(0x6666ff); // Slight blue tint to indicate night enhancement
+            // Visual indicator for night-time enhancement
+            this.setTint(0x6666ff); // Slight blue tint to indicate night enhancement
 
-        console.log(`${this.entity_type} enhanced for night time - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
+            // console.log(`${this.entity_type} enhanced for night time - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
+        } catch (error) {
+            console.error('Error applying night stats:', error);
+            this.nightStatsApplied = false;
+        }
     }
 
     private removeNightStats(): void {
-        if (!this.nightStatsApplied) return;
+        if (!this.nightStatsApplied) {
+            // console.log(`${this.entity_type} night stats not applied, skipping removal`);
+            return;
+        }
 
-        // Restore base stats
-        this.VELOCITY = this.baseVelocity;
-        this.attackPower = this.baseAttackPower;
+        try {
+            // Restore base stats
+            this.VELOCITY = this.baseVelocity;
+            this.attackPower = this.baseAttackPower;
 
-        this.nightStatsApplied = false;
+            this.nightStatsApplied = false;
 
-        // Remove visual indicator
-        this.clearTint();
+            // Remove visual indicator
+            this.clearTint();
 
-        console.log(`${this.entity_type} restored to day time stats - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
+            // console.log(`${this.entity_type} restored to day time stats - Speed: ${this.VELOCITY}, Attack: ${this.attackPower}`);
+        } catch (error) {
+            console.error('Error removing night stats:', error);
+            this.nightStatsApplied = false;
+        }
     }
 
     // Pathfinding methods
@@ -612,28 +663,37 @@ export class Enemy extends Entity {
     }
 
     public reset(): void {
-        this.HIT_POINTS = this.MAX_HIT_POINTS;
-        this.isAttacking = false;
-        this.alpha = 1;
+        try {
+            this.HIT_POINTS = this.MAX_HIT_POINTS;
+            this.isAttacking = false;
+            this.alpha = 1;
 
-        // Reset AI timers and states
-        this.alertTimer = 0;
-        this.pursuitTimer = 0;
-        this.searchTimer = 0;
-        this.flankTimer = 0;
-        this.attackTimer = 0;
-        this.lastPlayerPosition = { x: 0, y: 0 };
-        this.lastKnownPlayerPosition = null;
-        this.patrolTimer = 0;
-        this.attackCooldown = false;
+            // Reset AI timers and states
+            this.alertTimer = 0;
+            this.pursuitTimer = 0;
+            this.searchTimer = 0;
+            this.flankTimer = 0;
+            this.attackTimer = 0;
+            this.lastPlayerPosition = { x: 0, y: 0 };
+            this.lastKnownPlayerPosition = null;
+            this.patrolTimer = 0;
+            this.attackCooldown = false;
 
-        // Clean up alert indicator
-        if (this.alertIndicator) {
-            this.alertIndicator.destroy();
-            this.alertIndicator = null;
+            // Clean up alert indicator
+            this.cleanupAlertIndicator();
+
+            // Reset night stats if applied
+            if (this.nightStatsApplied) {
+                this.removeNightStats();
+            }
+
+            // Safely transition to patrolling state
+            this.safeTransitionToState('patrolling');
+            
+            // console.log(`${this.entity_type} reset successfully`);
+        } catch (error) {
+            console.error('Error resetting enemy:', error);
         }
-
-        this.animsFSM.transition('patrolling');
     }
 
     public loot(): void {
@@ -672,6 +732,13 @@ export class Enemy extends Entity {
     }
 
     protected die(): void {
+        // Update quest progress when enemy is killed
+        if (this.scene && this.scene.data && this.scene.data.get('questSystem')) {
+            const questSystem = this.scene.data.get('questSystem');
+            const enemyType = this.entity_type || 'enemy';
+            questSystem.updateQuestProgress(enemyType, 1);
+        }
+        
         // Enemy death logic is handled by state machine
     }
 
@@ -863,30 +930,48 @@ export class Enemy extends Entity {
     }
 
     public showAlertIndicator(): void {
-        if (this.alertIndicator) {
-            this.alertIndicator.destroy();
-        }
+        try {
+            // Clean up existing indicator
+            this.cleanupAlertIndicator();
 
-        // Create a small visual indicator above the enemy
-        this.alertIndicator = this.scene.add.graphics();
-        this.alertIndicator.fillStyle(0xff0000, 0.8);
-        this.alertIndicator.fillCircle(0, -30, 3);
-        this.alertIndicator.setDepth(1000);
+            // Create a small visual indicator above the enemy
+            this.alertIndicator = this.scene.add.graphics();
+            this.alertIndicator.fillStyle(0xff0000, 0.8);
+            this.alertIndicator.fillCircle(0, -30, 3);
+            this.alertIndicator.setDepth(1000);
 
-        // Make it follow the enemy
-        this.scene.tweens.add({
-            targets: this.alertIndicator,
-            alpha: 0,
-            duration: 500,
-            yoyo: true,
-            repeat: 1,
-            onComplete: () => {
-                if (this.alertIndicator) {
-                    this.alertIndicator.destroy();
-                    this.alertIndicator = null;
+            // Make it follow the enemy
+            this.scene.tweens.add({
+                targets: this.alertIndicator,
+                alpha: 0,
+                duration: 500,
+                yoyo: true,
+                repeat: 1,
+                onComplete: () => {
+                    this.cleanupAlertIndicator();
                 }
+            });
+        } catch (error) {
+            console.error('Error showing alert indicator:', error);
+            this.cleanupAlertIndicator();
+        }
+    }
+
+    /**
+     * Safely clean up alert indicator to prevent memory leaks
+     */
+    private cleanupAlertIndicator(): void {
+        if (this.alertIndicator) {
+            try {
+                // Stop any active tweens on the indicator
+                this.scene.tweens.killTweensOf(this.alertIndicator);
+                this.alertIndicator.destroy();
+            } catch (error) {
+                // Error cleaning up alert indicator
+            } finally {
+                this.alertIndicator = null;
             }
-        });
+        }
     }
 
     public performComboAttack(): void {
@@ -1132,5 +1217,57 @@ export class Enemy extends Entity {
         return this.attackCooldown;
     }
 
-    // Reset method is already defined above
+    /**
+     * Get the appropriate walk animation name based on enemy type
+     */
+    public getWalkAnimationName(): string {
+        if (this.isBoss) {
+            return 'boss-1-walk';
+        } else if (this.entity_type === 'Nepian Observer') {
+            return 'enemy-2-walk';
+        } else {
+            return 'enemy-1-walk';
+        }
+    }
+
+    /**
+     * Get the appropriate idle animation name based on enemy type
+     */
+    public getIdleAnimationName(): string {
+        if (this.isBoss) {
+            return 'boss-1-idle';
+        } else if (this.entity_type === 'Nepian Observer') {
+            return 'enemy-2-idle';
+        } else {
+            return 'enemy-1-idle';
+        }
+    }
+
+    /**
+     * Get the appropriate death animation name based on enemy type
+     */
+    public getDeathAnimationName(): string {
+        if (this.isBoss) {
+            return 'boss-1-death';
+        } else if (this.entity_type === 'Nepian Observer') {
+            return 'enemy-2-death';
+        } else {
+            return 'enemy-1-death';
+        }
+    }
+
+    /**
+     * Safely play animation with validation
+     */
+    public safePlayAnimation(animationName: string, ignoreIfMissing: boolean = false): boolean {
+        if (this.anims.exists(animationName)) {
+            this.anims.play(animationName, true);
+            return true;
+        } else {
+            if (!ignoreIfMissing) {
+                // Animation not found
+            }
+            return false;
+        }
+    }
 }

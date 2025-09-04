@@ -3,6 +3,7 @@ import { Player } from '../../prefabs/Player';
 import { Enemy } from '../../prefabs/Enemy';
 import { UnifiedNPC } from '../../prefabs/UnifiedNPC';
 import { Item } from '../../prefabs/Item';
+import { MedievalSword } from '../../prefabs/Weapon';
 import { Tree } from '../../prefabs/Tree';
 import { DebugManager } from '../../debug/DebugManager';
 import { InventoryUI } from '../../ui/InventoryUI';
@@ -16,6 +17,7 @@ import { PauseMenu } from '../../ui/PauseMenu';
 import { QuestUI } from '../../ui/QuestUI';
 import { SaveSystem } from '../../systems/SaveSystem';
 import { MusicManager } from '../../systems/MusicManager';
+import { CharacterGearUI } from '../../ui/CharacterGearUI';
 
 /**  
  HELLO CLANKER 
@@ -57,6 +59,7 @@ export class World extends Phaser.Scene {
     private pauseMenu!: PauseMenu;
     private questUI!: QuestUI;
     private musicManager!: MusicManager;
+    private characterGearUI!: CharacterGearUI;
 
     constructor() {
         super('worldScene');
@@ -77,7 +80,7 @@ export class World extends Phaser.Scene {
                 const saveData = SaveSystem.loadGame();
                 if (saveData && saveData.gameState) {
                     savedTime = saveData.gameState.currentTime;
-                    console.log(`Found saved time in save data: ${savedTime}`);
+                    // Found saved time in save data
                 }
             }
             this.dayNightCycle = new DayNightCycle(this, savedTime);
@@ -111,6 +114,14 @@ export class World extends Phaser.Scene {
             this.inventoryUI = new InventoryUI(this);
             this.inventoryUI.setPlayer(this.player);
 
+            // Setup character gear UI
+            this.characterGearUI = new CharacterGearUI(this);
+            this.characterGearUI.setPlayer(this.player);
+            
+            // Connect inventory and gear UIs
+            this.inventoryUI.setGearUI(this.characterGearUI);
+            this.characterGearUI.setInventoryUI(this.inventoryUI);
+
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
                 if (this.lantern) {
@@ -131,14 +142,14 @@ export class World extends Phaser.Scene {
             this.events.on('debug-setToPeakDay', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakDay();
-                    console.log('🌅 Debug event (scene): Set to peak day');
+                    // Debug: Set to peak day
                 }
             });
 
             this.events.on('debug-setToPeakNight', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakNight();
-                    console.log('🌙 Debug event (scene): Set to peak night');
+                    // Debug: Set to peak night
                 }
             });
 
@@ -146,27 +157,27 @@ export class World extends Phaser.Scene {
             this.game.events.on('debug-setToPeakDay', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakDay();
-                    console.log('🌅 Debug event (global): Set to peak day');
+                    // Debug: Set to peak day
                 }
             });
 
             this.game.events.on('debug-setToPeakNight', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.setToPeakNight();
-                    console.log('🌙 Debug event (global): Set to peak night');
+                    // Debug: Set to peak night
                 }
             });
 
             this.game.events.on('debug-disableTimeOverride', () => {
                 if (this.dayNightCycle) {
                     this.dayNightCycle.disableDebugMode();
-                    console.log('🕐 Debug event (global): Disabled time override');
+                    // Debug: Disabled time override
                 }
             });
 
             this.game.events.on('debug-clearSaveData', () => {
                 SaveSystem.forceClearSaveData();
-                console.log('🗑️ Debug event (global): Save data cleared');
+                // Debug: Save data cleared
             });
 
             // Method 3: Registry change listener
@@ -174,27 +185,39 @@ export class World extends Phaser.Scene {
                 if (data && this.dayNightCycle) {
                     if (data.type === 'setToPeakDay') {
                         this.dayNightCycle.setToPeakDay();
-                        console.log('🌅 Debug event (registry): Set to peak day');
+                        // Debug: Set to peak day
                     } else if (data.type === 'setToPeakNight') {
                         this.dayNightCycle.setToPeakNight();
-                        console.log('🌙 Debug event (registry): Set to peak night');
+                        // Debug: Set to peak night
                     } else if (data.type === 'clearSaveData') {
                         SaveSystem.forceClearSaveData();
-                        console.log('🗑️ Debug event (registry): Save data cleared');
+                        // console.log('🗑️ Debug event (registry): Save data cleared');
                     }
                 }
             });
 
             // Setup Lantern
-            console.log('Setting up lantern...');
+            // console.log('Setting up lantern...');
             this.lantern = new Lantern(this, this.player);
             this.player.lantern = this.lantern; // Connect lantern to player
-            console.log('Lantern setup complete');
+            // console.log('Lantern setup complete');
 
             // Setup Quest System and NPC
-            console.log('Setting up quest system...');
+            // console.log('Setting up quest system...');
             this.questSystem = new QuestSystem(this, this.player);
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
+            
+            // Add quest icons to existing items now that quest system is initialized
+            this.addQuestIconsToExistingItems();
+            
+            // Listen for quest completion events to give rewards
+            this.events.on('questCompleted', this.handleQuestCompletion, this);
+            
+            // Listen for quest start events to add quest icons to existing items
+            this.events.on('startQuest', () => {
+                // Add quest icons to existing items when a quest starts
+                this.addQuestIconsToExistingItems();
+            });
 
             // Create Narvark the quest giver NPC
             const narvarkNPC = this.npcs.find(npc => npc.entity_type === 'Narvark');
@@ -203,7 +226,7 @@ export class World extends Phaser.Scene {
                 this.questGiverNPC.setPlayer(this.player);
                 this.questSystem.setNPC(this.questGiverNPC);
                 this.data.set('npc', this.questGiverNPC);
-                console.log('Narvark NPC system initialized');
+                // console.log('Narvark NPC system initialized');
             } else {
                 console.error('Narvark NPC not found!');
             }
@@ -215,33 +238,33 @@ export class World extends Phaser.Scene {
             this.setupInteractionControls();
 
             // Setup Tree Light Emission
-            console.log('Setting up tree light emission...');
+            // console.log('Setting up tree light emission...');
             this.treeLightEmission = new TreeLightEmission(this);
             this.trees.forEach(tree => {
                 this.treeLightEmission.addTreeLight(tree);
             });
-            console.log('Tree light emission setup complete');
+            // console.log('Tree light emission setup complete');
 
             // Setup Pathfinding System
-            console.log('Setting up pathfinding system...');
+            // console.log('Setting up pathfinding system...');
             this.pathfinding = new Pathfinding(this);
             this.pathfinding.setObstacles(this.trees);
             this.data.set('pathfinding', this.pathfinding); // Store in scene data for enemy access
-            console.log('Pathfinding system setup complete');
+            // console.log('Pathfinding system setup complete');
 
             // Setup Collision Detection
-            console.log('Setting up collision detection...');
+            // console.log('Setting up collision detection...');
             this.setupCollisionDetection();
-            console.log('Collision detection setup complete');
+            // console.log('Collision detection setup complete');
 
             // Setup Pause Menu
-            console.log('Setting up pause menu...');
+            // console.log('Setting up pause menu...');
             this.pauseMenu = new PauseMenu(this);
-            console.log('Pause menu setup complete');
+            // console.log('Pause menu setup complete');
 
             // Setup quest UI
             this.questUI = new QuestUI(this);
-            console.log('Quest UI setup complete');
+            // console.log('Quest UI setup complete');
 
             if (data.loadSaveData) {
                 // Clear corrupted save data before loading
@@ -250,7 +273,7 @@ export class World extends Phaser.Scene {
                 
                 // Restore QuestSystem state and active quests in QuestUI after save data is loaded
                 this.time.delayedCall(100, () => {
-                    console.log('World: Restoring QuestSystem state...');
+                    // console.log('World: Restoring QuestSystem state...');
                     
                     // Restore QuestSystem state
                     const savedQuestState = localStorage.getItem('quest_system_state');
@@ -263,7 +286,7 @@ export class World extends Phaser.Scene {
                         }
                     }
                     
-                    console.log('World: Restoring active quests in QuestUI...');
+                    // console.log('World: Restoring active quests in QuestUI...');
                     this.questUI.restoreActiveQuests();
                 });
             }
@@ -327,6 +350,9 @@ export class World extends Phaser.Scene {
             }
         });
 
+        // Update items and handle respawning
+        this.updateItems(delta);
+
         // Update Lantern
         if (this.lantern) {
             this.lantern.update();
@@ -371,12 +397,20 @@ export class World extends Phaser.Scene {
         // This allows level designers to place spawns visually in Tiled
         if (this.objlayer) {
             this.objlayer.objects.forEach(element => {
+                let enemy: Enemy;
                 if (element.name === 'boss_spawn') {
-                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1').setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim') as Enemy)
+                    enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-1').setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim') as Enemy;
+                    this.addQuestIconToEnemy(enemy, 'Electro Lord'); // Quest 4 requires Electro Lord
                 } else if (element.name === 'enemy_spawn') {
-                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-1-anim').setScale(1.5).anims.play('enemy-idle-anim') as Enemy)
+                    enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-1-anim').setScale(1.5).anims.play('enemy-idle-anim') as Enemy;
+                    this.addQuestIconToEnemy(enemy, 'Nepian Scout'); // Quest 2 requires Nepian Scouts
                 } else if (element.name === 'enemy_spawn_2') {
-                    this.enemies.push(new Enemy(this, element.x as number, element.y as number, 'enemy-2-anim').setScale(1.5).anims.play('enemy2-idle-anim') as Enemy)
+                    enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-2-anim').setScale(1.5).anims.play('enemy2-idle-anim') as Enemy;
+                    this.addQuestIconToEnemy(enemy, 'Nepian Observer'); // Quest 5/6 might require observers
+                }
+                
+                if (enemy!) {
+                    this.enemies.push(enemy);
                 }
             })
         }
@@ -385,7 +419,7 @@ export class World extends Phaser.Scene {
 
     private createNPCs(): void {
         try {
-            console.log('Creating quest giver Narvark near spawn...');
+            // console.log('Creating quest giver Narvark near spawn...');
             const npc1Spawn = this.tilemap.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
             if (!npc1Spawn) {
                 console.error('NPC spawn point not found in tilemap!');
@@ -404,7 +438,7 @@ export class World extends Phaser.Scene {
 
             questGiver.showQuestIcon(); // Show exclamation mark over head
             this.npcs.push(questGiver);
-            console.log('Quest giver Narvark created successfully');
+            // console.log('Quest giver Narvark created successfully');
         } catch (error) {
             console.error('Error creating NPC:', error);
         }
@@ -420,19 +454,29 @@ export class World extends Phaser.Scene {
             // Positions are set visually in Tiled Map Editor
             if (this.objlayer) {
                 console.log('objlayer exists, objects count:', this.objlayer.objects.length);
+                let bushCount = 0;
                 this.objlayer.objects.forEach(element => {
                     if (element.name === 'bush_1') {
-                        console.log('Found bush_1 at:', element.x, element.y);
-                        const bush = new Item(this, element.x as number, element.y as number, 'bush-1', { sound: 'collect-herb', volume: 0.5 })
-                        bush.setScale(0.1).setSize(35, 30) // Much smaller scale for herbs
-                        bush.anims.play('quest-icon', true) // Play the sparkle animation
-                        this.items.push(bush)
+                        bushCount++;
                     }
-                })
+                    // Temporarily disable spawn point processing to isolate missing texture issue
+                    // this.createItemFromSpawnPoint(element);
+                });
+                console.log(`Found ${bushCount} bush_1 spawn points in tileset`);
+            } else {
+                console.error('objlayer is null! Cannot create items from tileset.');
             }
 
-            // Add test herbs near Narvark for quest testing
-            this.createTestHerbs();
+            // Add test herbs near Narvark for quest testing (only in development)
+            console.log('NODE_ENV:', process.env.NODE_ENV);
+            if (process.env.NODE_ENV === 'development') {
+                console.log('Creating test items in development mode');
+                this.createTestHerbs();
+            } else {
+                console.log('Not in development mode, skipping test items');
+            }
+
+            console.log(`=== ITEM CREATION COMPLETE - Total items: ${this.items.length} ===`);
 
         } catch (error) {
             console.error('Error creating items:', error);
@@ -443,15 +487,145 @@ export class World extends Phaser.Scene {
     }
 
     /**
+     * Create items from tilemap spawn points with proper validation and respawn capability
+     */
+    private createItemFromSpawnPoint(element: any): void {
+        try {
+            const x = element.x as number;
+            const y = element.y as number;
+            
+            if (isNaN(x) || isNaN(y)) {
+                console.warn(`Invalid spawn point coordinates: ${element.name} at (${x}, ${y})`);
+                return;
+            }
+
+            console.log(`Processing spawn point: ${element.name} at (${x}, ${y})`);
+            
+            // Skip empty or invalid spawn point names
+            if (!element.name || element.name.trim() === '') {
+                console.log(`Skipping empty spawn point at (${x}, ${y})`);
+                return;
+            }
+            
+            switch (element.name) {
+                case 'bush_1':
+                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
+                    break;
+                case 'herb_spawn':
+                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
+                    break;
+                case 'fruit_spawn':
+                    this.createFruitSpawnPoint(x, y);
+                    break;
+                case 'sword_spawn':
+                    this.createSwordSpawnPoint(x, y);
+                    break;
+                case 'rare_sword_spawn':
+                    this.createSwordSpawnPoint(x, y, 'rare');
+                    break;
+                case 'epic_sword_spawn':
+                    this.createSwordSpawnPoint(x, y, 'epic');
+                    break;
+                case 'legendary_sword_spawn':
+                    this.createSwordSpawnPoint(x, y, 'legendary');
+                    break;
+                case 'uncommon_sword_spawn':
+                    this.createSwordSpawnPoint(x, y, 'uncommon');
+                    break;
+                case 'bush_spawn':
+                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
+                    break;
+                case 'herb_1':
+                case 'herb_2':
+                case 'herb_3':
+                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
+                    break;
+                default:
+                    // Unknown spawn point type - log for debugging
+                    if (element.name && element.name !== '') {
+                        console.log(`Unknown spawn point type: ${element.name} at (${x}, ${y})`);
+                    }
+                    break;
+            }
+        } catch (error) {
+            console.error(`Error creating item from spawn point ${element.name}:`, error);
+        }
+    }
+
+    /**
+     * Create herb spawn point with respawn capability
+     */
+    private createHerbSpawnPoint(x: number, y: number, herbType: string = 'mysterious herb'): void {
+        console.log(`Creating herb spawn point: ${herbType} at (${x}, ${y})`);
+        
+        const herb = new Item(this, x, y, 'mysterious-herb', { 
+            sound: 'collect-herb', 
+            volume: 0.5 
+        });
+        
+        herb.setScale(0.8).setSize(32, 32).setOffset(0, 0); // Proper scale and centered clickable area
+        herb.setVisible(true);
+        herb.setDepth(100); // Higher depth to ensure visibility
+        
+        // Add quest icon if herb collection quest is active
+        this.addQuestIconToHerb(herb);
+        
+        // Add respawn capability
+        herb.setData('respawnTime', 30000); // 30 seconds
+        herb.setData('originalType', herbType);
+        herb.setData('spawnPoint', { x, y });
+        herb.setData('isRespawnable', true);
+        
+        this.items.push(herb);
+        console.log(`✓ Herb created successfully. Total items: ${this.items.length}`);
+    }
+
+    /**
+     * Create fruit spawn point
+     */
+    private createFruitSpawnPoint(x: number, y: number): void {
+        // console.log(`Creating fruit spawn point at (${x}, ${y})`);
+        
+        const fruit = new Item(this, x, y, 'fruit', { 
+            sound: 'collect-herb', 
+            volume: 0.3 
+        });
+        
+        fruit.setScale(0.8).setSize(16, 16).setOffset(0, 0);
+        fruit.setData('respawnTime', 60000); // 1 minute
+        fruit.setData('spawnPoint', { x, y });
+        fruit.setData('isRespawnable', true);
+        
+        this.items.push(fruit);
+    }
+
+    /**
+     * Create a sword spawn point with specified rarity
+     */
+    private createSwordSpawnPoint(x: number, y: number, rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' = 'common'): void {
+        const sword = new MedievalSword(this, x, y, rarity);
+        
+        // Set sword properties
+        sword.setScale(0.3).setSize(20, 40).setOffset(0, 0); // Make swords smaller as requested
+        sword.setData('respawnTime', 300000); // 5 minutes for weapons
+        sword.setData('spawnPoint', { x, y });
+        sword.setData('isRespawnable', true);
+        sword.setData('rarity', rarity);
+        
+        // Add to items array
+        this.items.push(sword);
+    }
+
+    /**
      * Create 5 test herbs near Narvark for quest testing
      */
     private createTestHerbs(): void {
-        console.log('=== CREATING TEST HERBS ===');
-        console.log('createTestHerbs method called!');
+        // console.log('=== CREATING TEST HERBS ===');
+        // console.log('createTestHerbs method called!');
         // TODO: Get Narvark position from tilemap object layer instead of hardcoding
         const narvarkX = 341.818181818182;
         const narvarkY = 344;
-        console.log('Narvark position:', narvarkX, narvarkY);
+        // console.log('Narvark position:', narvarkX, narvarkY);
         
         // Create 5 herbs in a wider area around Narvark (further away to avoid dialogue interference)
         const herbPositions = [
@@ -462,22 +636,24 @@ export class World extends Phaser.Scene {
             { x: narvarkX - 80, y: narvarkY + 30 }    // Left and down
         ];
 
-        console.log('Creating herbs at positions:', herbPositions);
-        console.log('Camera position:', this.cameras.main.x, this.cameras.main.y);
-        console.log('Camera bounds:', this.cameras.main.getBounds());
+        // console.log('Creating herbs at positions:', herbPositions);
+        // console.log('Camera position:', this.cameras.main.x, this.cameras.main.y);
+        // console.log('Camera bounds:', this.cameras.main.getBounds());
 
         herbPositions.forEach((pos, index) => {
             try {
-                console.log(`Creating herb ${index + 1} at (${pos.x}, ${pos.y})`);
-                // Create test herb using animated bush-1 spritesheet
-                const herb = new Item(this, pos.x, pos.y, 'bush-1', { 
+                console.log(`Creating test herb ${index + 1} at (${pos.x}, ${pos.y})`);
+                // Create test herb using static mysterious herb image
+                const herb = new Item(this, pos.x, pos.y, 'mysterious-herb', { 
                     sound: 'collect-herb', 
                     volume: 0.5 
                 });
-                herb.setScale(0.1).setSize(35, 30); // Much smaller scale for herbs
+                herb.setScale(0.8).setSize(32, 32).setOffset(0, 0); // Proper scale and centered clickable area
                 herb.setVisible(true); // Ensure herb is visible
-                herb.setDepth(10); // Set high depth to ensure visibility
-                herb.anims.play('quest-icon', true); // Play the sparkle animation
+                herb.setDepth(100); // Higher depth to ensure visibility
+                
+                // Add quest icon if herb collection quest is active
+                this.addQuestIconToHerb(herb);
                 this.items.push(herb);
                 console.log(`✓ Test herb ${index + 1} created successfully at (${pos.x}, ${pos.y})`);
                 console.log(`  - Herb visible: ${herb.visible}`);
@@ -488,7 +664,383 @@ export class World extends Phaser.Scene {
             }
         });
         
-        console.log('=== TEST HERBS CREATION COMPLETE ===');
+        // console.log('=== TEST HERBS CREATION COMPLETE ===');
+    }
+
+    /**
+     * Add quest icon to herb if herb collection quest is active
+     */
+    private addQuestIconToHerb(herb: Item): void {
+        this.addQuestIconToItem(herb, 'mysterious herb');
+    }
+
+    /**
+     * Add quest icons to existing items after quest system is initialized
+     */
+    private addQuestIconsToExistingItems(): void {
+        if (!this.questSystem) {
+            return;
+        }
+
+        // Add quest icons to existing herbs
+        this.items.forEach((item) => {
+            if (item && item.active && item.getItemType() === 'mysterious herb') {
+                this.addQuestIconToItem(item, 'mysterious herb');
+            }
+        });
+
+        // Add quest icons to existing enemies
+        this.enemies.forEach(enemy => {
+            if (enemy && enemy.active) {
+                // Determine enemy type based on texture or other properties
+                let enemyType = 'Nepian Scout'; // Default
+                if (enemy.texture.key === 'enemy-1') {
+                    enemyType = 'Nepian Scout';
+                } else if (enemy.texture.key === 'enemy-2') {
+                    enemyType = 'Nepian Observer';
+                } else if (enemy.texture.key === 'boss-1') {
+                    enemyType = 'Electro Lord';
+                }
+                this.addQuestIconToEnemy(enemy, enemyType);
+            }
+        });
+    }
+
+    /**
+     * Add quest icon to any item if a relevant quest is active
+     */
+    private addQuestIconToItem(item: Item, itemType: string): void {
+        if (!this.questSystem) {
+            // Quest system not yet initialized, skip quest icon for now
+            return;
+        }
+
+        const activeQuests = this.questSystem.getActiveQuests();
+        
+        // Check each active quest to see if this item type is required
+        for (const [questId, questProgress] of activeQuests) {
+            if (questProgress.isCompleted) continue;
+            
+            const questData = this.cache.json.get(`quest-${questId}`);
+            if (!questData || !questData.questdata) continue;
+            
+            const questRequirement = questData.questdata.type.toLowerCase();
+            const itemTypeLower = itemType.toLowerCase();
+            
+            // Check if this item matches the quest requirement
+            if (questRequirement === itemTypeLower || 
+                (questRequirement.includes('nepian') && itemTypeLower.includes('nepian')) ||
+                (questRequirement.includes('heart') && itemTypeLower.includes('heart'))) {
+                
+                // Add quest icon with sparkle animation
+                const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon');
+                questIcon.setScale(1.0); // Larger, more visible quest icon
+                questIcon.setDepth(150); // Above the item
+                questIcon.anims.play('quest-icon-bounce', true); // Use bounce animation for sparkle effect
+                
+                // Add sparkle animation to the herb itself
+                this.addSparkleAnimationToItem(item);
+                
+                // Store reference to quest icon for cleanup
+                item.setData('questIcon', questIcon);
+                
+                console.log(`✓ Added quest icon and sparkle to ${itemType} - quest ${questId} is active`);
+                break; // Only add one quest icon per item
+            }
+        }
+    }
+
+    /**
+     * Add sparkle animation to an item (herbs, etc.)
+     */
+    private addSparkleAnimationToItem(item: Item): void {
+        // Create sparkle effect using tween animations
+        const sparkleTween = this.tweens.add({
+            targets: item,
+            scaleX: item.scaleX * 1.2,
+            scaleY: item.scaleY * 1.2,
+            duration: 800,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Add subtle glow effect
+        const glowTween = this.tweens.add({
+            targets: item,
+            alpha: 0.7,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+        });
+
+        // Store tweens for cleanup
+        item.setData('sparkleTween', sparkleTween);
+        item.setData('glowTween', glowTween);
+    }
+
+    /**
+     * Add quest icon to enemy if relevant quest is active
+     */
+    private addQuestIconToEnemy(enemy: Enemy, enemyType: string): void {
+        if (!this.questSystem) return;
+
+        const activeQuests = this.questSystem.getActiveQuests();
+        
+        // Check each active quest to see if this enemy type is required
+        for (const [questId, questProgress] of activeQuests) {
+            if (questProgress.isCompleted) continue;
+            
+            const questData = this.cache.json.get(`quest-${questId}`);
+            if (!questData || !questData.questdata) continue;
+            
+            const questRequirement = questData.questdata.type.toLowerCase();
+            const enemyTypeLower = enemyType.toLowerCase();
+            
+            // Check if this enemy matches the quest requirement
+            if (questRequirement === enemyTypeLower || 
+                (questRequirement.includes('nepian') && enemyTypeLower.includes('nepian')) ||
+                (questRequirement.includes('scout') && enemyTypeLower.includes('scout')) ||
+                (questRequirement.includes('electro') && enemyTypeLower.includes('electro'))) {
+                
+                // Add quest icon above enemy
+                const questIcon = this.add.sprite(enemy.x, enemy.y - 30, 'quest-icon');
+                questIcon.setScale(0.7);
+                questIcon.setDepth(150); // Above the enemy
+                questIcon.anims.play('quest-icon-bounce', true);
+                
+                // Store reference to quest icon for cleanup
+                enemy.setData('questIcon', questIcon);
+                
+                console.log(`Added quest icon to ${enemyType} - quest ${questId} is active`);
+                break; // Only add one quest icon per enemy
+            }
+        }
+    }
+
+    /**
+     * Handle quest completion and give rewards to player
+     */
+    private handleQuestCompletion(questData: any): void {
+        console.log(`Quest completed: ${questData.questName}`);
+        console.log(`Reward: ${questData.reward.amount} ${questData.reward.type}`);
+        
+        // Remove quest icons from items since quest is completed
+        this.removeQuestIconsFromItems(questData.questId);
+        
+        // Add reward to player inventory
+        if (this.player && this.player.p1Inventory && questData.reward) {
+            const reward = questData.reward;
+            const added = this.player.p1Inventory.addItem(reward.type, reward.amount);
+            
+            if (added) {
+                console.log(`✓ Reward added to inventory: ${reward.amount} ${reward.type}`);
+                
+                // Show reward notification
+                this.showRewardNotification(reward);
+            } else {
+                console.log(`✗ Failed to add reward to inventory: ${reward.amount} ${reward.type}`);
+            }
+        }
+    }
+
+    /**
+     * Remove quest icons from items when quest is completed
+     */
+    private removeQuestIconsFromItems(completedQuestId: number): void {
+        // Get the quest data to determine what items to clean up
+        const questData = this.cache.json.get(`quest-${completedQuestId}`);
+        if (!questData || !questData.questdata) return;
+        
+        const questItemType = questData.questdata.type.toLowerCase();
+        
+        // Remove quest icons from items that match the completed quest
+        this.items.forEach(item => {
+            if (item && item.active) {
+                const itemType = item.getItemType().toLowerCase();
+                
+                // Check if this item matches the completed quest requirement
+                if (questItemType === itemType || 
+                    (questItemType.includes('nepian') && itemType.includes('nepian')) ||
+                    (questItemType.includes('heart') && itemType.includes('heart'))) {
+                    
+                    // Remove quest icon
+                    const questIcon = item.getData('questIcon');
+                    if (questIcon) {
+                        questIcon.destroy();
+                        item.setData('questIcon', null);
+                    }
+                    
+                    // Remove sparkle animations
+                    const sparkleTween = item.getData('sparkleTween');
+                    const glowTween = item.getData('glowTween');
+                    if (sparkleTween) {
+                        sparkleTween.destroy();
+                        item.setData('sparkleTween', null);
+                    }
+                    if (glowTween) {
+                        glowTween.destroy();
+                        item.setData('glowTween', null);
+                    }
+                    
+                    console.log(`Removed quest icon from ${itemType} - quest ${completedQuestId} completed`);
+                }
+            }
+        });
+        
+        // Remove quest icons from enemies that match the completed quest
+        this.enemies.forEach(enemy => {
+            if (enemy && enemy.active) {
+                const questIcon = enemy.getData('questIcon');
+                if (questIcon) {
+                    questIcon.destroy();
+                    enemy.setData('questIcon', null);
+                    console.log(`Removed quest icon from enemy - quest ${completedQuestId} completed`);
+                }
+            }
+        });
+    }
+
+    /**
+     * Show reward notification to player
+     */
+    private showRewardNotification(reward: any): void {
+        // Create floating reward text
+        const rewardText = this.add.bitmapText(
+            this.player.x, this.player.y - 50,
+            'pixel-white', `+${reward.amount} ${reward.type}`, 16
+        );
+        rewardText.setTint(0xffd700); // Gold color
+        rewardText.setOrigin(0.5, 0.5);
+        rewardText.setDepth(1000);
+        
+        // Animate the reward text
+        this.tweens.add({
+            targets: rewardText,
+            y: rewardText.y - 50,
+            alpha: 0,
+            duration: 2000,
+            ease: 'Power2',
+            onComplete: () => {
+                rewardText.destroy();
+            }
+        });
+    }
+
+
+    /**
+     * Handles item collection when player overlaps with an item
+     */
+    private collectItem(item: Item | MedievalSword): void {
+        try {
+            // Check if item is a weapon
+            if (item instanceof MedievalSword) {
+                this.collectWeapon(item);
+            } else {
+                this.collectRegularItem(item);
+            }
+        } catch (error) {
+            console.error('Error collecting item:', error);
+        }
+    }
+
+    /**
+     * Handles collection of regular items (herbs, fruit, etc.)
+     */
+    private collectRegularItem(item: Item): void {
+        const itemType = item.getItemType();
+        
+        // Add to player inventory
+        if (this.player && this.player.p1Inventory) {
+            const added = this.player.p1Inventory.addItem(itemType, 1);
+            
+            if (added) {
+                // Update quest progress when item is collected
+                if (this.questSystem) {
+                    this.questSystem.updateQuestProgress(itemType, 1);
+                }
+                
+                // Clean up quest icon if it exists
+                const questIcon = item.getData('questIcon');
+                if (questIcon) {
+                    questIcon.destroy();
+                }
+                
+                // Clean up sparkle animations if they exist
+                const sparkleTween = item.getData('sparkleTween');
+                const glowTween = item.getData('glowTween');
+                if (sparkleTween) {
+                    sparkleTween.destroy();
+                }
+                if (glowTween) {
+                    glowTween.destroy();
+                }
+                
+                // Play collection sound
+                item.collect();
+                
+                // Remove from items array
+                const index = this.items.indexOf(item);
+                if (index > -1) {
+                    this.items.splice(index, 1);
+                }
+                
+                // Destroy the item to prevent further interactions
+                item.destroy();
+                
+                console.log(`Collected ${itemType}`);
+            } else {
+                console.log(`Inventory full, cannot collect ${itemType}`);
+            }
+        }
+    }
+
+    /**
+     * Handles collection of weapons
+     */
+    private collectWeapon(weapon: MedievalSword): void {
+        if (this.player && this.player.p1Inventory) {
+            // Debug: Check current weapon count
+            const currentWeaponCount = this.player.p1Inventory.getWeaponCount();
+            const maxWeapons = 10; // From Inventory class
+            console.log(`Current weapons: ${currentWeaponCount}/${maxWeapons}`);
+            
+            // Create weapon data for inventory
+            const weaponData = {
+                type: 'weapon' as const,
+                weaponType: weapon.getWeaponStats().weaponType,
+                rarity: weapon.getWeaponStats().rarity,
+                stats: weapon.getWeaponStats(),
+                icon: weapon.getIconTexture()
+            };
+            
+            const added = this.player.p1Inventory.addWeapon(weaponData);
+            
+            if (added) {
+                // Update quest progress when weapon is collected (for weapon-related quests)
+                if (this.questSystem) {
+                    const weaponType = weapon.getWeaponStats().weaponType;
+                    this.questSystem.updateQuestProgress(weaponType, 1);
+                }
+                
+                // Play collection sound
+                weapon.collect();
+                
+                // Remove from items array
+                const index = this.items.indexOf(weapon);
+                if (index > -1) {
+                    this.items.splice(index, 1);
+                }
+                
+                // Destroy the weapon to prevent further interactions
+                weapon.destroy();
+                
+                console.log(`✓ Collected ${weapon.getWeaponStats().rarity} ${weapon.getWeaponStats().weaponType}`);
+            } else {
+                console.log(`✗ Inventory full, cannot collect weapon. Current: ${currentWeaponCount}/${maxWeapons}`);
+            }
+        }
     }
 
     private createTrees(): void {
@@ -531,8 +1083,28 @@ export class World extends Phaser.Scene {
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
 
+        // Create swords around the Tree of Life for proximity pickup testing
+        this.createSwordsAroundTreeOfLife(350, 400);
     }
 
+    private createSwordsAroundTreeOfLife(treeX: number, treeY: number): void {
+        // Create 3-5 swords in a circle around the Tree of Life
+        const swordCount = 4;
+        const radius = 80; // Distance from tree center
+        
+        for (let i = 0; i < swordCount; i++) {
+            const angle = (i / swordCount) * Math.PI * 2;
+            const swordX = treeX + Math.cos(angle) * radius;
+            const swordY = treeY + Math.sin(angle) * radius;
+            
+            // Create swords with different rarities
+            const rarities: ('common' | 'uncommon' | 'rare' | 'epic' | 'legendary')[] = 
+                ['common', 'uncommon', 'rare', 'epic'];
+            const rarity = rarities[i % rarities.length];
+            
+            this.createSwordSpawnPoint(swordX, swordY, rarity);
+        }
+    }
 
     private setupMinimap(): void {
         const minimapSize = 175;
@@ -728,17 +1300,26 @@ export class World extends Phaser.Scene {
             this.physics.add.collider(npc, this.player);
         });
 
-        console.log('Collision detection configured for all entities');
+        // Item collection - click-based interaction (not automatic overlap)
+        this.items.forEach(item => {
+            // Make items clickable
+            item.setInteractive();
+            item.on('pointerdown', () => {
+                this.collectItem(item);
+            });
+        });
+
+        // console.log('Collision detection configured for all entities');
     }
 
     private loadSaveData(): void {
         const saveData = SaveSystem.loadGame();
         if (saveData) {
-            console.log('Applying save data...');
+            // console.log('Applying save data...');
             SaveSystem.applySaveData(this, saveData);
-            console.log('Save data applied successfully');
+            // console.log('Save data applied successfully');
         } else {
-            console.log('No save data found or failed to load');
+            // console.log('No save data found or failed to load');
         }
     }
 
@@ -858,6 +1439,61 @@ export class World extends Phaser.Scene {
         return this.questUI;
     }
 
+    /**
+     * Update items and handle respawning
+     */
+    private updateItems(_delta: number): void {
+        // Track items that need to be respawned
+        const itemsToRespawn: { spawnPoint: { x: number; y: number }, type: string, respawnTime: number }[] = [];
+        
+        // Update existing items and check for respawn needs
+        this.items.forEach((item, index) => {
+            try {
+                if (item && item.active) {
+                    item.update();
+                    
+                    // Check if item was collected and needs respawning
+                    if (item.getData('isRespawnable') && !item.visible) {
+                        const respawnTime = item.getData('respawnTime') || 30000;
+                        const collectedTime = item.getData('collectedTime') || 0;
+                        
+                        if (Date.now() - collectedTime >= respawnTime) {
+                            const spawnPoint = item.getData('spawnPoint');
+                            const originalType = item.getData('originalType');
+                            
+                            if (spawnPoint && originalType) {
+                                itemsToRespawn.push({
+                                    spawnPoint,
+                                    type: originalType,
+                                    respawnTime
+                                });
+                            }
+                            
+                            // Remove the old item
+                            item.destroy();
+                            this.items.splice(index, 1);
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error updating item:', error);
+            }
+        });
+        
+        // Respawn items that are ready
+        itemsToRespawn.forEach(respawnData => {
+            try {
+                if (respawnData.type === 'mysterious herb') {
+                    this.createHerbSpawnPoint(respawnData.spawnPoint.x, respawnData.spawnPoint.y, respawnData.type);
+                } else if (respawnData.type === 'fruit') {
+                    this.createFruitSpawnPoint(respawnData.spawnPoint.x, respawnData.spawnPoint.y);
+                }
+            } catch (error) {
+                console.error('Error respawning item:', error);
+            }
+        });
+    }
+
     // TODO: Implement createQuestHerbs() method to spawn quest herbs from tilemap
     // private createQuestHerbs(): void {}
 
@@ -891,7 +1527,7 @@ export class World extends Phaser.Scene {
         this.input.keyboard?.on('keydown-T', () => {
             if (this.dayNightCycle) {
                 this.dayNightCycle.forceResetDebugMode();
-                console.log('Pressed T - Force reset debug mode');
+                // console.log('Pressed T - Force reset debug mode');
             }
         });
 
@@ -922,11 +1558,11 @@ export class World extends Phaser.Scene {
                 ease: 'Power2',
                 onComplete: () => {
                     fadeOverlay.destroy();
-                    console.log('Game fade in complete');
+                    // console.log('Game fade in complete');
                 }
             });
 
-            console.log('Starting game fade in...');
+            // console.log('Starting game fade in...');
 
         } catch (error) {
             console.error('Error in game fade in:', error);
@@ -937,11 +1573,11 @@ export class World extends Phaser.Scene {
      * Clean up resources when scene is destroyed
      */
     shutdown(): void {
-        console.log('World scene shutting down...');
+        // console.log('World scene shutting down...');
 
         // Stop music manager with fade out
         if (this.musicManager) {
-            console.log('Stopping shuffle playlist...');
+            // console.log('Stopping shuffle playlist...');
             this.musicManager.stopPlaylist();
         }
 
@@ -950,6 +1586,6 @@ export class World extends Phaser.Scene {
             this.dayNightCycle.destroy();
         }
 
-        console.log('World scene cleanup complete');
+        // console.log('World scene cleanup complete');
     }
 }

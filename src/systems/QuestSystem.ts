@@ -56,7 +56,7 @@ export class QuestSystem {
     public startQuest(questId: number): void {
         // Check if quest is already active
         if (this.activeQuests.has(questId)) {
-            console.log(`QuestSystem: Quest ${questId} is already active, skipping start`);
+            // Quest is already active, skipping start
             return;
         }
         
@@ -71,6 +71,8 @@ export class QuestSystem {
         const existingAmount = this.player.p1Inventory.getItemCount(questItemType);
         const requiredAmount = questData.questdata.amount;
         
+        console.log(`QuestSystem: Starting quest ${questId} - Item type: ${questItemType}, Existing: ${existingAmount}, Required: ${requiredAmount}`);
+        
         const questProgress: QuestProgress = {
             questId: questId,
             currentAmount: Math.min(existingAmount, requiredAmount), // Start with existing items
@@ -80,15 +82,15 @@ export class QuestSystem {
         };
         
         this.activeQuests.set(questId, questProgress);
-        console.log(`QuestSystem: Started quest ${questId}: ${questData.name}`);
-        console.log(`QuestSystem: Player already has ${existingAmount}/${requiredAmount} ${questItemType}`);
+        // Started quest
+        // Player already has required items
         
         // Always emit quest progress event to update QuestUI with current count
         this.scene.events.emit('questProgress', questProgress.currentAmount);
         
         // If quest is already ready for completion, emit the event
         if (questProgress.isReadyForCompletion) {
-            console.log(`QuestSystem: Quest ${questId} requirements already met - ready for completion`);
+            // Quest requirements already met - ready for completion
             this.scene.events.emit('questReadyForCompletion', {
                 questId: questId,
                 questName: questData.name
@@ -96,7 +98,7 @@ export class QuestSystem {
         }
     }
 
-    public updateQuestProgress(itemType: string, amount: number): void {
+    public updateQuestProgress(itemType: string, _amount: number): void {
         // Check all active quests for matching requirements
         this.activeQuests.forEach((progress, questId) => {
             if (progress.isCompleted) return;
@@ -116,7 +118,9 @@ export class QuestSystem {
                 const currentInventoryCount = this.player.p1Inventory.getItemCount(questData.questdata.type);
                 progress.currentAmount = Math.min(currentInventoryCount, progress.requiredAmount);
                 
-                console.log(`QuestSystem: Quest ${questId} progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+                console.log(`QuestSystem: Quest ${questId} progress update - Item: ${itemType}, Quest needs: ${questData.questdata.type}, Inventory count: ${currentInventoryCount}, Progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+                
+                // console.log(`QuestSystem: Quest ${questId} progress: ${progress.currentAmount}/${progress.requiredAmount}`);
                 
                 // Emit quest progress event for QuestUI
                 this.scene.events.emit('questProgress', progress.currentAmount);
@@ -124,7 +128,7 @@ export class QuestSystem {
                 // Check if quest requirements are met (but don't complete yet)
                 if (progress.currentAmount >= progress.requiredAmount && !progress.isReadyForCompletion) {
                     progress.isReadyForCompletion = true;
-                    console.log(`QuestSystem: Quest ${questId} requirements met - ready for completion`);
+                    // console.log(`QuestSystem: Quest ${questId} requirements met - ready for completion`);
                     
                     // Emit quest ready event for QuestUI to show green
                     this.scene.events.emit('questReadyForCompletion', {
@@ -156,16 +160,16 @@ export class QuestSystem {
         
         if (this.player.p1Inventory.hasItem(itemType, amount)) {
             this.player.p1Inventory.remove(itemType, amount);
-            console.log(`QuestSystem: Removed ${amount} ${itemType} from player inventory`);
+            // console.log(`QuestSystem: Removed ${amount} ${itemType} from player inventory`);
         } else {
-            console.log(`QuestSystem: Warning - player doesn't have required items, but quest is marked as ready`);
+            // console.log(`QuestSystem: Warning - player doesn't have required items, but quest is marked as ready`);
         }
         
         // Get reward (but don't add to inventory yet - player must accept it)
         const reward = this.getQuestReward(questId);
         
-        console.log(`QuestSystem: Quest ${questId} completed: ${questData.name}`);
-        console.log(`QuestSystem: Reward available: ${reward.amount} ${reward.type}`);
+        // console.log(`QuestSystem: Quest ${questId} completed: ${questData.name}`);
+        // console.log(`QuestSystem: Reward available: ${reward.amount} ${reward.type}`);
         
         // Remove from active quests
         this.activeQuests.delete(questId);
@@ -177,10 +181,33 @@ export class QuestSystem {
             reward: reward
         });
         
+        // Automatically start the next quest in sequence
+        this.startNextQuest(questId);
+        
         return true;
     }
 
 
+
+    /**
+     * Automatically start the next quest in sequence
+     */
+    private startNextQuest(completedQuestId: number): void {
+        const nextQuestId = completedQuestId + 1;
+        
+        // Check if next quest exists and hasn't been completed
+        if (!this.completedQuests.has(nextQuestId) && !this.activeQuests.has(nextQuestId)) {
+            try {
+                const nextQuestData = this.scene.cache.json.get(`quest-${nextQuestId}`);
+                if (nextQuestData) {
+                    console.log(`Starting next quest: ${nextQuestId} - ${nextQuestData.name}`);
+                    this.startQuest(nextQuestId);
+                }
+            } catch (error) {
+                console.log(`No next quest found after quest ${completedQuestId}`);
+            }
+        }
+    }
 
     private getQuestReward(questId: number): any {
         // Define rewards for each quest
@@ -223,7 +250,7 @@ export class QuestSystem {
         
         const questProgress = this.activeQuests.get(currentQuest.id);
         if (!questProgress || !questProgress.isCompleted) {
-            console.log('QuestSystem: Quest not ready for turn-in');
+            // console.log('QuestSystem: Quest not ready for turn-in');
             return;
         }
         
@@ -238,7 +265,7 @@ export class QuestSystem {
             const reward = this.getQuestReward(currentQuest.id);
             this.player.p1Inventory.add(reward.type, reward.amount);
             
-            console.log(`QuestSystem: Gave reward: ${reward.amount} ${reward.type}`);
+            // console.log(`QuestSystem: Gave reward: ${reward.amount} ${reward.type}`);
             
             // Remove from active quests
             this.activeQuests.delete(currentQuest.id);
@@ -264,11 +291,11 @@ export class QuestSystem {
     public isQuestReadyForCompletion(questId: number): boolean {
         const progress = this.activeQuests.get(questId);
         const isReady = progress ? progress.isReadyForCompletion : false;
-        console.log(`QuestSystem: Quest ${questId} ready for completion: ${isReady}`);
+        // console.log(`QuestSystem: Quest ${questId} ready for completion: ${isReady}`);
         if (progress) {
-            console.log(`QuestSystem: Quest progress: ${progress.currentAmount}/${progress.requiredAmount}, isReady: ${progress.isReadyForCompletion}`);
+            // console.log(`QuestSystem: Quest progress: ${progress.currentAmount}/${progress.requiredAmount}, isReady: ${progress.isReadyForCompletion}`);
         } else {
-            console.log(`QuestSystem: No progress found for quest ${questId}`);
+            // console.log(`QuestSystem: No progress found for quest ${questId}`);
         }
         return isReady;
     }
@@ -285,7 +312,7 @@ export class QuestSystem {
             activeQuests: Array.from(this.activeQuests.entries()),
             completedQuests: Array.from(this.completedQuests)
         };
-        console.log('QuestSystem: Saving quest state:', questState);
+        // console.log('QuestSystem: Saving quest state:', questState);
         return questState;
     }
 
@@ -294,18 +321,18 @@ export class QuestSystem {
      */
     public restoreQuestState(savedState: any): void {
         if (!savedState) {
-            console.log('QuestSystem: No saved quest state to restore');
+            // console.log('QuestSystem: No saved quest state to restore');
             return;
         }
 
-        console.log('QuestSystem: Restoring quest state:', savedState);
+        // console.log('QuestSystem: Restoring quest state:', savedState);
 
         // Restore active quests
         if (savedState.activeQuests && Array.isArray(savedState.activeQuests)) {
             this.activeQuests.clear();
             savedState.activeQuests.forEach(([questId, questProgress]: [number, QuestProgress]) => {
                 this.activeQuests.set(questId, questProgress);
-                console.log(`QuestSystem: Restored active quest ${questId}: ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
+                // console.log(`QuestSystem: Restored active quest ${questId}: ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
             });
         }
 
@@ -314,7 +341,7 @@ export class QuestSystem {
             this.completedQuests.clear();
             savedState.completedQuests.forEach((questId: number) => {
                 this.completedQuests.add(questId);
-                console.log(`QuestSystem: Restored completed quest ${questId}`);
+                // console.log(`QuestSystem: Restored completed quest ${questId}`);
             });
         }
     }

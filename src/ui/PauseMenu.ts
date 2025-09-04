@@ -359,12 +359,11 @@ export class PauseMenu {
 
         const rightControls = [
             'P - Pause Menu',
-            '` - Debug Panel',
-            'Alt+2 - Collision Boxes',
-            'Alt+3 - Show Paths',
-            'Alt+4 - Peak Day',
-            'Alt+5 - Peak Night',
-            'T - Reset Time (if frozen)'
+            'F1 - Debug Panel',
+            'F2 - Collision Boxes',
+            'F3 - Show Paths',
+            'F4 - Peak Day',
+            'F5 - Peak Night'
         ];
 
         // Left column

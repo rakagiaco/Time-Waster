@@ -38,7 +38,7 @@ export class MusicManager {
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        console.log('MusicManager: Initialized');
+        // MusicManager initialized
     }
 
     /**
@@ -46,13 +46,13 @@ export class MusicManager {
      */
     public startPlaylist(initialIsNight: boolean = false): void {
         if (this.isPlaying) {
-            console.log('MusicManager: Playlist already playing');
+            // Playlist already playing
             return;
         }
         
         this.isPlaying = true;
         this.isNightTime = initialIsNight;
-        console.log(`MusicManager: Starting shuffle playlist (initial time: ${initialIsNight ? 'night' : 'day'})`);
+        // Starting shuffle playlist
         
         // Add some randomization to the initial song selection
         // This ensures the first song isn't always the same

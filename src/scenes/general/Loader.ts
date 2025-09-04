@@ -82,7 +82,7 @@ export class Loader extends Phaser.Scene {
         this.load.image('Frozen Heart', '/img/frozen-heart.png')
         this.load.image('fruit', '/img/fruit.png')
         this.load.image('fullscreen', '/img/fullscreen.png')
-        this.load.image('mysterious herb', '/img/mysterious-herb.png')
+        this.load.image('mysterious-herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
         this.load.image('new-game-button', '/img/new-game-button.png')
         this.load.image('npc-1', '/img/npc-1.png')
@@ -530,7 +530,7 @@ export class Loader extends Phaser.Scene {
     /**
      * Create a unique fruit texture with specific color and shape
      */
-    private createFruitTexture(textureKey: string, color: number, shape: string): void {
+    private createFruitTexture(textureKey: string, color: number, _shape: string): void {
         const graphics = this.add.graphics();
         
         // Base fruit shape (16x16)
@@ -574,6 +574,6 @@ export class Loader extends Phaser.Scene {
         graphics.generateTexture(textureKey, 16, 16);
         graphics.destroy();
         
-        console.log(`Created ${textureKey} texture with color ${color.toString(16)}`);
+        // Created texture with color
     }
 }

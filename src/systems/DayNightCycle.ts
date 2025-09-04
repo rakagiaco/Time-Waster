@@ -76,10 +76,10 @@ export class DayNightCycle {
         // Set initial time (for save game restoration or custom start time)
         if (initialTime !== undefined) {
             this.currentTime = initialTime;
-            console.log(`DayNightCycle initialized with saved time: ${initialTime} (${(initialTime * 24).toFixed(1)} hours)`);
+            // DayNightCycle initialized with saved time
         } else {
             this.currentTime = 0.5
-            console.log(`DayNightCycle initialized with default time: ${this.currentTime} (${(this.currentTime * 24).toFixed(1)} hours)`);
+            // DayNightCycle initialized with default time
         }
 
         // Initialize visual components and controls
@@ -111,7 +111,7 @@ export class DayNightCycle {
             this.currentTime = this.debugTimeOverride;
             // Debug: Log when time is frozen
             if (Math.random() < 0.001) { // Log occasionally to avoid spam
-                console.log(`DayNightCycle: Time frozen at debug override: ${(this.debugTimeOverride * 24).toFixed(1)}h`);
+                // Time frozen at debug override
             }
         } else {
             // Update time based on cycle duration
@@ -188,7 +188,7 @@ export class DayNightCycle {
         
         // Debug logging for darkness intensity
         if (this.darknessIntensity > 0.1) {
-            console.log(`DayNightCycle: Drawing darkness overlay with intensity ${this.darknessIntensity.toFixed(2)}`);
+            // Drawing darkness overlay
         }
     }
 
@@ -234,19 +234,19 @@ export class DayNightCycle {
     public setToPeakDay(): void {
         this.debugMode = true;
         this.debugTimeOverride = 0.5; // 12 PM (noon) - true peak day
-        console.log('Set to peak day (12 PM noon)');
+        // Set to peak day
     }
 
     public setToPeakNight(): void {
         this.debugMode = true;
         this.debugTimeOverride = 0.0; // 12 AM (midnight) - true peak night
-        console.log('Set to peak night (12 AM midnight)');
+        // Set to peak night
     }
 
     public setTime(time: number): void {
         this.debugMode = true;
         this.debugTimeOverride = Math.max(0, Math.min(1, time));
-        console.log(`Set time to ${(time * 24).toFixed(1)} hours`);
+        // Set time
     }
 
     /**
@@ -258,24 +258,24 @@ export class DayNightCycle {
         // Ensure debug mode is disabled so time can progress normally
         this.debugMode = false;
         this.debugTimeOverride = null;
-        console.log(`Restored saved time: ${(time * 24).toFixed(1)} hours - time will progress normally`);
+        // Restored saved time - time will progress normally
     }
 
     public disableDebugMode(): void {
         this.debugMode = false;
         this.debugTimeOverride = null;
-        console.log('Debug mode disabled - returning to normal time progression');
+        // Debug mode disabled - returning to normal time progression
     }
 
     public forceResetDebugMode(): void {
         this.debugMode = false;
         this.debugTimeOverride = null;
-        console.log('FORCE RESET: Debug mode disabled - time should now progress normally');
+        // FORCE RESET: Debug mode disabled - time should now progress normally
     }
 
     public setDarknessIntensity(intensity: number): void {
         this.darknessIntensity = intensity
-        console.log(`Set darkness intensity to ${intensity}`);
+        // Set darkness intensity
     }
 
     public destroy(): void {

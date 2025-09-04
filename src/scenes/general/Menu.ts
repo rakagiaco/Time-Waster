@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { SaveSystem } from '../../systems/SaveSystem';
+import { MenuRemarksSystem } from '../../systems/MenuRemarksSystem';
 
 interface MenuData {
     qobj?: any;
@@ -13,17 +14,20 @@ export class Menu extends Phaser.Scene {
         super('menuScene');
     }
 
-    create(_data: MenuData): void {
+    async create(_data: MenuData): Promise<void> {
         try {
-            console.log('=== MENU SCENE CREATE ===');
-            console.log('Scene key:', this.scene.key);
+            // console.log('=== MENU SCENE CREATE ===');
+            // console.log('Scene key:', this.scene.key);
+
+            // Load menu remarks first
+            await MenuRemarksSystem.loadRemarks();
 
             // Stop any existing music first (with safety check)
             if (this.sound) {
                 this.sound.stopAll();
-                console.log('Menu: Stopped all existing music');
+                // console.log('Menu: Stopped all existing music');
             } else {
-                console.log('Menu: Sound system not ready yet, skipping stopAll');
+                // console.log('Menu: Sound system not ready yet, skipping stopAll');
             }
 
             // Start main menu music with a small delay to ensure sound system is ready
@@ -43,7 +47,7 @@ export class Menu extends Phaser.Scene {
             // Create medieval-themed menu buttons
             this.createMenuButtons();
 
-            console.log('Menu scene setup complete');
+            // console.log('Menu scene setup complete');
 
         } catch (error) {
             console.error('=== CRITICAL ERROR IN MENU CREATE ===');
@@ -462,10 +466,7 @@ export class Menu extends Phaser.Scene {
     }
 
     /**
-     *  CLANKER MAN, THIS IS A TERRIBLE COMMENT... LOOK AT THE NAME OF THE FUNCTION
-     *  AND THE CODE INSIDE THE FUNCTION IS LIKE 3 LINES LONG, YOU DONT NEED A COMMENT SAYING ITS AND 'ENHANCED TITLE'
-     * 
-     * Creates an enhanced title with medieval styling ??????????
+     * Creates the main title and a random subtitle from the remarks system
      */
     private createTitle(): void {
         const centerX = (this.game.config.width as number) / 2;
@@ -474,7 +475,9 @@ export class Menu extends Phaser.Scene {
         const title = this.add.bitmapText(centerX, centerY - 180, '8-bit', 'TIME WASTER', 72);
         title.setOrigin(0.5);
 
-        const subtitle = this.add.bitmapText(centerX, centerY - 120, '8-bit', 'A Vibecoded clanker fantasy', 20);
+        // Get a random remark from the system
+        const randomRemark = MenuRemarksSystem.getRandomRemark();
+        const subtitle = this.add.bitmapText(centerX, centerY - 120, '8-bit', randomRemark, 20);
         subtitle.setOrigin(0.5);
     }
 
@@ -488,13 +491,13 @@ export class Menu extends Phaser.Scene {
         // Continue button
         const continueBtn = this.createMedievalButton(centerX, centerY - 20, 'CONTINUE', () => {
             const hasSaveData = SaveSystem.hasSaveData();
-            console.log('Continue button clicked - checking for save data:', hasSaveData);
+            // console.log('Continue button clicked - checking for save data:', hasSaveData);
 
             if (hasSaveData) {
-                console.log('Save data found - loading saved game');
+                // console.log('Save data found - loading saved game');
                 this.fadeToGame(true);
             } else {
-                console.log('No save data available');
+                // console.log('No save data available');
                 this.showNoSaveMessage();
             }
         });
@@ -504,19 +507,19 @@ export class Menu extends Phaser.Scene {
 
         // New Game button
         this.createMedievalButton(centerX, centerY + 50, 'NEW GAME', () => {
-            console.log('New Game button clicked');
+            // console.log('New Game button clicked');
             this.fadeToGame(false);
         });
 
         // Credits button  
         this.createMedievalButton(centerX, centerY + 120, 'CREDITS', () => {
-            console.log('Credits button clicked');
+            // console.log('Credits button clicked');
             this.scene.start('Credits');
         });
 
         // Freeplay button
         this.createMedievalButton(centerX, centerY + 190, 'FREEPLAY', () => {
-            console.log('Freeplay button clicked');
+            // console.log('Freeplay button clicked');
             this.fadeToGame(false);
         });
     }
@@ -609,7 +612,7 @@ export class Menu extends Phaser.Scene {
     private updateContinueButtonAppearance(continueBtn: Phaser.GameObjects.Container): void {
         const hasSaveData = SaveSystem.hasSaveData();
         continueBtn.setAlpha(hasSaveData ? 1.0 : 0.6);
-        console.log('Continue button updated - has save data:', hasSaveData);
+        // console.log('Continue button updated - has save data:', hasSaveData);
     }
 
     /**
@@ -639,7 +642,7 @@ export class Menu extends Phaser.Scene {
         try {
             // Check if sound system is available
             if (!this.sound) {
-                console.log('Menu: Sound system not available, retrying in 200ms...');
+                // console.log('Menu: Sound system not available, retrying in 200ms...');
                 // Retry after a short delay
                 this.time.delayedCall(200, () => {
                     this.startMainMenuMusic();
@@ -650,7 +653,7 @@ export class Menu extends Phaser.Scene {
             // Check if music is already playing to avoid duplicates
             const existingMusic = this.sound.get('main-menu-music');
             if (existingMusic && existingMusic.isPlaying) {
-                console.log('Menu: Main menu music already playing');
+                // console.log('Menu: Main menu music already playing');
                 return;
             }
 
@@ -659,7 +662,7 @@ export class Menu extends Phaser.Scene {
                 existingMusic.destroy();
             }
 
-            console.log('Menu: Starting main menu music...');
+            // console.log('Menu: Starting main menu music...');
 
             // Create and play the main menu music
             const music = this.sound.add('main-menu-music', {
@@ -680,7 +683,7 @@ export class Menu extends Phaser.Scene {
                     duration: 3000, // 3 second fade in (increased from 1.5s)
                     ease: 'Power2',
                     onComplete: () => {
-                        console.log('Main menu music faded in and looping');
+                        // console.log('Main menu music faded in and looping');
                     }
                 });
             });
@@ -716,7 +719,7 @@ export class Menu extends Phaser.Scene {
                     ease: 'Power2',
                     onComplete: () => {
                         music.stop();
-                        console.log('Main menu music faded out and stopped');
+                        // console.log('Main menu music faded out and stopped');
                     }
                 });
             }
@@ -756,7 +759,7 @@ export class Menu extends Phaser.Scene {
                 }
             });
 
-            console.log('Starting fade transition to game...');
+            // console.log('Starting fade transition to game...');
 
         } catch (error) {
             console.error('Error in fade transition:', error);

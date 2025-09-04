@@ -120,7 +120,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         this.hasFruit = false;
         this.fruitRespawnTimer = 0;
 
-        console.log(`🍎 All fruit collected from ${this.treeType} tree - will respawn in 5 minutes`);
+        // All fruit collected - will respawn in 5 minutes
     }
 
     public update(): void {
@@ -131,7 +131,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
             if (this.fruitRespawnTimer >= this.fruitRespawnDelay) {
                 this.hasFruit = true;
                 this.createFruit();
-                console.log(`🍎 Fruit respawned on ${this.treeType} tree after 5 minutes`);
+                // Fruit respawned after 5 minutes
             }
         }
 
@@ -182,7 +182,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         // Check if player is close enough to collect (within 50 pixels)
         const distance = Phaser.Math.Distance.Between(player.x, player.y, fruit.x, fruit.y);
         if (distance > 50) {
-            console.log('Player too far from fruit to collect');
+            // Player too far from fruit to collect
             return;
         }
 
@@ -214,10 +214,10 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
         if (this.fruitItems.length === 0) {
             this.hasFruit = false;
             this.fruitRespawnTimer = 0;
-            console.log(`🍎 All fruit collected from ${this.treeType} tree - will respawn in 5 minutes`);
+            // All fruit collected - will respawn in 5 minutes
         }
 
-        console.log(`Collected ${fruitType} from ${this.treeType} tree`);
+        // Fruit collected from tree
     }
 
     public getCollisionBounds(): { x: number; y: number; width: number; height: number } {
@@ -250,7 +250,7 @@ export class Tree extends Phaser.Physics.Arcade.Sprite {
             this.entity_text.setDepth(this.depth + 1);
             this.entity_text.setTint(0x00ff00); // Green color for Tree of Life
             
-            console.log(`Tree of Life nametag created at: x=${this.entity_text.x}, y=${this.entity_text.y}`);
+            // Tree of Life nametag created
         }
     }
 

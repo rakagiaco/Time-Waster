@@ -10,7 +10,7 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         this.itemType = itemType;
         this.soundEffect = soundEffect;
         
-        console.log(`Creating Item: ${itemType} at (${x}, ${y})`);
+        // Creating item
         
         // Add to scene
         scene.add.existing(this);
@@ -21,13 +21,13 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
             console.warn(`Item texture '${itemType}' does not exist, creating fallback texture`);
             this.createMissingTextureFallback(itemType);
         } else {
-            console.log(`Item texture '${itemType}' exists and loaded`);
+            // Item texture exists and loaded
         }
         
         // Setup physics
         this.setCollideWorldBounds(false);
         this.setSize(16, 16);
-        this.setOffset(8, 8);
+        this.setOffset(0, 0); // No offset - let the size handle positioning
         
         // Make interactive
         this.setInteractive();
@@ -35,8 +35,8 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
 
     public getItemType(): string {
         // Map texture names to quest item types
-        if (this.itemType === 'bush-1') {
-            return 'mysterious herb'; // bush-1 texture represents mysterious herb for quests
+        if (this.itemType === 'bush-1' || this.itemType === 'mysterious-herb') {
+            return 'mysterious herb'; // Both textures represent mysterious herb for quests
         }
         return this.itemType;
     }
@@ -51,8 +51,15 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
             this.scene.sound.play(this.soundEffect.sound, { volume: this.soundEffect.volume });
         }
         
-        // Destroy the item
-        this.destroy();
+        // If item is respawnable, mark as collected instead of destroying
+        if (this.getData('isRespawnable')) {
+            this.setData('collectedTime', Date.now());
+            this.setVisible(false);
+            this.setActive(false);
+        } else {
+            // Destroy non-respawnable items
+            this.destroy();
+        }
     }
 
     public update(): void {

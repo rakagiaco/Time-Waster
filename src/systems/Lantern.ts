@@ -52,7 +52,7 @@ export class Lantern {
         graphics.generateTexture('lantern-sprite', 8, 16);
         graphics.destroy(); // Clean up graphics object
         
-        console.log('Lantern sprite texture created');
+        // Lantern sprite texture created
     }
     
     private createFlameTexture(): void {
@@ -75,7 +75,7 @@ export class Lantern {
         graphics.generateTexture('flame-sprite', 6, 6);
         graphics.destroy(); // Clean up graphics object
         
-        console.log('Flame sprite texture created');
+        // Flame sprite texture created
     }
     
     private setupLantern(): void {
@@ -96,7 +96,7 @@ export class Lantern {
         this.lightEffect.setDepth(1000);
         this.lightEffect.setBlendMode(Phaser.BlendModes.ADD); // Additive blending to create light
         
-        console.log('Lantern system initialized with custom sprite and flame');
+        // Lantern system initialized with custom sprite and flame
     }
     
     public update(): void {
@@ -190,7 +190,7 @@ export class Lantern {
         if (this.flameSprite) {
             this.flameSprite.setVisible(this.isActive);
         }
-        console.log(`Lantern ${this.isActive ? 'lit' : 'extinguished'}`);
+        // Lantern state changed
     }
     
     public setActive(active: boolean): void {
@@ -217,6 +217,6 @@ export class Lantern {
         if (this.lightEffect) {
             this.lightEffect.destroy();
         }
-        console.log('Lantern system destroyed');
+        // Lantern system destroyed
     }
 }

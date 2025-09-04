@@ -20,7 +20,7 @@ export function mechanic1(_boss: any, player: any, scene: Scene): void {
             let damage = Phaser.Math.Between(GameConfig.COMBAT.BOSS_AOE_DAMAGE_MIN, GameConfig.COMBAT.BOSS_AOE_DAMAGE_MAX)
             player.HIT_POINTS -= damage
 
-            //console.log('hit by aoe.. health is now -> ' + player.HIT_POINTS)
+            // Hit by AOE attack
 
             let attackText = scene.add.bitmapText(player.x + Phaser.Math.Between(-50, 50), player.y + Phaser.Math.Between(-10, -60), 'pixel-red', '-' + damage, 24)
             scene.time.delayedCall(GameConfig.TIMING.DAMAGE_TEXT_DURATION, () => { attackText.destroy() })
