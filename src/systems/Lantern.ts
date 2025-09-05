@@ -1,210 +1,180 @@
+
 import Phaser from 'phaser';
 
 /**
- * Simple Lantern System - Creates a sprite from graphics and provides basic light effect
- * Uses the existing lantern graphics design but converts it to a sprite for better performance
+ * Optimized Lantern System
+ * - Lantern and flame sprites are generated from Graphics → Texture
+ * - Light effect is a single pre-rendered radial gradient texture
+ * - Flicker is done with scale/alpha instead of redrawing circles
  */
 export class Lantern {
     private scene: Phaser.Scene;
     private player: any;
     private lanternSprite: Phaser.GameObjects.Sprite | null = null;
     private flameSprite: Phaser.GameObjects.Sprite | null = null;
-    private lightEffect: Phaser.GameObjects.Graphics | null = null;
+    private lightSprite: Phaser.GameObjects.Image | null = null;
     private isActive: boolean = false;
     private flickerTimer: number = 0;
 
     constructor(scene: Phaser.Scene, player: any) {
         this.scene = scene;
         this.player = player;
+
+        // Create textures once
         this.createLanternTexture();
         this.createFlameTexture();
+        this.createLightTexture();
+
+        // Setup sprites
         this.setupLantern();
     }
 
     private createLanternTexture(): void {
-        // Create graphics to draw the lantern
         const graphics = this.scene.add.graphics();
 
-        // Lantern body (dark metal frame)
-        graphics.fillStyle(0x2C1810); // Dark brown/black metal
-        graphics.fillRect(0, 0, 6, 12); // Main frame
+        // Lantern body
+        graphics.fillStyle(0x2C1810);
+        graphics.fillRect(0, 0, 6, 12);
 
-        // Lantern glass panels (slightly transparent)
-        graphics.fillStyle(0x4A4A4A, 0.3); // Semi-transparent gray
-        graphics.fillRect(1, 2, 4, 8); // Glass panel
+        // Glass panels
+        graphics.fillStyle(0x4A4A4A, 0.3);
+        graphics.fillRect(1, 2, 4, 8);
 
-        // Metal frame details
-        graphics.fillStyle(0x1A1A1A); // Very dark metal
-        graphics.fillRect(0, 0, 6, 1); // Top frame
-        graphics.fillRect(0, 11, 6, 1); // Bottom frame
-        graphics.fillRect(0, 0, 1, 12); // Left frame
-        graphics.fillRect(5, 0, 1, 12); // Right frame
+        // Frame details
+        graphics.fillStyle(0x1A1A1A);
+        graphics.fillRect(0, 0, 6, 1);
+        graphics.fillRect(0, 11, 6, 1);
+        graphics.fillRect(0, 0, 1, 12);
+        graphics.fillRect(5, 0, 1, 12);
 
-        // Lantern handle/chain attachment (top)
-        graphics.fillStyle(0x3C3C3C); // Medium gray metal
-        graphics.fillRect(2, -2, 2, 2); // Handle attachment
+        // Handle attachment
+        graphics.fillStyle(0x3C3C3C);
+        graphics.fillRect(2, -2, 2, 2);
 
-        // Base/bottom of lantern
-        graphics.fillStyle(0x2C1810); // Dark metal
-        graphics.fillRect(1, 12, 4, 2); // Bottom base
+        // Base
+        graphics.fillStyle(0x2C1810);
+        graphics.fillRect(1, 12, 4, 2);
 
-        // Generate texture from graphics
         graphics.generateTexture('lantern-sprite', 8, 16);
-        graphics.destroy(); // Clean up graphics object
-
-        // Lantern sprite texture created
+        graphics.destroy();
     }
 
     private createFlameTexture(): void {
-        // Create graphics to draw the flame
         const graphics = this.scene.add.graphics();
 
-        // Flame base (orange-red)
-        graphics.fillStyle(0xFF4500); // Orange-red base
+        // Flame base
+        graphics.fillStyle(0xFF4500);
         graphics.fillRect(2, 2, 2, 3);
 
-        // Flame middle (bright orange)
-        graphics.fillStyle(0xFF8C00); // Bright orange
+        // Flame middle
+        graphics.fillStyle(0xFF8C00);
         graphics.fillRect(2, 1, 2, 2);
 
-        // Flame top (yellow)
-        graphics.fillStyle(0xFFFF00); // Bright yellow
+        // Flame top
+        graphics.fillStyle(0xFFFF00);
         graphics.fillRect(2, 0, 2, 1);
 
-        // Generate texture from graphics
         graphics.generateTexture('flame-sprite', 6, 6);
-        graphics.destroy(); // Clean up graphics object
+        graphics.destroy();
+    }
 
-        // Flame sprite texture created
+    private createLightTexture(): void {
+        const radius = 100; // base radius for light
+        const rt = this.scene.textures.createCanvas('lantern-light', radius * 2, radius * 2);
+
+        if (rt) {
+            const ctx = rt.getContext();
+
+            const cx = radius;
+            const cy = radius;
+
+            const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
+            gradient.addColorStop(0, 'rgba(248, 247, 247, 0.3)'); // bright warm center
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // transparent edge
+
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, radius * 2, radius * 2);
+
+            rt.refresh();
+        }
     }
 
     private setupLantern(): void {
-        // Create lantern sprite using the generated texture
+        // Lantern
         this.lanternSprite = this.scene.add.sprite(0, 0, 'lantern-sprite');
-        this.lanternSprite.setScale(0.8); // Much smaller size
+        this.lanternSprite.setScale(0.8);
         this.lanternSprite.setDepth(500);
         this.lanternSprite.setVisible(false);
 
-        // Create flame sprite that appears inside the lantern
+        // Flame
         this.flameSprite = this.scene.add.sprite(0, 0, 'flame-sprite');
-        this.flameSprite.setScale(0.6); // Smaller than lantern
-        this.flameSprite.setDepth(501); // Above lantern
+        this.flameSprite.setScale(0.6);
+        this.flameSprite.setDepth(501);
         this.flameSprite.setVisible(false);
 
-        // Create light effect that actually provides light (not darkness)
-        this.lightEffect = this.scene.add.graphics();
-        this.lightEffect.setDepth(1000);
-        this.lightEffect.setBlendMode(Phaser.BlendModes.ADD); // Additive blending to create light
-
-        // Lantern system initialized with custom sprite and flame
+        // Light effect (prebaked gradient)
+        this.lightSprite = this.scene.add.image(0, 0, 'lantern-light');
+        this.lightSprite.setOrigin(0.5, 0.5);
+        this.lightSprite.setBlendMode(Phaser.BlendModes.ADD);
+        this.lightSprite.setDepth(1000);
+        this.lightSprite.setVisible(false);
     }
 
     public update(): void {
-        if (!this.lanternSprite || !this.lightEffect || !this.flameSprite) return;
+        if (!this.lanternSprite || !this.flameSprite || !this.lightSprite) return;
 
-        // Update flicker timer for flame effect
         this.flickerTimer += 0.1;
 
-        // Position lantern next to player
-        this.lanternSprite.x = this.player.x + 15;
-        this.lanternSprite.y = this.player.y - 8;
+        const lx = this.player.x + 15;
+        const ly = this.player.y - 8;
 
-        // Position flame inside the lantern
-        this.flameSprite.x = this.player.x + 15;
-        this.flameSprite.y = this.player.y - 8;
+        // Position sprites
+        this.lanternSprite.setPosition(lx, ly);
+        this.flameSprite.setPosition(lx, ly);
+        this.lightSprite.setPosition(lx, ly);
 
-        // Add flicker animation to flame
         if (this.isActive) {
-            const flickerAlpha = Math.sin(this.flickerTimer * 8) * 0.1 + 0.9; // 0.8 to 1.0
+            // Flicker alpha for flame
+            const flickerAlpha = Math.sin(this.flickerTimer * 8);
             this.flameSprite.setAlpha(flickerAlpha);
-        }
 
-        // Update light effect
-        this.lightEffect.clear();
-        if (this.isActive) {
-            this.createGradientLight();
-        }
-    }
+            // Flicker scale for light
+            const flickerScale = Math.sin(this.flickerTimer) * 0.05 + 0.95;
 
-    private createGradientLight(): void {
-        // Get darkness intensity from day/night cycle (0 = day, 1 = night)
-        const darknessIntensity = this.getDarknessIntensity();
+            const darknessIntensity = this.getDarknessIntensity();
+            const baseScale = darknessIntensity > 0.3 ? 1 : 0; // invisible during day
 
-        // Calculate flicker effect
-        const flickerRadius = Math.sin(this.flickerTimer) * 0.05 + 0.95;
-
-        // Base light radius - smaller during day, larger at night
-        const baseRadius = darknessIntensity > 0.3 ? 100 : 0; // cannot see lantern during day
-        const currentRadius = baseRadius * flickerRadius;
-
-        const gradientSteps = 75;
-
-        for (let i = 0; i < gradientSteps; i++) {
-            // Calculate radius for this step
-            const radiusRatio = (i + 1) / gradientSteps; 
-            const stepRadius = currentRadius * radiusRatio;
-
-            // Calculate light intensity - strongest at center, weakest at edge
-            const distanceFromCenter = i / (gradientSteps - 1) // 0 at center, 1 at edge
-            let lightIntensity = (1 - distanceFromCenter) * darknessIntensity * 0.01
-
-            // Only draw if intensity is significant
-            if (this.lightEffect) {
-                // Use warm light color with additive blending
-                this.lightEffect.fillStyle(0xffffff, lightIntensity); // Warm lantern light color
-                // Light emanates from lantern position, not player position
-                this.lightEffect.fillCircle(this.player.x + 15, this.player.y - 8, stepRadius);
-            }
+            this.lightSprite.setScale(baseScale * flickerScale);
+            this.lightSprite.setAlpha(darknessIntensity);
         }
     }
 
     private getDarknessIntensity(): number {
-        // Get darkness intensity from day/night cycle
-        // This should match the day/night cycle system
         const worldScene = this.scene as any;
         if (worldScene.dayNightCycle) {
             return worldScene.dayNightCycle.getDarknessIntensity();
         }
-        // Fallback - assume it's night if no day/night cycle found
-        return 0.8;
+        return 0.8; // fallback
     }
 
     public toggle(): void {
-        this.isActive = !this.isActive;
-        if (this.lanternSprite) {
-            this.lanternSprite.setVisible(this.isActive);
-        }
-        if (this.flameSprite) {
-            this.flameSprite.setVisible(this.isActive);
-        }
-        // Lantern state changed
+        this.setActive(!this.isActive);
     }
 
     public setActive(active: boolean): void {
         this.isActive = active;
-        if (this.lanternSprite) {
-            this.lanternSprite.setVisible(this.isActive);
-        }
-        if (this.flameSprite) {
-            this.flameSprite.setVisible(this.isActive);
-        }
+        if (this.lanternSprite) this.lanternSprite.setVisible(active);
+        if (this.flameSprite) this.flameSprite.setVisible(active);
+        if (this.lightSprite) this.lightSprite.setVisible(active);
     }
 
-    // we lit?
     public isLit(): boolean {
         return this.isActive;
     }
 
     public destroy(): void {
-        if (this.lanternSprite) {
-            this.lanternSprite.destroy();
-        }
-        if (this.flameSprite) {
-            this.flameSprite.destroy();
-        }
-        if (this.lightEffect) {
-            this.lightEffect.destroy();
-        }
-        // Lantern system destroyed
+        this.lanternSprite?.destroy();
+        this.flameSprite?.destroy();
+        this.lightSprite?.destroy();
     }
 }
