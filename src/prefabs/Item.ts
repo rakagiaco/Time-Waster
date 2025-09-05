@@ -36,7 +36,7 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
     public getItemType(): string {
         // Map texture names to quest item types
         if (this.itemType === 'bush-1' || this.itemType === 'mysterious-herb') {
-            return 'mysterious herb'; // Both textures represent mysterious herb for quests
+            return 'mysterious herb'; // Return quest item type for consistency
         }
         return this.itemType;
     }
@@ -93,5 +93,42 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         graphics.generateTexture(itemType, 16, 16);
         graphics.destroy();
     }
+
+    /**
+     * Creates a soft bounce animation when item is dropped on the ground
+     * Can be used for any item including weapons
+     */
+    public playDropBounceAnimation(): void {
+        // Store original Y position
+        const originalY = this.y;
+        
+        // Create bounce tween
+        this.scene.tweens.add({
+            targets: this,
+            y: originalY - 8, // Bounce up 8 pixels
+            duration: 200,
+            ease: 'Power2',
+            yoyo: true, // Bounce back down
+            repeat: 2, // Bounce 3 times total
+            onComplete: () => {
+                // Ensure item returns to exact original position
+                this.y = originalY;
+            }
+        });
+        
+        // Add slight rotation for more dynamic effect
+        this.scene.tweens.add({
+            targets: this,
+            rotation: 0.1, // Slight rotation
+            duration: 200,
+            ease: 'Power2',
+            yoyo: true,
+            repeat: 2,
+            onComplete: () => {
+                this.rotation = 0; // Reset rotation
+            }
+        });
+    }
+
 
 }

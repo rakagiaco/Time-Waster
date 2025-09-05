@@ -3,7 +3,7 @@ import { Player } from '../../prefabs/Player';
 import { Enemy } from '../../prefabs/Enemy';
 import { UnifiedNPC } from '../../prefabs/UnifiedNPC';
 import { Item } from '../../prefabs/Item';
-import { MedievalSword } from '../../prefabs/Weapon';
+import { LongSword } from '../../prefabs/Weapon';
 import { Tree } from '../../prefabs/Tree';
 import { DebugManager } from '../../debug/DebugManager';
 import { InventoryUI } from '../../ui/InventoryUI';
@@ -41,7 +41,8 @@ export class World extends Phaser.Scene {
     private trees: Tree[] = [];
     private tilemap!: Phaser.Tilemaps.Tilemap;
     private tileset!: Phaser.Tilemaps.Tileset | null;
-    private objlayer!: Phaser.Tilemaps.ObjectLayer | null
+    private objlayer!: Phaser.Tilemaps.ObjectLayer | null;
+    private swordCreationCount: number = 0;
 
     private miniMapCamera!: Phaser.Cameras.Scene2D.Camera;
     private minimapMask!: Phaser.GameObjects.Graphics;
@@ -347,6 +348,12 @@ export class World extends Phaser.Scene {
 
         // Update items and handle respawning
         this.updateItems(delta);
+        
+        // Debug: Check for unexpected sword creation (only log if more than 1 sword)
+        const currentSwords = this.children.list.filter(child => child instanceof LongSword);
+        if (currentSwords.length > 1) {
+            console.log(`DEBUG: Found ${currentSwords.length} swords in scene during update`);
+        }
 
         // Update Lantern
         if (this.lantern) {
@@ -452,8 +459,8 @@ export class World extends Phaser.Scene {
                     if (element.name === 'bush_1') {
                         bushCount++;
                     }
-                    // Temporarily disable spawn point processing to isolate missing texture issue
-                    // this.createItemFromSpawnPoint(element);
+                    // Create items from tilemap spawn points
+                    this.createItemFromSpawnPoint(element);
                 });
                 console.log(`Found ${bushCount} bush_1 spawn points in tileset`);
             } else {
@@ -469,6 +476,9 @@ export class World extends Phaser.Scene {
                 console.log('Not in development mode, skipping test items');
             }
 
+            // Create weapon spawn point near Narvark
+            this.createWeaponSpawnPoint();
+
             console.log(`=== ITEM CREATION COMPLETE - Total items: ${this.items.length} ===`);
 
         } catch (error) {
@@ -479,71 +489,6 @@ export class World extends Phaser.Scene {
         }
     }
 
-    /**
-     * Create items from tilemap spawn points with proper validation and respawn capability
-     */
-    private createItemFromSpawnPoint(element: any): void {
-        try {
-            const x = element.x as number;
-            const y = element.y as number;
-            
-            if (isNaN(x) || isNaN(y)) {
-                console.warn(`Invalid spawn point coordinates: ${element.name} at (${x}, ${y})`);
-                return;
-            }
-
-            console.log(`Processing spawn point: ${element.name} at (${x}, ${y})`);
-            
-            // Skip empty or invalid spawn point names
-            if (!element.name || element.name.trim() === '') {
-                console.log(`Skipping empty spawn point at (${x}, ${y})`);
-                return;
-            }
-            
-            switch (element.name) {
-                case 'bush_1':
-                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
-                    break;
-                case 'herb_spawn':
-                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
-                    break;
-                case 'fruit_spawn':
-                    this.createFruitSpawnPoint(x, y);
-                    break;
-                case 'sword_spawn':
-                    this.createSwordSpawnPoint(x, y);
-                    break;
-                case 'rare_sword_spawn':
-                    this.createSwordSpawnPoint(x, y, 'rare');
-                    break;
-                case 'epic_sword_spawn':
-                    this.createSwordSpawnPoint(x, y, 'epic');
-                    break;
-                case 'legendary_sword_spawn':
-                    this.createSwordSpawnPoint(x, y, 'legendary');
-                    break;
-                case 'uncommon_sword_spawn':
-                    this.createSwordSpawnPoint(x, y, 'uncommon');
-                    break;
-                case 'bush_spawn':
-                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
-                    break;
-                case 'herb_1':
-                case 'herb_2':
-                case 'herb_3':
-                    this.createHerbSpawnPoint(x, y, 'mysterious herb');
-                    break;
-                default:
-                    // Unknown spawn point type - log for debugging
-                    if (element.name && element.name !== '') {
-                        console.log(`Unknown spawn point type: ${element.name} at (${x}, ${y})`);
-                    }
-                    break;
-            }
-        } catch (error) {
-            console.error(`Error creating item from spawn point ${element.name}:`, error);
-        }
-    }
 
     /**
      * Create herb spawn point with respawn capability
@@ -591,22 +536,6 @@ export class World extends Phaser.Scene {
         this.items.push(fruit);
     }
 
-    /**
-     * Create a sword spawn point with specified rarity
-     */
-    private createSwordSpawnPoint(x: number, y: number, rarity: 'common' | 'uncommon' | 'rare' | 'epic' | 'legendary' = 'common'): void {
-        const sword = new MedievalSword(this, x, y, rarity);
-        
-        // Set sword properties
-        sword.setScale(0.3).setSize(40, 60).setOffset(-10, -10); // Larger clickable area
-        sword.setData('respawnTime', 300000); // 5 minutes for weapons
-        sword.setData('spawnPoint', { x, y });
-        sword.setData('isRespawnable', true);
-        sword.setData('rarity', rarity);
-        
-        // Add to items array
-        this.items.push(sword);
-    }
 
     /**
      * Create 5 test herbs near Narvark for quest testing
@@ -640,6 +569,9 @@ export class World extends Phaser.Scene {
                 // Add quest icon if herb collection quest is active
                 this.addQuestIconToHerb(herb);
                 this.items.push(herb);
+                
+                // Herbs don't bounce - only player-dropped items bounce
+                
                 console.log(`✓ Test herb ${index + 1} created successfully at (${pos.x}, ${pos.y})`);
                 console.log(`  - Herb visible: ${herb.visible}`);
                 console.log(`  - Herb depth: ${herb.depth}`);
@@ -916,12 +848,16 @@ export class World extends Phaser.Scene {
     /**
      * Handles item collection when player overlaps with an item
      */
-    private collectItem(item: Item | MedievalSword): void {
+    private collectItem(item: Item | LongSword): void {
         try {
+            console.log(`collectItem called for: ${item.getItemType()}, Active: ${item.active}, Visible: ${item.visible}`);
+            
             // Check if item is a weapon
-            if (item instanceof MedievalSword) {
+            if (item instanceof LongSword) {
+                console.log(`Item is LongSword, calling collectWeapon`);
                 this.collectWeapon(item);
             } else {
+                console.log(`Item is regular item, calling collectRegularItem`);
                 this.collectRegularItem(item);
             }
         } catch (error) {
@@ -986,47 +922,49 @@ export class World extends Phaser.Scene {
     /**
      * Handles collection of weapons
      */
-    private collectWeapon(weapon: MedievalSword): void {
+    private collectWeapon(weapon: LongSword): void {
+        console.log(`Attempting to collect weapon: ${weapon.getItemType()} (ID: ${weapon.getData('swordId')})`);
+        
         if (this.player && this.player.p1Inventory) {
-            // Debug: Check current weapon count
-            const currentWeaponCount = this.player.p1Inventory.getWeaponCount();
-            const maxWeapons = 10; // From Inventory class
-            console.log(`Current weapons: ${currentWeaponCount}/${maxWeapons}`);
-            
-            // Create weapon data for inventory
-            const weaponData = {
-                type: 'weapon' as const,
-                weaponType: weapon.getWeaponStats().weaponType,
-                rarity: weapon.getWeaponStats().rarity,
-                stats: weapon.getWeaponStats(),
-                icon: weapon.getIconTexture()
-            };
-            
-            const added = this.player.p1Inventory.addWeapon(weaponData);
+            // Add weapon to inventory as a regular item
+            const added = this.player.p1Inventory.addItem(weapon.getItemType(), 1);
             
             if (added) {
-                // Update quest progress when weapon is collected (for weapon-related quests)
+                console.log(`✓ Weapon added to inventory successfully`);
+                
+                // Update quest progress when weapon is collected
                 if (this.questSystem) {
-                    const weaponType = weapon.getWeaponStats().weaponType;
-                    this.questSystem.updateQuestProgress(weaponType, 1);
+                    this.questSystem.updateQuestProgress('weapon', 1);
                 }
                 
                 // Play collection sound
                 weapon.collect();
                 
+                // Hide weapon immediately
+                weapon.setVisible(false);
+                
                 // Remove from items array
                 const index = this.items.indexOf(weapon);
                 if (index > -1) {
                     this.items.splice(index, 1);
+                    console.log(`✓ Weapon removed from items array at index ${index}`);
                 }
                 
                 // Destroy the weapon to prevent further interactions
+                console.log(`Destroying weapon - Active: ${weapon.active}, Visible: ${weapon.visible}`);
                 weapon.destroy();
+                console.log(`✓ Weapon destroyed - Active: ${weapon.active}, Visible: ${weapon.visible}`);
                 
-                console.log(`✓ Collected ${weapon.getWeaponStats().rarity} ${weapon.getWeaponStats().weaponType}`);
+                // Check if sword is still in the scene
+                const remainingSwords = this.children.list.filter(child => child instanceof LongSword);
+                console.log(`Remaining swords in scene after destruction: ${remainingSwords.length}`);
+                
+                console.log(`✓ Collected ${weapon.getItemType()}`);
             } else {
-                console.log(`✗ Inventory full, cannot collect weapon. Current: ${currentWeaponCount}/${maxWeapons}`);
+                console.log(`✗ Inventory full, cannot collect weapon.`);
             }
+        } else {
+            console.log(`✗ Player or inventory not available`);
         }
     }
 
@@ -1068,49 +1006,93 @@ export class World extends Phaser.Scene {
         
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
-
-        // Create swords to the right of Narvark for testing
-        this.createSwordsAroundNarvark();
     }
 
-    private createSwordsAroundNarvark(): void {
-        // Create swords to the right of Narvark (Narvark is at 341.818181818182, 344)
+    /**
+     * Create items from tilemap spawn points
+     */
+    private createItemFromSpawnPoint(element: any): void {
+        if (element.name === 'bush_1') {
+            // Create mysterious herb from bush_1 spawn point
+            const herb = new Item(this, element.x as number, element.y as number, 'mysterious-herb', { 
+                sound: 'collect-herb', 
+                volume: 0.5 
+            });
+            
+            herb.setScale(0.8).setSize(32, 32).setOffset(0, 0);
+            herb.setVisible(true);
+            herb.setDepth(100);
+            
+            // Add quest icon if herb collection quest is active
+            this.addQuestIconToHerb(herb);
+            
+            // Add respawn capability
+            herb.setData('respawnTime', 30000); // 30 seconds
+            herb.setData('originalType', 'mysterious herb');
+            herb.setData('spawnPoint', { x: element.x, y: element.y });
+            herb.setData('isRespawnable', true);
+            
+            this.items.push(herb);
+            
+            // Make herb clickable for pickup
+            herb.setInteractive();
+            herb.on('pointerdown', () => {
+                this.collectItem(herb);
+            });
+            
+            // Herbs don't bounce - only player-dropped items bounce
+            
+            console.log(`Created herb from tilemap at (${element.x}, ${element.y})`);
+        }
+    }
+
+    /**
+     * Create a weapon spawn point near Narvark for testing
+     */
+    private createWeaponSpawnPoint(): void {
+        this.swordCreationCount++;
+        console.log(`createWeaponSpawnPoint called #${this.swordCreationCount} - items array length: ${this.items.length}`);
+        
+        // Check if sword already exists in items array
+        const existingSword = this.items.find(item => item instanceof LongSword);
+        if (existingSword) {
+            console.log(`Sword already exists, skipping creation`);
+            return;
+        }
+        
+        // Position near Narvark (Narvark is at 341.818181818182, 344)
         const narvarkX = 341.818181818182;
         const narvarkY = 344;
-        const swordCount = 4;
-        const radius = 80; // Distance from Narvark
         
-        for (let i = 0; i < swordCount; i++) {
-            const angle = (i / swordCount) * Math.PI * 2;
-            const swordX = narvarkX + Math.cos(angle) * radius;
-            const swordY = narvarkY + Math.sin(angle) * radius;
-            
-            // Create swords with different rarities
-            const rarities: ('common' | 'uncommon' | 'rare' | 'epic' | 'legendary')[] = 
-                ['common', 'uncommon', 'rare', 'epic'];
-            const rarity = rarities[i % rarities.length];
-            
-            this.createSwordSpawnPoint(swordX, swordY, rarity);
-        }
-    }
-
-    private createSwordsAroundTreeOfLife(treeX: number, treeY: number): void {
-        // Create 3-5 swords in a circle around the Tree of Life
-        const swordCount = 4;
-        const radius = 80; // Distance from tree center
+        // Spawn weapon to the right of Narvark, slightly lower
+        const weaponX = narvarkX + 60;
+        const weaponY = narvarkY + 20;
         
-        for (let i = 0; i < swordCount; i++) {
-            const angle = (i / swordCount) * Math.PI * 2;
-            const swordX = treeX + Math.cos(angle) * radius;
-            const swordY = treeY + Math.sin(angle) * radius;
-            
-            // Create swords with different rarities
-            const rarities: ('common' | 'uncommon' | 'rare' | 'epic' | 'legendary')[] = 
-                ['common', 'uncommon', 'rare', 'epic'];
-            const rarity = rarities[i % rarities.length];
-            
-            this.createSwordSpawnPoint(swordX, swordY, rarity);
-        }
+        // Create the long sword
+        const sword = new LongSword(this, weaponX, weaponY);
+        
+        // Set sword properties - proper scale for world display
+        sword.setScale(0.08).setSize(40, 60).setOffset(-10, -10); // Larger scale for better visibility
+        sword.setVisible(true); // Ensure sword is visible
+        sword.setDepth(100); // Ensure proper depth
+        sword.setData('isRespawnable', false); // Sword is not respawnable - one-time pickup
+        
+        // Add unique identifier for debugging
+        sword.setData('swordId', `sword_${Date.now()}`);
+        console.log(`Created sword with ID: ${sword.getData('swordId')} at (${weaponX}, ${weaponY})`);
+        
+        // Add to items array
+        this.items.push(sword);
+        
+        // Make sword clickable for pickup
+        sword.setInteractive();
+        sword.on('pointerdown', () => {
+            this.collectItem(sword);
+        });
+        
+        // Sword is ready for pickup (no bounce animation)
+        
+        console.log(`Created weapon spawn point at (${weaponX}, ${weaponY})`);
     }
 
     private setupMinimap(): void {

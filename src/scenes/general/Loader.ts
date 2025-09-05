@@ -10,6 +10,7 @@
  * 
  *  HONESTLY THIS IS THE ONLY FILE THAT SHOULD EVEN BE REMOTELY CLOSE TO 1000 LINES ... YET ITS ONE OF THE SMALLER FILES ... 
  */
+
 export class Loader extends Phaser.Scene {
     quest: any;                 // Saved quest data from localStorage
     existing_inv: any;          // Saved inventory data from localStorage
@@ -83,6 +84,8 @@ export class Loader extends Phaser.Scene {
         this.load.image('fruit', '/img/fruit.png')
         this.load.image('fullscreen', '/img/fullscreen.png')
         this.load.image('mysterious-herb', '/img/mysterious-herb.png')
+        // Create alias for quest system compatibility
+        this.load.image('mysterious herb', '/img/mysterious-herb.png')
         this.load.image('lesser nepian blood', '/img/nepian-blood.png')
         this.load.image('new-game-button', '/img/new-game-button.png')
         this.load.image('npc-1', '/img/npc-1.png')
@@ -97,6 +100,9 @@ export class Loader extends Phaser.Scene {
         this.load.image('menu-button', '/img/menu-button.png')
         this.load.image('freeplay-button', '/img/freeplay-button.png')
         this.load.image('menubackground', '/Backgrounds/menubackground.png')
+        
+        // Load weapon textures
+        this.load.image('w_longsword', '/weapons/w_longsword.png');
 
         // =====================================================================
         // QUEST DATA FILES

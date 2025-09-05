@@ -41,6 +41,9 @@ export class DebugManager {
     private debugTextObjects: Phaser.GameObjects.Text[] = [];
     private maxTextObjects: number = 50; // Limit to prevent performance issues
 
+    // Collision box visibility
+    private showCollisionBoxes: boolean = false;
+
     // Debug info storage
     private debugInfo: DebugInfo = {
         fps: 0,
@@ -223,8 +226,9 @@ export class DebugManager {
         const dayBtn = document.getElementById('debug-day-btn');
         const nightBtn = document.getElementById('debug-night-btn');
         const normalTimeBtn = document.getElementById('debug-normal-time-btn');
+        const collisionBtn = document.getElementById('debug-collision-btn');
 
-        console.log("Attaching button listeners", { dayBtn, nightBtn, normalTimeBtn });
+        console.log("Attaching button listeners", { dayBtn, nightBtn, normalTimeBtn, collisionBtn });
       
         if (dayBtn) {
             dayBtn.addEventListener("click", () => {
@@ -244,6 +248,12 @@ export class DebugManager {
         if (normalTimeBtn) {
             normalTimeBtn.onclick = () => {
                 this.disableDebugMode();
+            };
+        }
+
+        if (collisionBtn) {
+            collisionBtn.onclick = () => {
+                this.toggleCollisionBoxes();
             };
         }
     }
@@ -362,5 +372,46 @@ export class DebugManager {
         if (this.debugPanelElement) {
             this.debugPanelElement.style.display = 'none';
         }
+    }
+
+    /**
+     * Draws a path for debugging purposes
+     */
+    public drawPath(path: Phaser.Math.Vector2[], color: number = 0x00ff00): void {
+        if (!this.isEnabled || !this.debugGraphics) return;
+        
+        this.debugGraphics.clear();
+        this.debugGraphics.lineStyle(2, color);
+        
+        if (path.length > 1) {
+            this.debugGraphics.moveTo(path[0].x, path[0].y);
+            for (let i = 1; i < path.length; i++) {
+                this.debugGraphics.lineTo(path[i].x, path[i].y);
+            }
+        }
+    }
+
+    /**
+     * Toggle collision box visibility
+     */
+    private toggleCollisionBoxes(): void {
+        this.showCollisionBoxes = !this.showCollisionBoxes;
+        console.log(`Collision boxes ${this.showCollisionBoxes ? 'enabled' : 'disabled'}`);
+        
+        // Update all game objects to show/hide collision boxes
+        if (this.scene && this.scene.children) {
+            this.scene.children.list.forEach((child: any) => {
+                if (child.body && child.body.debugShowBody !== undefined) {
+                    child.body.debugShowBody = this.showCollisionBoxes;
+                }
+            });
+        }
+    }
+
+    /**
+     * Get collision box visibility state
+     */
+    public getCollisionBoxVisibility(): boolean {
+        return this.showCollisionBoxes;
     }
 }

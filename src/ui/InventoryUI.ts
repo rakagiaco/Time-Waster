@@ -678,32 +678,9 @@ export class InventoryUI {
         let textureName = itemType;
         if (itemType === 'mysterious herb') {
             textureName = 'mysterious-herb';
-        } else if (itemType.startsWith('weapon_') || itemType.startsWith('sword_')) {
-            // Handle weapon/sword items - extract weapon type and rarity
-            const parts = itemType.split('_');
-            const rarity = parts[1]; // For sword_common, rarity is at index 1
-            
-            // Map to appropriate sword texture based on rarity
-            // Use the high-resolution textures created by MedievalSword class
-            switch (rarity) {
-                case 'common':
-                    textureName = 'medieval-sword-common'; // 64x128 high-res version
-                    break;
-                case 'uncommon':
-                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
-                    break;
-                case 'rare':
-                    textureName = 'medieval-sword-rare'; // 64x128 high-res version
-                    break;
-                case 'epic':
-                    textureName = 'medieval-sword-epic'; // 64x128 high-res version
-                    break;
-                case 'legendary':
-                    textureName = 'medieval-sword-legendary'; // 64x128 high-res version
-                    break;
-                default:
-                    textureName = 'medieval-sword-common';
-            }
+        } else if (itemType === 'w_longsword') {
+            // Use the weapon texture for weapons in inventory
+            textureName = 'w_longsword';
         }
         
         // Check if texture exists, create fallback if not
@@ -718,9 +695,9 @@ export class InventoryUI {
         );
         itemIcon.setOrigin(0.5, 0.5); // Center the image
         
-        // Special scaling for sword textures - all swords use same scale
-        if (itemType.startsWith('sword_')) {
-            itemIcon.setScale(0.3); // Consistent scale for all sword textures
+        // Special scaling for weapon textures
+        if (itemType === 'w_longsword') {
+            itemIcon.setScale(0.4); // Scale for w_longsword.png
         } else {
             itemIcon.setScale(0.8); // Good size for medieval slots
         }
@@ -763,13 +740,9 @@ export class InventoryUI {
                     graphics.fillCircle(16, 16, 6);
                     graphics.generateTexture(itemType, 32, 32);
                 break;
-            case 'medieval-sword-icon':
-            case 'medieval-sword-rare':
-            case 'medieval-sword-epic':
-            case 'medieval-sword-legendary':
-                // These textures are created by the MedievalSword class
-                // Don't create fallback textures - they should already exist
-                console.warn(`Sword texture ${itemType} should already exist from MedievalSword class`);
+            case 'w_longsword':
+                // This texture should be loaded from the weapons directory
+                console.warn(`Weapon texture ${itemType} should be loaded from public/weapons/`);
                 break;
             default:
                 // Missing texture indicator - red and white checkerboard pattern
@@ -904,14 +877,8 @@ export class InventoryUI {
             
             // Scale back to original scale
             let originalScale = 0.8; // Default scale
-            if (itemType.startsWith('sword_')) {
-                const parts = itemType.split('_');
-                const rarity = parts[1];
-                if (rarity === 'rare' || rarity === 'epic' || rarity === 'legendary') {
-                    originalScale = 0.3;
-                } else {
-                    originalScale = 0.5;
-                }
+            if (itemType === 'w_longsword') {
+                originalScale = 0.4;
             }
             
             this.scene.tweens.add({
@@ -1007,32 +974,9 @@ export class InventoryUI {
         let textureName = itemType;
         if (itemType === 'mysterious herb') {
             textureName = 'mysterious-herb';
-        } else if (itemType.startsWith('sword_')) {
-            // Handle sword items - extract rarity
-            const parts = itemType.split('_');
-            const rarity = parts[1];
-            
-            // Map to appropriate sword texture based on rarity
-            // Use the high-resolution textures created by MedievalSword class
-            switch (rarity) {
-                case 'common':
-                    textureName = 'medieval-sword-common'; // 64x128 high-res version
-                    break;
-                case 'uncommon':
-                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
-                    break;
-                case 'rare':
-                    textureName = 'medieval-sword-rare'; // 64x128 high-res version
-                    break;
-                case 'epic':
-                    textureName = 'medieval-sword-epic'; // 64x128 high-res version
-                    break;
-                case 'legendary':
-                    textureName = 'medieval-sword-legendary'; // 64x128 high-res version
-                    break;
-                default:
-                    textureName = 'medieval-sword-common';
-            }
+        } else if (itemType === 'w_longsword') {
+            // Use the weapon texture for weapons in inventory
+            textureName = 'w_longsword';
         }
         
         // Check if texture exists, create fallback if not
@@ -1045,8 +989,8 @@ export class InventoryUI {
         this.cursorItemIcon.setOrigin(0.5, 0.5); // Center the item on the cursor
         
         // Apply cursor scaling (slightly larger than inventory for visibility)
-        if (itemType.startsWith('sword_')) {
-            this.cursorItemIcon.setScale(0.4); // Consistent scale for all sword textures
+        if (itemType === 'w_longsword') {
+            this.cursorItemIcon.setScale(0.4); // Scale for w_longsword.png
         } else {
             this.cursorItemIcon.setScale(0.8); // Good size for other items
         }
@@ -1172,32 +1116,9 @@ export class InventoryUI {
         let textureName = itemType;
         if (itemType === 'mysterious herb') {
             textureName = 'mysterious-herb';
-        } else if (itemType.startsWith('sword_')) {
-            // Handle sword items - extract rarity
-            const parts = itemType.split('_');
-            const rarity = parts[1];
-            
-            // Map to appropriate sword texture based on rarity
-            // Use the high-resolution textures created by MedievalSword class
-            switch (rarity) {
-                case 'common':
-                    textureName = 'medieval-sword-common'; // 64x128 high-res version
-                    break;
-                case 'uncommon':
-                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
-                    break;
-                case 'rare':
-                    textureName = 'medieval-sword-rare'; // 64x128 high-res version
-                    break;
-                case 'epic':
-                    textureName = 'medieval-sword-epic'; // 64x128 high-res version
-                    break;
-                case 'legendary':
-                    textureName = 'medieval-sword-legendary'; // 64x128 high-res version
-                    break;
-                default:
-                    textureName = 'medieval-sword-common';
-            }
+        } else if (itemType === 'w_longsword') {
+            // Use the weapon texture for weapons in inventory
+            textureName = 'w_longsword';
         }
         
         this.cursorItemIcon = this.scene.add.image(pointer.x, pointer.y, textureName);
@@ -1624,7 +1545,7 @@ export class InventoryUI {
     }
 
     private isWeaponItem(itemType: string): boolean {
-        return itemType.startsWith('sword_') || itemType.startsWith('weapon_');
+        return itemType === 'w_longsword';
     }
 
     private equipWeapon(itemType: string, slotIndex: number): void {

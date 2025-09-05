@@ -100,12 +100,7 @@ class PlayerWalkingState extends State {
 
         // Handle movement (with null checks)
         if (keyUp && keyDown && keyLeft && keyRight) {
-            const oldDirection = player.lastDirection;
             updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight);
-            // Update weapon position if direction changed
-            if (oldDirection !== player.lastDirection) {
-                player.updateWeaponPosition();
-            }
         } else {
             // If keys aren't ready yet, just stop movement
             player.setVelocity(0, 0);
@@ -252,7 +247,6 @@ export class Player extends Entity {
     public lanternSprite: Phaser.GameObjects.Graphics | null = null;
     public lastDirection: string = 'down'; // Track last movement direction for idle animation
     public equippedWeapon: Phaser.GameObjects.Image | null = null;
-
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
         super(scene, x, y, 'player');
@@ -586,30 +580,14 @@ export class Player extends Entity {
      * Create visual weapon attachment on player
      */
     private createWeaponAttachment(weaponName: string): void {
-        // Determine weapon texture based on name
-        let weaponTexture = 'medieval-sword-common';
-        if (weaponName.includes('common')) {
-            weaponTexture = 'medieval-sword-common';
-        } else if (weaponName.includes('uncommon')) {
-            weaponTexture = 'medieval-sword-uncommon';
-        } else if (weaponName.includes('rare')) {
-            weaponTexture = 'medieval-sword-rare';
-        } else if (weaponName.includes('epic')) {
-            weaponTexture = 'medieval-sword-epic';
-        } else if (weaponName.includes('legendary')) {
-            weaponTexture = 'medieval-sword-legendary';
-        }
-        
         // Create weapon sprite attached to player
-        this.equippedWeapon = this.scene.add.image(this.x, this.y, weaponTexture);
+        this.equippedWeapon = this.scene.add.image(this.x, this.y, weaponName);
         this.equippedWeapon.setOrigin(0.5, 0.8); // Anchor at bottom center
-        this.equippedWeapon.setScale(0.4); // Smaller than world sword
+        this.equippedWeapon.setScale(0.3); // Scale for w_longsword.png
         this.equippedWeapon.setDepth(this.depth + 1); // Above player
         
-        // Position weapon on player's hip/back
+        // Position weapon on player's hip
         this.updateWeaponPosition();
-        
-        // No tint effects - swords use natural colors
     }
 
     /**
@@ -618,7 +596,7 @@ export class Player extends Entity {
     public updateWeaponPosition(): void {
         if (!this.equippedWeapon) return;
         
-        // Position weapon on player's hip/back based on direction
+        // Position weapon on player's hip based on direction
         switch (this.lastDirection) {
             case 'down':
                 this.equippedWeapon.setPosition(this.x + 8, this.y + 8); // Right hip
@@ -678,19 +656,13 @@ export class Player extends Entity {
                 if (distance <= pickupRadius) {
                     const itemType = item.getItemType();
                     
-                    // Check if it's a collectible item (fruit, mysterious herb, or sword)
-                    if (this.isFruitItem(itemType) || this.isMysteriousHerb(itemType) || this.isSwordItem(item)) {
-                        // Handle all items (including swords) as regular items
+                    // Check if it's a collectible item (fruit or mysterious herb)
+                    if (this.isFruitItem(itemType) || this.isMysteriousHerb(itemType)) {
+                        // Handle all items as regular items
                         this.p1Inventory.add(itemType, 1);
                         
                         // Track collected items for consolidated feedback
-                        if (this.isSwordItem(item)) {
-                            const rarity = item.getData('rarity');
-                            const swordName = this.getSwordNameFromRarity(rarity);
-                            collectedItems.set(swordName, (collectedItems.get(swordName) || 0) + 1);
-                        } else {
-                            collectedItems.set(itemType, (collectedItems.get(itemType) || 0) + 1);
-                        }
+                        collectedItems.set(itemType, (collectedItems.get(itemType) || 0) + 1);
 
                         // Play collection sound
                         const soundEffect = item.getSoundEffect();
@@ -705,6 +677,37 @@ export class Player extends Entity {
                         item.destroy();
                         itemsCollected++;
                     }
+                }
+            }
+        });
+
+        // Find all weapons in the scene (LongSword instances)
+        this.scene.children.list.forEach(child => {
+            if (child.constructor.name === 'LongSword') {
+                const weapon = child as any; // LongSword instance
+                const distance = Phaser.Math.Distance.Between(this.x, this.y, weapon.x, weapon.y);
+
+                if (distance <= pickupRadius) {
+                    const itemType = weapon.getItemType();
+                    
+                    // Handle weapon pickup
+                    this.p1Inventory.add(itemType, 1);
+                    
+                    // Track collected items for consolidated feedback
+                    collectedItems.set(itemType, (collectedItems.get(itemType) || 0) + 1);
+
+                    // Play collection sound
+                    const soundEffect = weapon.getSoundEffect();
+                    if (soundEffect) {
+                        this.scene.sound.play(soundEffect.sound, { volume: soundEffect.volume });
+                    }
+
+                    // Emit item collected event for quest system
+                    this.scene.events.emit('itemCollected', itemType, 1);
+
+                    // Destroy the weapon
+                    weapon.destroy();
+                    itemsCollected++;
                 }
             }
         });
@@ -740,21 +743,6 @@ export class Player extends Entity {
         return herbTypes.includes(itemType);
     }
 
-    private isSwordItem(item: Item): boolean {
-        // Check if the item is a sword by looking at its data properties
-        return item.getData('isWeapon') === true && item.getData('weaponType') === 'sword';
-    }
-
-    private getSwordNameFromRarity(rarity: string): string {
-        const names = {
-            common: 'Iron Sword',
-            uncommon: 'Steel Sword',
-            rare: 'Silver Sword',
-            epic: 'Mithril Sword',
-            legendary: 'Excalibur'
-        };
-        return names[rarity as keyof typeof names] || 'Sword';
-    }
 
 
     private showConsolidatedPickupFeedback(collectedItems: Map<string, number>): void {

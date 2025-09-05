@@ -121,7 +121,11 @@ export class SaveSystem {
                         itemType: fruit.getItemType()
                     })) || []
                 })),
-                items: items.map(item => {
+                items: items.filter(item => {
+                    const itemType = item.getItemType();
+                    // Don't save swords - they should not persist between sessions
+                    return itemType !== 'w_longsword';
+                }).map(item => {
                     const itemType = item.getItemType();
                     console.log(`Saving item: ${itemType} at (${item.x}, ${item.y})`);
                     return {
@@ -355,9 +359,12 @@ export class SaveSystem {
                 saveData.items.forEach(itemData => {
                     console.log(`Loading item: ${itemData.itemType} at (${itemData.x}, ${itemData.y})`);
                     // Skip items with undefined itemType (corrupted save data)
-                    if (itemData.itemType && itemData.itemType !== 'undefined') {
+                    // Skip swords as they should not be saved/loaded
+                    if (itemData.itemType && itemData.itemType !== 'undefined' && itemData.itemType !== 'w_longsword') {
                         const item = new Item(scene, itemData.x, itemData.y, itemData.itemType);
                         scene.items.push(item);
+                    } else if (itemData.itemType === 'w_longsword') {
+                        console.log(`Skipping sword from save data - swords are not saved/loaded`);
                     } else {
                         console.warn(`Skipping corrupted item with undefined itemType at (${itemData.x}, ${itemData.y})`);
                     }

@@ -7,6 +7,10 @@
 
 import Phaser from 'phaser';
 
+interface WeaponIcon extends Phaser.GameObjects.Image {
+    isWeaponIcon?: boolean;
+}
+
 export interface GearSlot {
     type: 'weapon' | 'armor' | 'accessory';
     item: string | null;
@@ -88,8 +92,11 @@ export class CharacterGearUI {
     private createGearUI(): void {
         // Return early if gear container already exists
         if (this.gearContainer) {
+            console.log('Gear UI already exists, skipping creation');
             return;
         }
+        
+        console.log('Creating gear UI...');
         
         const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2;
@@ -106,20 +113,20 @@ export class CharacterGearUI {
         const gearX = centerX + (inventoryWidth / 2) + (this.GEAR_WIDTH / 2) + 20; // 20px gap between UIs
         const gearY = centerY;
 
-        this.gearContainer = this.scene.add.container(0, 0);
+        this.gearContainer = this.scene.add.container(gearX, gearY);
         this.gearContainer.setScrollFactor(0);
         this.gearContainer.setDepth(1000);
 
-        // Create medieval-themed gear background
-        this.createGearBackground(gearX, gearY);
+        // Create medieval-themed gear background (relative to container)
+        this.createGearBackground(0, 0);
         
-        // Create gear title
-        this.createGearTitle(gearX, gearY - 120);
+        // Create gear title (relative to container)
+        this.createGearTitle(0, -120);
         
-        // Create gear slots with increased spacing, moved down slightly
-        this.createWeaponSlot(gearX, gearY - 60);
-        this.createArmorSlot(gearX, gearY + 20);
-        this.createAccessorySlot(gearX, gearY + 100);
+        // Create gear slots with increased spacing, moved down slightly (relative to container)
+        this.createWeaponSlot(0, -60);
+        this.createArmorSlot(0, 20);
+        this.createAccessorySlot(0, 100);
     }
 
     /**
@@ -268,6 +275,7 @@ export class CharacterGearUI {
      * Create weapon slot (matching inventory slot style)
      */
     private createWeaponSlot(x: number, y: number): void {
+        console.log(`Creating weapon slot at (${x}, ${y})`);
         this.weaponSlotUI = this.scene.add.container(x, y);
         this.weaponSlotUI.setScrollFactor(0);
         this.gearContainer?.add(this.weaponSlotUI);
@@ -558,7 +566,7 @@ export class CharacterGearUI {
         if (!this.inventoryUI) return;
         
         // Create a temporary image for the inventory's pickup/place system
-        const tempIcon = this.scene.add.image(0, 0, 'medieval-sword-common');
+        const tempIcon = this.scene.add.image(0, 0, 'w_longsword');
         tempIcon.setVisible(false);
         
         if (this.inventoryUI.cursorItem) {
@@ -586,7 +594,7 @@ export class CharacterGearUI {
         const cursorItem = this.inventoryUI.cursorItem;
         
         // Check if cursor item is a weapon
-        if (cursorItem.itemType.startsWith('sword_')) {
+        if (cursorItem.itemType === 'w_longsword') {
             // Equip the weapon
             this.equipWeaponFromCursor(cursorItem);
         }
@@ -632,13 +640,6 @@ export class CharacterGearUI {
         console.log(`Equipped weapon: ${cursorItem.itemType}`);
     }
 
-    /**
-     * Show weapon selection interface
-     */
-    private showWeaponSelection(): void {
-        // For now, just log - in a full implementation, this would show a weapon selection UI
-        console.log('Weapon selection clicked - would show available weapons from inventory');
-    }
 
     /**
      * Unequip current weapon
@@ -703,8 +704,11 @@ export class CharacterGearUI {
     private updateWeaponSlotDisplay(): void {
         if (!this.weaponSlotUI) return;
         
+        // Remove all event listeners to prevent duplication
+        this.weaponSlotUI.removeAllListeners();
+        
         // Clear existing weapon display (but keep the container)
-        this.weaponSlotUI.removeAll(false);
+        this.weaponSlotUI.removeAll(true); // Destroy all children
         
         // Recreate slot background
         const slotBg = this.createMedievalGearSlot();
@@ -752,38 +756,16 @@ export class CharacterGearUI {
         
         // Map weapon item type to correct texture name
         let textureName = this.weaponSlot.item;
-        if (this.weaponSlot.item.startsWith('sword_')) {
-            const parts = this.weaponSlot.item.split('_');
-            const rarity = parts[1];
-            
-            // Map to appropriate sword texture based on rarity
-            switch (rarity) {
-                case 'common':
-                    textureName = 'medieval-sword-common'; // 64x128 high-res version
-                    break;
-                case 'uncommon':
-                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
-                    break;
-                case 'rare':
-                    textureName = 'medieval-sword-rare'; // 64x128 high-res version
-                    break;
-                case 'epic':
-                    textureName = 'medieval-sword-epic'; // 64x128 high-res version
-                    break;
-                case 'legendary':
-                    textureName = 'medieval-sword-legendary'; // 64x128 high-res version
-                    break;
-                default:
-                    textureName = 'medieval-sword-common';
-            }
+        if (this.weaponSlot.item === 'w_longsword') {
+            textureName = 'w_longsword';
         }
         
         // Create weapon icon with correct texture and scale
-        const weaponIcon = this.scene.add.image(0, -8, textureName);
+        const weaponIcon = this.scene.add.image(0, -8, textureName) as WeaponIcon;
         weaponIcon.setOrigin(0.5, 0.5);
         
-        // All swords are now high-resolution (64x128), use consistent scale
-        weaponIcon.setScale(0.2); // 64x128 high-res swords - smaller scale to fit in slot
+        // Scale the weapon icon to fit in the slot
+        weaponIcon.setScale(0.3); // Scale for w_longsword.png
         
         // Mark as weapon icon to exclude from hover effects
         weaponIcon.isWeaponIcon = true;
