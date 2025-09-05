@@ -134,17 +134,27 @@ export class Lantern {
         const flickerRadius = Math.sin(this.flickerTimer) * 0.05 + 0.95;
 
         // Base light radius - smaller during day, larger at night
-        const baseRadius = darknessIntensity > 0.3 ? 45 : 0; // cannot see lantern during day
+        const baseRadius = darknessIntensity > 0.3 ? 80 : 0; // cannot see lantern during day
         const currentRadius = baseRadius * flickerRadius;
 
-        let lightIntensity = darknessIntensity * 0.1;
+        const gradientSteps = 50;
 
-        // Only draw if intensity is significant
-        if (this.lightEffect) {
-            // Use warm light color with additive blending
-            this.lightEffect.fillStyle(0xffaa44, lightIntensity); // Warm lantern light color
-            // Light emanates from lantern position, not player position
-            this.lightEffect.fillCircle(this.player.x + 15, this.player.y - 8, currentRadius);
+        for (let i = 0; i < gradientSteps; i++) {
+            // Calculate radius for this step
+            const radiusRatio = (i + 1) / gradientSteps; 
+            const stepRadius = currentRadius * radiusRatio;
+
+            // Calculate light intensity - strongest at center, weakest at edge
+            const distanceFromCenter = i / (gradientSteps - 1) // 0 at center, 1 at edge
+            let lightIntensity = (1 - distanceFromCenter) * darknessIntensity * 0.01
+
+            // Only draw if intensity is significant
+            if (this.lightEffect) {
+                // Use warm light color with additive blending
+                this.lightEffect.fillStyle(0xffffff, lightIntensity); // Warm lantern light color
+                // Light emanates from lantern position, not player position
+                this.lightEffect.fillCircle(this.player.x + 15, this.player.y - 8, stepRadius);
+            }
         }
     }
 
