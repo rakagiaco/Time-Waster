@@ -58,20 +58,20 @@ export class DayNightCycle {
     constructor(scene: Phaser.Scene, initialTime?: number) {
         this.scene = scene;
 
-        // this.config = {
-        //     cycleDuration: 24 * 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
-        //     dayDuration: 12 * 60 * 1000,         // 12 minutes of daylight
-        //     nightDuration: 12 * 60 * 1000,       // 12 minutes of darkness
-        //     transitionDuration: 2 * 60 * 1000,   // 2 minutes for dawn/dusk
-        // };
+        this.config = {
+            cycleDuration: 24 * 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
+            dayDuration: 12 * 60 * 1000,         // 12 minutes of daylight
+            nightDuration: 12 * 60 * 1000,       // 12 minutes of darkness
+            transitionDuration: 2 * 60 * 1000,   // 2 minutes for dawn/dusk
+        };
     
         // comment this in for 1 minute cycles fo testing
-        this.config = {
-            cycleDuration: 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
-            dayDuration: 60 * 1000,         // 12 minutes of daylight
-            nightDuration: 60 * 1000,       // 12 minutes of darkness
-            transitionDuration: 60 * 1000,   // 2 minutes for dawn/dusk
-        };
+        // this.config = {
+        //     cycleDuration: 60 * 1000,       // 24 minutes total cycle (1 real minute = 1 game hour)
+        //     dayDuration: 60 * 1000,         // 12 minutes of daylight
+        //     nightDuration: 60 * 1000,       // 12 minutes of darkness
+        //     transitionDuration: 60 * 1000,   // 2 minutes for dawn/dusk
+        // };
 
         // Set initial time (for save game restoration or custom start time)
         if (initialTime !== undefined) {

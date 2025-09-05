@@ -1874,13 +1874,13 @@
  "nextobjectid":1368,
  "orientation":"orthogonal",
  "renderorder":"right-down",
- "tiledversion":"1.10.2",
+ "tiledversion":"1.11.2",
  "tileheight":16,
  "tilesets":[
         {
          "columns":5,
          "firstgid":1,
-         "image":"C:\/Users\/CJ\/Downloads\/spritesheet.png",
+         "image":"base_tileset.png",
          "imageheight":112,
          "imagewidth":80,
          "margin":0,

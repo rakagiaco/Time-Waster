@@ -1205,6 +1205,10 @@ export class World extends Phaser.Scene {
     private drawDebugVisuals(): void {
         if (!this.debugManager || !this.debugManager.isDebugEnabled()) return;
 
+        // Clear previous debug text and graphics
+        this.debugManager.clearDebugText();
+        this.debugManager.clearDebugGraphics();
+
         // Draw collision boxes for all entities
         if (this.player) {
             this.debugManager.drawCollisionBox(this.player, 0x00ff00); // Green for player

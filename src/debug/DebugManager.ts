@@ -37,6 +37,10 @@ export class DebugManager {
     private debugContentElement!: HTMLElement;
     private debugGraphics!: Phaser.GameObjects.Graphics;
 
+    // Debug text management
+    private debugTextObjects: Phaser.GameObjects.Text[] = [];
+    private maxTextObjects: number = 50; // Limit to prevent performance issues
+
     // Debug info storage
     private debugInfo: DebugInfo = {
         fps: 0,
@@ -78,7 +82,7 @@ export class DebugManager {
 
     private setupDebugGraphics(): void {
         this.debugGraphics = this.scene.add.graphics();
-        this.debugGraphics.setScrollFactor(0);
+        this.debugGraphics.setScrollFactor(1, 1); // Follow world coordinates
         this.debugGraphics.setDepth(9999);
         this.debugGraphics.setVisible(false);
     }
@@ -102,8 +106,8 @@ export class DebugManager {
         if (this.isEnabled) {
             this.updateDebugDisplay();
         } else {
-            // this.clearVisualDebug();
-
+            this.clearDebugText();
+            this.resetTextObjectPool();
         }
     }
 
@@ -278,9 +282,81 @@ export class DebugManager {
         this.debugGraphics.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
+    public addInfoText(x: number, y: number, text: string, color: number = 0xffffff): void {
+        if (!this.isEnabled || !this.debugGraphics) return;
+        
+        // Convert hex color to CSS color string
+        const colorStr = `#${color.toString(16).padStart(6, '0')}`;
+        
+        // Find an available text object or create a new one
+        let textObj = this.debugTextObjects.find(obj => !obj.visible);
+        
+        if (!textObj && this.debugTextObjects.length < this.maxTextObjects) {
+            // Create new text object
+            textObj = this.scene.add.text(0, 0, '', {
+                fontSize: '12px',
+                color: colorStr,
+                backgroundColor: '#000000',
+                padding: { x: 4, y: 2 }
+            });
+            
+            // Set properties - use world space for proper following
+            textObj.setScrollFactor(1, 1); // Follow world coordinates
+            textObj.setDepth(10000);
+            textObj.setOrigin(0.5, 0.5);
+            
+            this.debugTextObjects.push(textObj);
+        }
+        
+        if (textObj) {
+            // Update existing text object
+            textObj.setPosition(x, y);
+            textObj.setText(text);
+            textObj.setStyle({ color: colorStr });
+            textObj.setVisible(true);
+        }
+    }
+
+    public clearDebugText(): void {
+        // Hide all debug text objects instead of destroying them
+        this.debugTextObjects.forEach(textObj => {
+            if (textObj) {
+                textObj.setVisible(false);
+            }
+        });
+    }
+
+    public clearDebugGraphics(): void {
+        // Clear the debug graphics to prevent accumulation
+        if (this.debugGraphics) {
+            this.debugGraphics.clear();
+        }
+    }
+
+    private resetTextObjectPool(): void {
+        // Reset all text objects to a clean state
+        this.debugTextObjects.forEach(textObj => {
+            if (textObj) {
+                textObj.setVisible(false);
+                textObj.setText('');
+                textObj.setPosition(0, 0);
+            }
+        });
+    }
+
     public destroy(): void {
-        // this.clearVisualDebug();
-        this.debugGraphics.destroy();
+        // Destroy all debug text objects
+        this.debugTextObjects.forEach(textObj => {
+            if (textObj && textObj.destroy) {
+                textObj.destroy();
+            }
+        });
+        this.debugTextObjects = [];
+        
+        // Destroy debug graphics
+        if (this.debugGraphics) {
+            this.debugGraphics.destroy();
+        }
 
         // Hide the external debug panel
         if (this.debugPanelElement) {
