@@ -25,14 +25,16 @@ export class PauseMenu {
     private setupInput(): void {
         // Use a single key handler for P key only
         this.scene.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-            // Only handle P key for pause menu toggle
+            // Only handle P key for pause menu toggle - prevent event propagation
             if (event.code === 'KeyP') {
+                event.stopPropagation();
                 this.toggle();
                 return;
             }
 
             // Handle ESC key to close controls if showing
             if (this.showingControls && event.code === 'Escape') {
+                event.stopPropagation();
                 this.hideControls();
             }
         });

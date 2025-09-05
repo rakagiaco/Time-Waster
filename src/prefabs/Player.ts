@@ -98,6 +98,12 @@ class PlayerWalkingState extends State {
             return;
         }
 
+        // Don't process movement if player movement is locked (e.g., inventory open)
+        if (player.isMovementLocked()) {
+            player.setVelocity(0, 0);
+            return;
+        }
+
         // Handle movement (with null checks)
         if (keyUp && keyDown && keyLeft && keyRight) {
             updatePlayerMovement(player, keyUp, keyDown, keyLeft, keyRight);
@@ -152,6 +158,12 @@ class PlayerSprintingState extends State {
         const worldScene = _scene as any;
         if (worldScene.pauseMenu && worldScene.pauseMenu.isMenuVisible()) {
             // Stop movement when pause menu is open
+            player.setVelocity(0, 0);
+            return;
+        }
+
+        // Don't process movement if player movement is locked (e.g., inventory open)
+        if (player.isMovementLocked()) {
             player.setVelocity(0, 0);
             return;
         }
@@ -247,6 +259,7 @@ export class Player extends Entity {
     public lanternSprite: Phaser.GameObjects.Graphics | null = null;
     public lastDirection: string = 'down'; // Track last movement direction for idle animation
     public equippedWeapon: Phaser.GameObjects.Image | null = null;
+    public movementLocked: boolean = false; // Track if player movement is locked
 
     constructor(scene: Phaser.Scene, x: number, y: number, inventory?: any, questData?: any) {
         super(scene, x, y, 'player');
@@ -800,5 +813,27 @@ export class Player extends Entity {
     public setHealth(health: number): void {
         this.HIT_POINTS = Math.max(0, Math.min(health, this.MAX_HIT_POINTS));
         this.updateHealthBar();
+    }
+
+    /**
+     * Lock player movement (used when inventory is open)
+     */
+    public lockMovement(): void {
+        this.movementLocked = true;
+        this.setVelocity(0, 0); // Stop current movement
+    }
+
+    /**
+     * Unlock player movement (used when inventory is closed)
+     */
+    public unlockMovement(): void {
+        this.movementLocked = false;
+    }
+
+    /**
+     * Check if player movement is locked
+     */
+    public isMovementLocked(): boolean {
+        return this.movementLocked;
     }
 }

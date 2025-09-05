@@ -576,6 +576,11 @@ export class InventoryUI {
         this.positionInventory();
         this.updateInventoryDisplay();
         this.inventoryContainer.setVisible(true);
+        
+        // Lock player movement when inventory is open
+        if (this.player) {
+            this.player.lockMovement();
+        }
     }
 
     public hide(): void {
@@ -588,6 +593,11 @@ export class InventoryUI {
         
         this.isVisible = false;
         this.inventoryContainer.setVisible(false);
+        
+        // Unlock player movement when inventory is closed
+        if (this.player) {
+            this.player.unlockMovement();
+        }
         
         // Close gear UI when inventory is closed
         if (this.gearUI && this.gearUI.isGearVisible()) {

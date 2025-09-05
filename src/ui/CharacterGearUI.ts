@@ -299,12 +299,14 @@ export class CharacterGearUI {
 
         // Add hover effects
         this.weaponSlotUI.on('pointerover', () => {
+            console.log('Weapon slot hover detected');
             if (this.weaponSlotUI) {
                 this.handleSlotHover(this.weaponSlotUI, true);
             }
         });
 
         this.weaponSlotUI.on('pointerout', () => {
+            console.log('Weapon slot hover ended');
             if (this.weaponSlotUI) {
                 this.handleSlotHover(this.weaponSlotUI, false);
             }
@@ -383,17 +385,21 @@ export class CharacterGearUI {
     }
 
     /**
-     * Handle slot hover effects
+     * Handle slot hover effects (matching inventory style)
      */
     private handleSlotHover(slotContainer: Phaser.GameObjects.Container, isHovering: boolean): void {
         if (isHovering) {
-            // Apply tint to all children except weapon icons (no scaling)
+            // Add glow effect - same as inventory
+            slotContainer.setScale(1.05);
+            // Apply tint to all children except weapon icons
             slotContainer.list.forEach((child: any) => {
                 if (child.setTint && !child.isWeaponIcon) {
-                    child.setTint(0xFFFFAA); // Light yellow glow
+                    child.setTint(0xFFFFAA); // Light yellow glow - same as inventory
                 }
             });
         } else {
+            // Remove glow effect - same as inventory
+            slotContainer.setScale(1.0);
             // Clear tint from all children except weapon icons
             slotContainer.list.forEach((child: any) => {
                 if (child.clearTint && !child.isWeaponIcon) {
@@ -429,12 +435,14 @@ export class CharacterGearUI {
 
         // Add hover effects
         this.armorSlotUI.on('pointerover', () => {
+            console.log('Armor slot hover detected');
             if (this.armorSlotUI) {
                 this.handleSlotHover(this.armorSlotUI, true);
             }
         });
 
         this.armorSlotUI.on('pointerout', () => {
+            console.log('Armor slot hover ended');
             if (this.armorSlotUI) {
                 this.handleSlotHover(this.armorSlotUI, false);
             }
@@ -471,12 +479,14 @@ export class CharacterGearUI {
 
         // Add hover effects
         this.accessorySlotUI.on('pointerover', () => {
+            console.log('Accessory slot hover detected');
             if (this.accessorySlotUI) {
                 this.handleSlotHover(this.accessorySlotUI, true);
             }
         });
 
         this.accessorySlotUI.on('pointerout', () => {
+            console.log('Accessory slot hover ended');
             if (this.accessorySlotUI) {
                 this.handleSlotHover(this.accessorySlotUI, false);
             }

@@ -1072,14 +1072,21 @@ export class World extends Phaser.Scene {
         const sword = new LongSword(this, weaponX, weaponY);
         
         // Set sword properties - proper scale for world display
-        sword.setScale(0.08).setSize(40, 60).setOffset(-10, -10); // Larger scale for better visibility
+        sword.setScale(0.4).setSize(40, 60).setOffset(-10, -10); // Slightly larger scale
         sword.setVisible(true); // Ensure sword is visible
-        sword.setDepth(100); // Ensure proper depth
+        sword.setDepth(1000); // Very high depth to ensure visibility
+        sword.setAlpha(1.0); // Ensure full opacity
+        sword.clearTint(); // Remove red tint for normal appearance
         sword.setData('isRespawnable', false); // Sword is not respawnable - one-time pickup
         
         // Add unique identifier for debugging
         sword.setData('swordId', `sword_${Date.now()}`);
         console.log(`Created sword with ID: ${sword.getData('swordId')} at (${weaponX}, ${weaponY})`);
+        console.log(`Sword visibility: ${sword.visible}, alpha: ${sword.alpha}, scale: ${sword.scaleX}, ${sword.scaleY}`);
+        console.log(`Sword texture: ${sword.texture.key}, exists: ${this.textures.exists('w_longsword')}`);
+        console.log(`Sword position: (${sword.x}, ${sword.y}), depth: ${sword.depth}`);
+        console.log(`Camera position: (${this.cameras.main.x}, ${this.cameras.main.y})`);
+        console.log(`Camera zoom: ${this.cameras.main.zoom}`);
         
         // Add to items array
         this.items.push(sword);
@@ -1491,12 +1498,12 @@ export class World extends Phaser.Scene {
             }
         });
 
-        // Setup F key as alternative interaction
-        this.input.keyboard?.on('keydown-F', () => {
-            if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
-                this.questGiverNPC.interact();
-            }
-        });
+        // Setup F key as alternative interaction - DISABLED per user request
+        // this.input.keyboard?.on('keydown-F', () => {
+        //     if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
+        //         this.questGiverNPC.interact();
+        //     }
+        // });
 
         // Setup mouse click interaction
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
