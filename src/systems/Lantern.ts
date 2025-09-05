@@ -89,8 +89,8 @@ export class Lantern {
             const cy = radius;
 
             const gradient = ctx.createRadialGradient(cx, cy, 0, cx, cy, radius);
-            gradient.addColorStop(0, 'rgba(248, 247, 247, 0.3)'); // bright warm center
-            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)'); // transparent edge
+            gradient.addColorStop(0, 'rgba(248, 247, 247, 0.3)');
+            gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
 
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, radius * 2, radius * 2);
@@ -134,15 +134,11 @@ export class Lantern {
         this.lightSprite.setPosition(lx, ly);
 
         if (this.isActive) {
-            // Flicker alpha for flame
-            const flickerAlpha = Math.sin(this.flickerTimer * 8);
-            this.flameSprite.setAlpha(flickerAlpha);
-
             // Flicker scale for light
             const flickerScale = Math.sin(this.flickerTimer) * 0.05 + 0.95;
 
             const darknessIntensity = this.getDarknessIntensity();
-            const baseScale = darknessIntensity > 0.3 ? 1 : 0; // invisible during day
+            const baseScale = darknessIntensity > 0.3 ? 1 : 0;
 
             this.lightSprite.setScale(baseScale * flickerScale);
             this.lightSprite.setAlpha(darknessIntensity);
