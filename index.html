@@ -9,22 +9,68 @@
 
     <link rel="stylesheet" href="styles/styles.css">
     <style>
-        body {
-            background-image: linear-gradient(to right, #094603, #0229b5);
+        :root {
+            --left-width: 350px;
+            --z-frame: 0;
+            --z-game: 1;
+            --z-debug: 2;
+        }
+
+        /* Reset page so FIT scaling centers nicely */
+        html, body {
+            height: 100%;
             margin: 0;
             padding: 0;
-            display: flex;
+            background: #0e0a1a; /* deep night to blend borders */
+            overflow: hidden;    /* avoid scrollbars */
             font-family: 'Courier New', monospace;
         }
 
-        #gameContainer {
-            flex: 1;
+        /* Fixed side frames behind the game */
+        .frame.side {
+            position: fixed;
+            top: 0;
+            height: 100vh;
+            z-index: var(--z-frame);
+            pointer-events: none;           /* clicks pass through */
         }
 
+        #frame-left { 
+            left: 0;  
+            width: var(--left-width); 
+        }
+        
+        #frame-right { 
+            right: 0; 
+            width: var(--left-width); 
+        }
+
+        /* Images fill their containers without distortion */
+        .frame.side img {
+            height: 100%;
+            width: 100%;
+            object-fit: cover;     /* crop gracefully if aspect differs */
+            image-rendering: pixelated;
+        }
+
+        /* Game container - centered on screen */
+        #gameContainer {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: var(--z-game);
+        }
+
+        /* Debug panel that appears over the left border */
         #debugPanel {
-            width: 350px;
+            position: fixed;
+            left: 0; 
+            top: 0;
+            width: var(--left-width);
             height: 100vh;
-            background-color: #2a2a2a;
+            z-index: var(--z-debug);
+            background: rgba(10,10,10,.6); /* translucent over left art */
             border-left: 3px solid #00ff00;
             padding: 20px;
             box-sizing: border-box;
@@ -33,6 +79,7 @@
             line-height: 1.4;
             overflow-y: auto;
             display: none;
+            backdrop-filter: blur(2px);
         }
 
         #debugPanel h3 {
@@ -60,15 +107,47 @@
         #debugPanel .debug-value {
             color: #ffffff;
         }
+
+        /* Small screens: collapse right border if space is tight */
+        @media (max-width: 1200px) {
+            #frame-right { 
+                display: none; 
+            }
+        }
+
+        /* Very small screens: hide left border too and make debug panel overlay */
+        @media (max-width: 768px) {
+            #frame-left { 
+                display: none; 
+            }
+            #debugPanel {
+                width: 100vw;
+                height: 50vh;
+                top: auto;
+                bottom: 0;
+                left: 0;
+                right: 0;
+                background: rgba(10,10,10,.9);
+            }
+        }
     </style>
     <title>RPG</title>
 </head>
 
 <body>
-
-    <div id="gameContainer">
+    <!-- Fixed side frames behind the game -->
+    <div id="frame-left" class="frame side">
+        <img src="public/Backgrounds/htmlbackground.png" alt="left border" style="object-position: left center;" />
     </div>
 
+    <div id="frame-right" class="frame side">
+        <img src="public/Backgrounds/htmlbackground.png" alt="right border" style="object-position: right center;" />
+    </div>
+
+    <!-- Game container - centered on screen -->
+    <div id="gameContainer"></div>
+
+    <!-- Debug panel (hidden by default) occupies the same left space -->
     <div id="debugPanel">
         <h3>DEBUG MODE</h3>
         <div id="debugContent">
