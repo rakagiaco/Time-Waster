@@ -598,7 +598,7 @@ export class World extends Phaser.Scene {
         const sword = new MedievalSword(this, x, y, rarity);
         
         // Set sword properties
-        sword.setScale(0.3).setSize(20, 40).setOffset(0, 0); // Make swords smaller as requested
+        sword.setScale(0.3).setSize(40, 60).setOffset(-10, -10); // Larger clickable area
         sword.setData('respawnTime', 300000); // 5 minutes for weapons
         sword.setData('spawnPoint', { x, y });
         sword.setData('isRespawnable', true);
@@ -1069,8 +1069,29 @@ export class World extends Phaser.Scene {
         // Add the tree to our trees array
         this.trees.push(treeOfLife);
 
-        // Create swords around the Tree of Life for proximity pickup testing
-        this.createSwordsAroundTreeOfLife(350, 400);
+        // Create swords to the right of Narvark for testing
+        this.createSwordsAroundNarvark();
+    }
+
+    private createSwordsAroundNarvark(): void {
+        // Create swords to the right of Narvark (Narvark is at 341.818181818182, 344)
+        const narvarkX = 341.818181818182;
+        const narvarkY = 344;
+        const swordCount = 4;
+        const radius = 80; // Distance from Narvark
+        
+        for (let i = 0; i < swordCount; i++) {
+            const angle = (i / swordCount) * Math.PI * 2;
+            const swordX = narvarkX + Math.cos(angle) * radius;
+            const swordY = narvarkY + Math.sin(angle) * radius;
+            
+            // Create swords with different rarities
+            const rarities: ('common' | 'uncommon' | 'rare' | 'epic' | 'legendary')[] = 
+                ['common', 'uncommon', 'rare', 'epic'];
+            const rarity = rarities[i % rarities.length];
+            
+            this.createSwordSpawnPoint(swordX, swordY, rarity);
+        }
     }
 
     private createSwordsAroundTreeOfLife(treeX: number, treeY: number): void {

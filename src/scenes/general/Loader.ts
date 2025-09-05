@@ -96,6 +96,7 @@ export class Loader extends Phaser.Scene {
         this.load.image('credits-button', '/img/credits-button.png')
         this.load.image('menu-button', '/img/menu-button.png')
         this.load.image('freeplay-button', '/img/freeplay-button.png')
+        this.load.image('menubackground', '/Backgrounds/menubackground.png')
 
         // =====================================================================
         // QUEST DATA FILES

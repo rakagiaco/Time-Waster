@@ -687,8 +687,10 @@ export class InventoryUI {
             // Use the high-resolution textures created by MedievalSword class
             switch (rarity) {
                 case 'common':
+                    textureName = 'medieval-sword-common'; // 64x128 high-res version
+                    break;
                 case 'uncommon':
-                    textureName = 'medieval-sword-icon'; // 32x32 icon version
+                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
                     break;
                 case 'rare':
                     textureName = 'medieval-sword-rare'; // 64x128 high-res version
@@ -700,7 +702,7 @@ export class InventoryUI {
                     textureName = 'medieval-sword-legendary'; // 64x128 high-res version
                     break;
                 default:
-                    textureName = 'medieval-sword-icon';
+                    textureName = 'medieval-sword-common';
             }
         }
         
@@ -716,15 +718,9 @@ export class InventoryUI {
         );
         itemIcon.setOrigin(0.5, 0.5); // Center the image
         
-        // Special scaling for larger sword textures
+        // Special scaling for sword textures - all swords use same scale
         if (itemType.startsWith('sword_')) {
-            const parts = itemType.split('_');
-            const rarity = parts[1];
-            if (rarity === 'rare' || rarity === 'epic' || rarity === 'legendary') {
-                itemIcon.setScale(0.3); // Even smaller scale for larger sword textures
-            } else {
-                itemIcon.setScale(0.5); // Smaller scale for common/uncommon swords
-            }
+            itemIcon.setScale(0.3); // Consistent scale for all sword textures
         } else {
             itemIcon.setScale(0.8); // Good size for medieval slots
         }
@@ -1000,7 +996,7 @@ export class InventoryUI {
     /**
      * Pick up item from slot (Minecraft style)
      */
-    private pickupItem(itemIcon: Phaser.GameObjects.Image, itemType: string, count: number, slotIndex: number): void {
+    public pickupItem(itemIcon: Phaser.GameObjects.Image, itemType: string, count: number, slotIndex: number): void {
         // Store cursor item with original slot
         this.cursorItem = { itemType, count, originalSlot: slotIndex };
         
@@ -1020,8 +1016,10 @@ export class InventoryUI {
             // Use the high-resolution textures created by MedievalSword class
             switch (rarity) {
                 case 'common':
+                    textureName = 'medieval-sword-common'; // 64x128 high-res version
+                    break;
                 case 'uncommon':
-                    textureName = 'medieval-sword-icon'; // 32x32 icon version
+                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
                     break;
                 case 'rare':
                     textureName = 'medieval-sword-rare'; // 64x128 high-res version
@@ -1033,7 +1031,7 @@ export class InventoryUI {
                     textureName = 'medieval-sword-legendary'; // 64x128 high-res version
                     break;
                 default:
-                    textureName = 'medieval-sword-icon';
+                    textureName = 'medieval-sword-common';
             }
         }
         
@@ -1048,13 +1046,7 @@ export class InventoryUI {
         
         // Apply cursor scaling (slightly larger than inventory for visibility)
         if (itemType.startsWith('sword_')) {
-            const parts = itemType.split('_');
-            const rarity = parts[1];
-            if (rarity === 'rare' || rarity === 'epic' || rarity === 'legendary') {
-                this.cursorItemIcon.setScale(0.4); // Slightly larger for cursor visibility
-            } else {
-                this.cursorItemIcon.setScale(0.7); // Larger for common/uncommon swords
-            }
+            this.cursorItemIcon.setScale(0.4); // Consistent scale for all sword textures
         } else {
             this.cursorItemIcon.setScale(0.8); // Good size for other items
         }
@@ -1189,8 +1181,10 @@ export class InventoryUI {
             // Use the high-resolution textures created by MedievalSword class
             switch (rarity) {
                 case 'common':
+                    textureName = 'medieval-sword-common'; // 64x128 high-res version
+                    break;
                 case 'uncommon':
-                    textureName = 'medieval-sword-icon'; // 32x32 icon version
+                    textureName = 'medieval-sword-uncommon'; // 64x128 high-res version
                     break;
                 case 'rare':
                     textureName = 'medieval-sword-rare'; // 64x128 high-res version
@@ -1202,7 +1196,7 @@ export class InventoryUI {
                     textureName = 'medieval-sword-legendary'; // 64x128 high-res version
                     break;
                 default:
-                    textureName = 'medieval-sword-icon';
+                    textureName = 'medieval-sword-common';
             }
         }
         

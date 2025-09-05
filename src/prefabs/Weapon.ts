@@ -37,12 +37,11 @@ export class MedievalSword extends Item {
         }
 
         const graphics = scene.add.graphics();
-        // Position graphics offscreen to prevent any visual artifacts
-        graphics.setPosition(-1000, -1000);
-        // Make graphics invisible during texture generation
+        // Position graphics completely off-screen and make invisible
+        graphics.setPosition(-2000, -2000);
         graphics.setVisible(false);
-        // Set depth to be behind everything
-        graphics.setDepth(-1000);
+        graphics.setDepth(-2000);
+        graphics.setAlpha(0);
         
         // Create high-resolution full-size sword (64x128)
         this.drawDetailedSword(graphics, 64, 128);

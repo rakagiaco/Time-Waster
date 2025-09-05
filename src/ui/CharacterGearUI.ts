@@ -61,7 +61,11 @@ export class CharacterGearUI {
         if (this.isVisible) return;
         
         this.isVisible = true;
-        this.createGearUI();
+        if (!this.gearContainer) {
+            this.createGearUI();
+        } else {
+            this.gearContainer.setVisible(true);
+        }
         // Gear UI shown
     }
 
@@ -73,8 +77,7 @@ export class CharacterGearUI {
         
         this.isVisible = false;
         if (this.gearContainer) {
-            this.gearContainer.destroy();
-            this.gearContainer = null;
+            this.gearContainer.setVisible(false);
         }
         // Gear UI hidden
     }
@@ -83,6 +86,11 @@ export class CharacterGearUI {
      * Create the gear UI elements
      */
     private createGearUI(): void {
+        // Return early if gear container already exists
+        if (this.gearContainer) {
+            return;
+        }
+        
         const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2;
         
@@ -263,6 +271,7 @@ export class CharacterGearUI {
         this.weaponSlotUI = this.scene.add.container(x, y);
         this.weaponSlotUI.setScrollFactor(0);
         this.gearContainer?.add(this.weaponSlotUI);
+        
 
         // Create medieval slot background (matching inventory)
         const slotBg = this.createMedievalGearSlot();
@@ -370,20 +379,16 @@ export class CharacterGearUI {
      */
     private handleSlotHover(slotContainer: Phaser.GameObjects.Container, isHovering: boolean): void {
         if (isHovering) {
-            // Add glow effect
-            slotContainer.setScale(1.05);
-            // Apply tint to all children instead of container
+            // Apply tint to all children except weapon icons (no scaling)
             slotContainer.list.forEach((child: any) => {
-                if (child.setTint) {
+                if (child.setTint && !child.isWeaponIcon) {
                     child.setTint(0xFFFFAA); // Light yellow glow
                 }
             });
         } else {
-            // Remove glow effect
-            slotContainer.setScale(1.0);
-            // Clear tint from all children
+            // Clear tint from all children except weapon icons
             slotContainer.list.forEach((child: any) => {
-                if (child.clearTint) {
+                if (child.clearTint && !child.isWeaponIcon) {
                     child.clearTint();
                 }
             });
@@ -547,30 +552,46 @@ export class CharacterGearUI {
     }
 
     /**
-     * Handle weapon slot click
+     * Handle weapon slot click - use same system as inventory
      */
     private handleWeaponSlotClick(): void {
-        // Check if there's a cursor item from inventory
-        if (this.inventoryUI && this.inventoryUI.cursorItem) {
-            const cursorItem = this.inventoryUI.cursorItem;
-            
-            // Check if cursor item is a weapon
-            if (cursorItem.itemType.startsWith('sword_')) {
-                // Equip the weapon from cursor
-                this.equipWeaponFromCursor(cursorItem);
-                return;
+        if (!this.inventoryUI) return;
+        
+        // Create a temporary image for the inventory's pickup/place system
+        const tempIcon = this.scene.add.image(0, 0, 'medieval-sword-common');
+        tempIcon.setVisible(false);
+        
+        if (this.inventoryUI.cursorItem) {
+            // Place item from cursor into weapon slot
+            this.placeWeaponFromCursor();
+        } else if (this.weaponSlot.equipped && this.weaponSlot.item) {
+            // Pick up weapon from slot to cursor
+            this.inventoryUI.pickupItem(tempIcon, this.weaponSlot.item, this.weaponSlot.count, -1);
+            this.unequipWeapon();
+            if (this.player) {
+                this.player.unequipWeapon();
             }
         }
         
-        // Weapon slot clicked
-        if (this.weaponSlot.equipped) {
-            // Unequip current weapon
-            this.unequipWeapon();
-        } else {
-            // Show weapon selection or equip from inventory
-            this.showWeaponSelection();
+        // Clean up temp icon
+        tempIcon.destroy();
+    }
+
+    /**
+     * Place weapon from cursor into weapon slot
+     */
+    private placeWeaponFromCursor(): void {
+        if (!this.inventoryUI || !this.inventoryUI.cursorItem) return;
+        
+        const cursorItem = this.inventoryUI.cursorItem;
+        
+        // Check if cursor item is a weapon
+        if (cursorItem.itemType.startsWith('sword_')) {
+            // Equip the weapon
+            this.equipWeaponFromCursor(cursorItem);
         }
     }
+
 
     /**
      * Equip weapon from cursor item
@@ -682,8 +703,8 @@ export class CharacterGearUI {
     private updateWeaponSlotDisplay(): void {
         if (!this.weaponSlotUI) return;
         
-        // Clear existing weapon display
-        this.weaponSlotUI.removeAll(true);
+        // Clear existing weapon display (but keep the container)
+        this.weaponSlotUI.removeAll(false);
         
         // Recreate slot background
         const slotBg = this.createMedievalGearSlot();
@@ -763,6 +784,9 @@ export class CharacterGearUI {
         
         // All swords are now high-resolution (64x128), use consistent scale
         weaponIcon.setScale(0.2); // 64x128 high-res swords - smaller scale to fit in slot
+        
+        // Mark as weapon icon to exclude from hover effects
+        weaponIcon.isWeaponIcon = true;
         
         weaponIcon.setScrollFactor(0);
         this.weaponSlotUI.add(weaponIcon);
