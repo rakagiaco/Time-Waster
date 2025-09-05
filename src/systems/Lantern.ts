@@ -134,10 +134,10 @@ export class Lantern {
         const flickerRadius = Math.sin(this.flickerTimer) * 0.05 + 0.95;
 
         // Base light radius - smaller during day, larger at night
-        const baseRadius = darknessIntensity > 0.3 ? 80 : 0; // cannot see lantern during day
+        const baseRadius = darknessIntensity > 0.3 ? 100 : 0; // cannot see lantern during day
         const currentRadius = baseRadius * flickerRadius;
 
-        const gradientSteps = 50;
+        const gradientSteps = 75;
 
         for (let i = 0; i < gradientSteps; i++) {
             // Calculate radius for this step
