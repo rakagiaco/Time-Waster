@@ -614,6 +614,7 @@ export class Player extends Entity {
             case 'down':
                 this.equippedWeapon.setPosition(this.x + 8, this.y + 8); // Right hip
                 this.equippedWeapon.setRotation(0);
+                this.equippedWeapon.setFlipX(false); // Normal orientation
                 break;
             case 'up':
                 this.equippedWeapon.setPosition(this.x - 8, this.y - 8); // Left shoulder/back
@@ -621,11 +622,13 @@ export class Player extends Entity {
                 break;
             case 'left':
                 this.equippedWeapon.setPosition(this.x - 8, this.y + 4); // Left hip
-                this.equippedWeapon.setRotation(-Math.PI / 2);
+                this.equippedWeapon.setRotation(0); // No rotation, just flip
+                this.equippedWeapon.setFlipX(true); // Flip horizontally for left side
                 break;
             case 'right':
                 this.equippedWeapon.setPosition(this.x + 8, this.y + 4); // Right hip
-                this.equippedWeapon.setRotation(Math.PI / 2);
+                this.equippedWeapon.setRotation(0); // No rotation, just flip
+                this.equippedWeapon.setFlipX(false); // Normal orientation for right side
                 break;
         }
     }
