@@ -40,13 +40,8 @@ class NPCIdleState extends State {
     enter(_scene: Phaser.Scene, npc: UnifiedNPC): void {
         npc.setVelocity(0, 0);
 
-        // Check if animation exists before playing
-        if (npc.anims.exists('npc-1')) {
-            npc.anims.play('npc-1', true);
-            npc.anims.stop();
-        } else {
-            console.warn('Animation "npc-1" not found');
-        }
+        // NPC uses static image, no animation needed
+        // The texture is already set in the constructor
     }
 
     execute(_scene: Phaser.Scene, npc: UnifiedNPC): void {

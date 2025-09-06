@@ -778,6 +778,8 @@ export class InventoryUI {
                 break;
         }
         
+        // Clean up graphics object after texture generation
+        graphics.clear();
         graphics.destroy();
     }
 

@@ -40,9 +40,7 @@ export class World extends Phaser.Scene {
     private items: Item[] = [];
     private trees: Tree[] = [];
     private tilemap!: Phaser.Tilemaps.Tilemap;
-    private tileset!: Phaser.Tilemaps.Tileset | null;
     private objlayer!: Phaser.Tilemaps.ObjectLayer | null;
-    private swordCreationCount: number = 0;
 
     private miniMapCamera!: Phaser.Cameras.Scene2D.Camera;
     private minimapMask!: Phaser.GameObjects.Graphics;
@@ -102,10 +100,20 @@ export class World extends Phaser.Scene {
             this.createItems();
             this.createTrees();
 
-            // camera setup
-            this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
-            this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
-            this.cameras.main.startFollow(this.player);
+            // camera setup - with safety checks
+            if (this.tilemap && this.tilemap.widthInPixels && this.tilemap.heightInPixels) {
+                this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels);
+                this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels);
+                this.cameras.main.startFollow(this.player);
+                console.log(`✓ Camera bounds set: ${this.tilemap.widthInPixels}x${this.tilemap.heightInPixels}`);
+                console.log(`✓ Map dimensions: ${this.tilemap.width}x${this.tilemap.height} tiles`);
+            } else {
+                console.error('❌ Tilemap dimensions not available for camera setup');
+                // Fallback to default bounds
+                this.cameras.main.setBounds(0, 0, 1600, 1200);
+                this.physics.world.setBounds(0, 0, 1600, 1200);
+                this.cameras.main.startFollow(this.player);
+            }
 
             // minimap
             this.setupMinimap();
@@ -134,6 +142,7 @@ export class World extends Phaser.Scene {
 
                 if (this.treeLightEmission) {
                     if (data.isDay) {
+                     
                      
                        this.treeLightEmission.deactivate();
                     } else {
@@ -415,24 +424,184 @@ export class World extends Phaser.Scene {
 
     private createTilemap(): void {
         this.tilemap = this.make.tilemap({ key: 'tilemapJSON' });
-        this.tileset = this.tilemap.addTilesetImage('base_tileset', 'base-tileset');
-
-        if (this.tileset) {
-            this.tilemap.createLayer('Background', this.tileset, 0, 0);
-            this.objlayer = this.tilemap.getObjectLayer('Player/NPC')
-        }
+        
+        // The new tilemap has embedded tilesets, so we can create layers directly
+        // Create visible layers in the correct order (bottom to top) with proper tilesets
+        // Start with minimal layers to isolate the problem
+        
+        console.log('=== CREATING TILEMAP LAYERS ===');
+        
+        // =====================================================================
+        // COMPREHENSIVE TILESET BINDING FOR AETHERON.TMJ
+        // =====================================================================
+        // Bind all tilesets referenced in the tilemap using addTilesetImage
+        // First argument: tileset name from Tiled (must match exactly)
+        // Second argument: image key from preload
+        
+        // Core environment tilesets
+        const tsWater = this.tilemap.addTilesetImage('Water_tiles', 'Water_tiles');
+        const tsFloors = this.tilemap.addTilesetImage('Floors_Tiles', 'Floors_Tiles');
+        const tsDungeon = this.tilemap.addTilesetImage('Dungeon_Tiles', 'Dungeon_Tiles');
+        const tsWallTiles = this.tilemap.addTilesetImage('Wall_Tiles', 'Wall_Tiles');
+        const tsWallVariations = this.tilemap.addTilesetImage('Wall_Variations', 'Wall_Variations');
+        
+        // Props and environment objects
+        const tsDungeonProps = this.tilemap.addTilesetImage('Dungeon_Props', 'Dungeon_Props');
+        const tsFarm = this.tilemap.addTilesetImage('Farm', 'Farm');
+        const tsResources = this.tilemap.addTilesetImage('Resources', 'Resources');
+        const tsRocks = this.tilemap.addTilesetImage('Rocks', 'Rocks');
+        const tsShadows = this.tilemap.addTilesetImage('Shadows', 'Shadows');
+        const tsVegetation = this.tilemap.addTilesetImage('Vegetation', 'Vegetation');
+        
+        // Tree models (all sizes) - using correct tileset names from tilemap
+        const tsSize02 = this.tilemap.addTilesetImage('Size_02', 'Tree_Model_01_Size_02');
+        const tsSize02Type02 = this.tilemap.addTilesetImage('Size_02_type02', 'Tree_Model_02_Size_02');
+        const tsSize02Type3 = this.tilemap.addTilesetImage('Size_02_type3', 'Tree_Model_03_Size_02');
+        const tsSize03 = this.tilemap.addTilesetImage('Size_03', 'Tree_Model_01_Size_03');
+        const tsSize03Type02 = this.tilemap.addTilesetImage('Size_03_type02', 'Tree_Model_02_Size_03');
+        const tsSize03Type03 = this.tilemap.addTilesetImage('Size_03_type03', 'Tree_Model_03_Size_03');
+        const tsSize04 = this.tilemap.addTilesetImage('Size_04', 'Tree_Model_01_Size_04');
+        const tsSize04Type02 = this.tilemap.addTilesetImage('Size_04_type02', 'Tree_Model_02_Size_04');
+        const tsSize04Type03 = this.tilemap.addTilesetImage('Size_04_type03', 'Tree_Model_03_Size_04');
+        const tsSize05 = this.tilemap.addTilesetImage('Size_05', 'Tree_Model_01_Size_05');
+        const tsSize05Type02 = this.tilemap.addTilesetImage('Size_05_type02', 'Tree_Model_02_Size_05');
+        const tsSize05Type03 = this.tilemap.addTilesetImage('Size_05_type03', 'Tree_Model_03_Size_05');
+        
+        // Building structures
+        const tsShadowsBuildings = this.tilemap.addTilesetImage('Shadows_Buildings', 'Shadows_Buildings');
+        const tsWallsBuildings = this.tilemap.addTilesetImage('Walls_Buildings', 'Walls_Buildings');
+        const tsRoofsBuildings = this.tilemap.addTilesetImage('Roofs_Buildings', 'Roofs_Buildings');
+        const tsPropsBuildings = this.tilemap.addTilesetImage('Props_Buildings', 'Props_Buildings');
+        const tsFloorsBuildings = this.tilemap.addTilesetImage('Floors_Buildings', 'Floors_Buildings');
+        
+        // Stations and special objects
+        const tsBonfire = this.tilemap.addTilesetImage('Bonfire', 'Bonfire');
+        const tsWorkbench = this.tilemap.addTilesetImage('Workbench', 'Workbench');
+        const tsAlchemy = this.tilemap.addTilesetImage('Alchemy_Table_01-Sheet', 'Alchemy_Table_01');
+        
+        // Fairy Forest assets
+        const tsFairyProps = this.tilemap.addTilesetImage('fairyforest_Props', 'fairyforest_Props');
+        const tsFairyShadows = this.tilemap.addTilesetImage('fairy_Shadown', 'fairy_Shadown');
+        const tsFairyTiles = this.tilemap.addTilesetImage('fairyforest_Tiles', 'fairyforest_Tiles');
+        const tsFairyTree = this.tilemap.addTilesetImage('fairyforest_Tree', 'fairyforest_Tree');
+        const tsFairyLight = this.tilemap.addTilesetImage('Light_fairy', 'Light_fairy');
+        
+        // Desert assets
+        const tsDesertProps = this.tilemap.addTilesetImage('dessert_Props', 'dessert_Props');
+        const tsDesertGround = this.tilemap.addTilesetImage('dessert_Ground', 'dessert_Ground');
+        const tsSand = this.tilemap.addTilesetImage('Sand', 'Sand');
+        
+        // Additional tree tileset
+        const tsTree = this.tilemap.addTilesetImage('Tree', 'fairyforest_Tree');
+        
+        // Create array of all tilesets for layers that might use multiple tilesets
+        // Filter out null values in case some tilesets fail to load
+        const allTilesets = [
+            // Core environment
+            tsWater, tsFloors, tsDungeon, tsWallTiles, tsWallVariations,
+            // Props and objects
+            tsDungeonProps, tsFarm, tsResources, tsRocks, tsShadows, tsVegetation,
+            // Tree models
+            tsSize02, tsSize02Type02, tsSize02Type3, tsSize03, tsSize03Type02, tsSize03Type03,
+            tsSize04, tsSize04Type02, tsSize04Type03, tsSize05, tsSize05Type02, tsSize05Type03,
+            // Building structures
+            tsShadowsBuildings, tsWallsBuildings, tsRoofsBuildings, tsPropsBuildings, tsFloorsBuildings,
+            // Stations
+            tsBonfire, tsWorkbench, tsAlchemy,
+            // Fairy Forest
+            tsFairyProps, tsFairyShadows, tsFairyTiles, tsFairyTree, tsFairyLight,
+            // Desert
+            tsDesertProps, tsDesertGround, tsSand,
+            // Additional tree
+            tsTree
+        ].filter(ts => ts !== null);
+        
+        // Create visible layers in the correct order (bottom to top)
+        // Order based on JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building walls -> Building roofs -> Building props -> Mines -> Bushes overlayer
+        
+        // Base layers (bottom)
+        const groundLayer = this.tilemap.createLayer('Ground', allTilesets);
+        const pathsLayer = this.tilemap.createLayer('Paths', allTilesets);
+        const shadowsLayer = this.tilemap.createLayer('Shadows', allTilesets);
+        const wallsLayer = this.tilemap.createLayer('Walls', allTilesets);
+        const rocksLayer = this.tilemap.createLayer('Rocks', allTilesets);
+        
+        // Tree layers (under and over)
+        const treesUnderlayer = this.tilemap.createLayer('Trees underlayer', allTilesets);
+        const treesOverlayer = this.tilemap.createLayer('Trees overlayer', allTilesets);
+        
+        // Bush layers (under and over)
+        const bushesUnderlayer = this.tilemap.createLayer('Bushes underlayer', allTilesets);
+        
+        // Roofs layer
+        const roofsLayer = this.tilemap.createLayer('Roofs', allTilesets);
+        
+        // Building layers (first instance)
+        const buildingWallsLayer1 = this.tilemap.createLayer('Building walls', allTilesets);
+        const propsDetailsLayer = this.tilemap.createLayer('Props/Details', allTilesets);
+        
+        // Building layers (second instance - skip duplicate name)
+        // const buildingWallsLayer2 = this.tilemap.createLayer('Building walls', allTilesets); // Skip duplicate
+        const buildingRoofsLayer = this.tilemap.createLayer('Building roofs', allTilesets);
+        const buildingPropsLayer = this.tilemap.createLayer('Building props', allTilesets);
+        
+        // Mine layers
+        const minesLayer = this.tilemap.createLayer('Mines', allTilesets);
+        const mineRoofLayer = this.tilemap.createLayer('Mine Roof', allTilesets);
+        
+        // Bush overlayer (top)
+        const bushesOverlayer = this.tilemap.createLayer('Bushes overlayer', allTilesets);
+        
+        // Collision layer is an object layer, not a tile layer
+        // We'll handle collision objects separately in setupCollisionDetection()
+        
+        // Debug: Check which tilesets each layer is actually using
+        console.log('=== LAYER TILESET DEBUG ===');
+        const allLayers = [
+            groundLayer, pathsLayer, shadowsLayer, wallsLayer, rocksLayer,
+            treesUnderlayer, treesOverlayer, bushesUnderlayer, roofsLayer,
+            buildingWallsLayer1, propsDetailsLayer, buildingRoofsLayer, buildingPropsLayer,
+            minesLayer, mineRoofLayer, bushesOverlayer
+        ];
+        const layerNames = [
+            'Ground', 'Paths', 'Shadows', 'Walls', 'Rocks',
+            'Trees underlayer', 'Trees overlayer', 'Bushes underlayer', 'Roofs',
+            'Building walls', 'Props/Details', 'Building roofs', 'Building props',
+            'Mines', 'Mine Roof', 'Bushes overlayer'
+        ];
+        
+        // Set proper depth ordering for correct rendering (lower depth = behind)
+        const depthOrder = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170];
+        
+        allLayers.forEach((layer, index) => {
+            if (layer) {
+                // Set layer visibility and depth
+                layer.setVisible(true);
+                layer.setDepth(depthOrder[index]);
+                console.log(`${layerNames[index]} layer created successfully (depth: ${depthOrder[index]})`);
+            } else {
+                console.warn(`${layerNames[index]} layer failed to create`);
+            }
+        });
+        
+        console.log('=== LAYER CREATION COMPLETE ===');
+        
+        // Get object layers
+        this.objlayer = this.tilemap.getObjectLayer('Item Spawn');
     }
+
 
     // no clankers allowed in this function please
     private createEnemies(): void {
         // Create enemies from tilemap object layer spawn points
-        // Uses Tiled Map Editor object layer 'Player/NPC' with named objects:
+        // Uses Tiled Map Editor object layer 'NPC/Player Spawn' with named objects:
         // - 'boss_spawn': Creates boss-level enemies
         // - 'enemy_spawn': Creates regular scout enemies  
         // - 'enemy_spawn_2': Creates observer-type enemies
         // This allows level designers to place spawns visually in Tiled
-        if (this.objlayer) {
-            this.objlayer.objects.forEach(element => {
+        const enemyObjLayer = this.tilemap.getObjectLayer('NPC/Player Spawn');
+        if (enemyObjLayer) {
+            enemyObjLayer.objects.forEach(element => {
                 let enemy: Enemy;
                 if (element.name === 'boss_spawn') {
                     enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-1').setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim') as Enemy;
@@ -455,7 +624,7 @@ export class World extends Phaser.Scene {
 
     private createNPCs(): void {
         try {
-            const npc1Spawn = this.tilemap.findObject('Player/NPC', obj => obj.name === 'npc_spawn')
+            const npc1Spawn = this.tilemap.findObject('NPC/Player Spawn', obj => obj.name === 'npc_spawn')
             if (!npc1Spawn) {
                 console.error('NPC spawn point not found in tilemap!');
                 return;
@@ -483,35 +652,41 @@ export class World extends Phaser.Scene {
         try {
             console.log('=== CREATING ITEMS ===');
             
-            // Create collectible items from tilemap object layer
+            // Create collectible items from tilemap object layers
             // Uses named objects like 'bush_1' to spawn herb items
             // Positions are set visually in Tiled Map Editor
+            
+            // Check Item Spawn layer
             if (this.objlayer) {
-                console.log('objlayer exists, objects count:', this.objlayer.objects.length);
-                let bushCount = 0;
+                console.log('Item Spawn layer exists, objects count:', this.objlayer.objects.length);
+                console.log('Item Spawn object names:', this.objlayer.objects.map(obj => obj.name));
                 this.objlayer.objects.forEach(element => {
-                    if (element.name === 'bush_1') {
-                        bushCount++;
-                    }
-                    // Create items from tilemap spawn points
                     this.createItemFromSpawnPoint(element);
                 });
-                console.log(`Found ${bushCount} bush_1 spawn points in tileset`);
             } else {
-                console.error('objlayer is null! Cannot create items from tileset.');
+                console.error('Item Spawn layer is null!');
+            }
+            
+            // Check NPC/Player Spawn layer for bush_1 objects
+            const npcSpawnLayer = this.tilemap.getObjectLayer('NPC/Player Spawn');
+            if (npcSpawnLayer) {
+                console.log('NPC/Player Spawn layer exists, objects count:', npcSpawnLayer.objects.length);
+                console.log('NPC/Player Spawn object names:', npcSpawnLayer.objects.map(obj => obj.name));
+                let bushCount = 0;
+                npcSpawnLayer.objects.forEach(element => {
+                    if (element.name === 'bush_1') {
+                        bushCount++;
+                        this.createItemFromSpawnPoint(element);
+                    }
+                });
+                console.log(`Found ${bushCount} bush_1 spawn points in NPC/Player Spawn layer`);
+            } else {
+                console.error('NPC/Player Spawn layer is null!');
             }
 
-            // Add test herbs near Narvark for quest testing (only in development)
-            console.log('NODE_ENV:', process.env.NODE_ENV);
-            if (process.env.NODE_ENV === 'development') {
-                console.log('Creating test items in development mode');
-                this.createTestHerbs();
-            } else {
-                console.log('Not in development mode, skipping test items');
-            }
+            // Test herbs removed - all items now come from tilemap object layers
 
-            // Create weapon spawn point near Narvark
-            this.createWeaponSpawnPoint();
+            // Weapon spawns now handled by tilemap object layers
 
             console.log(`=== ITEM CREATION COMPLETE - Total items: ${this.items.length} ===`);
 
@@ -552,70 +727,8 @@ export class World extends Phaser.Scene {
         console.log(`✓ Herb created successfully. Total items: ${this.items.length}`);
     }
 
-    /**
-     * Create fruit spawn point
-     */
-    private createFruitSpawnPoint(x: number, y: number): void {
-        
-        const fruit = new Item(this, x, y, 'fruit', { 
-            sound: 'collect-herb', 
-            volume: 0.3 
-        });
-        
-        fruit.setScale(0.8).setSize(16, 16).setOffset(0, 0);
-        fruit.setData('respawnTime', 60000); // 1 minute
-        fruit.setData('spawnPoint', { x, y });
-        fruit.setData('isRespawnable', true);
-        
-        this.items.push(fruit);
-    }
 
 
-    /**
-     * Create 5 test herbs near Narvark for quest testing
-     */
-    private createTestHerbs(): void {
-        const narvarkX = 341.818181818182;
-        const narvarkY = 344;
-        
-        // Create 5 herbs in a wider area around Narvark (further away to avoid dialogue interference)
-        const herbPositions = [
-            { x: narvarkX + 80, y: narvarkY - 40 },   // Right and up
-            { x: narvarkX + 100, y: narvarkY },       // Right
-            { x: narvarkX + 80, y: narvarkY + 40 },   // Right and down
-            { x: narvarkX - 80, y: narvarkY - 30 },   // Left and up
-            { x: narvarkX - 80, y: narvarkY + 30 }    // Left and down
-        ];
-
-
-        herbPositions.forEach((pos, index) => {
-            try {
-                console.log(`Creating test herb ${index + 1} at (${pos.x}, ${pos.y})`);
-                // Create test herb using static mysterious herb image
-                const herb = new Item(this, pos.x, pos.y, 'mysterious-herb', { 
-                    sound: 'collect-herb', 
-                    volume: 0.5 
-                });
-                herb.setScale(0.8).setSize(32, 32).setOffset(0, 0); // Proper scale and centered clickable area
-                herb.setVisible(true); // Ensure herb is visible
-                herb.setDepth(100); // Higher depth to ensure visibility
-                
-                // Add quest icon if herb collection quest is active
-                this.addQuestIconToHerb(herb);
-                this.items.push(herb);
-                
-                // Herbs don't bounce - only player-dropped items bounce
-                
-                console.log(`✓ Test herb ${index + 1} created successfully at (${pos.x}, ${pos.y})`);
-                console.log(`  - Herb visible: ${herb.visible}`);
-                console.log(`  - Herb depth: ${herb.depth}`);
-                console.log(`  - Herb scale: ${herb.scaleX}, ${herb.scaleY}`);
-            } catch (error) {
-                console.error(`✗ Failed to create herb ${index + 1}:`, error);
-            }
-        });
-        
-    }
 
     /**
      * Add quest icon to herb if herb collection quest is active
@@ -873,13 +986,19 @@ export class World extends Phaser.Scene {
                     const sparkleTween = item.getData('sparkleTween');
                     const glowTween = item.getData('glowTween');
                     if (sparkleTween) {
+                        sparkleTween.stop();
                         sparkleTween.destroy();
                         item.setData('sparkleTween', null);
                     }
                     if (glowTween) {
+                        glowTween.stop();
                         glowTween.destroy();
                         item.setData('glowTween', null);
                     }
+                    
+                    // Reset item scale and alpha to original values
+                    item.setScale(0.8);
+                    item.setAlpha(1.0);
                     
                     console.log(`Removed quest icon from ${itemType} - quest ${completedQuestId} completed`);
                 }
@@ -973,10 +1092,12 @@ export class World extends Phaser.Scene {
                 const sparkleTween = item.getData('sparkleTween');
                 const glowTween = item.getData('glowTween');
                 if (sparkleTween) {
+                    sparkleTween.stop();
                     sparkleTween.destroy();
                     item.setData('sparkleTween', null);
                 }
                 if (glowTween) {
+                    glowTween.stop();
                     glowTween.destroy();
                     item.setData('glowTween', null);
                 }
@@ -1074,29 +1195,12 @@ export class World extends Phaser.Scene {
                 })
             }
 
-            this.createTreeOfLife()
+            // Tree of Life removed - all trees now come from tilemap object layers
         } catch (error) {
             console.error('Error creating trees:', error);
         }
     }
 
-    private createTreeOfLife(): void {
-        const treeOfLife = new Tree(this, 350, 400, 'tree-2-second')
-        treeOfLife.clearFruit()
-
-        // Make it extra special - larger scale and unique properties
-        treeOfLife.setScale(4); // Much larger than normal trees
-        treeOfLife.setDepth(10); // Ensure it's visible above other objects
-        
-        // Set origin to center for proper positioning
-        treeOfLife.setOrigin(0.5, 0.5);
-
-        // Add nametag to the tree
-        treeOfLife.createNameTag('TREE OF LIFE');
-        
-        // Add the tree to our trees array
-        this.trees.push(treeOfLife);
-    }
 
     /**
      * Create items from tilemap spawn points
@@ -1124,73 +1228,37 @@ export class World extends Phaser.Scene {
             
             this.items.push(herb);
             
-            // Make herb clickable for pickup
-            herb.setInteractive();
-            herb.on('pointerdown', () => {
-                this.collectItem(herb);
-            });
+            // Herb pickup now handled by proximity-based mouse pickup system
             
             // Herbs don't bounce - only player-dropped items bounce
             
             console.log(`Created herb from tilemap at (${element.x}, ${element.y})`);
+        } else if (element.name === 'sword_spawn') {
+            // Create sword from sword_spawn spawn point
+            const sword = new LongSword(this, element.x as number, element.y as number);
+            
+            // Set sword properties - proper scale for world display
+            sword.setScale(0.4).setSize(40, 60).setOffset(-10, -10);
+            sword.setVisible(true);
+            sword.setDepth(1000); // Very high depth to ensure visibility
+            sword.setAlpha(1.0);
+            sword.clearTint();
+            sword.setData('isRespawnable', false); // Sword is not respawnable - one-time pickup
+            
+            // Add unique identifier for debugging
+            sword.setData('swordId', `sword_${Date.now()}`);
+            
+            this.items.push(sword);
+            
+            // Sword pickup now handled by proximity-based mouse pickup system
+            
+            console.log(`Created sword from tilemap at (${element.x}, ${element.y})`);
         }
     }
 
     /**
      * Create a weapon spawn point near Narvark for testing
      */
-    private createWeaponSpawnPoint(): void {
-        this.swordCreationCount++;
-        console.log(`createWeaponSpawnPoint called #${this.swordCreationCount} - items array length: ${this.items.length}`);
-        
-        // Check if sword already exists in scene children (more reliable than items array)
-        const existingSword = this.children.list.find(child => child instanceof LongSword);
-        if (existingSword) {
-            console.log(`Sword already exists in scene, skipping creation`);
-            return;
-        }
-        
-        // Position near Narvark (Narvark is at 341.818181818182, 344)
-        const narvarkX = 341.818181818182;
-        const narvarkY = 344;
-        
-        // Spawn weapon to the right of Narvark, slightly lower
-        const weaponX = narvarkX + 60;
-        const weaponY = narvarkY + 20;
-        
-        // Create the long sword
-        const sword = new LongSword(this, weaponX, weaponY);
-        
-        // Set sword properties - proper scale for world display
-        sword.setScale(0.4).setSize(40, 60).setOffset(-10, -10); // Slightly larger scale
-        sword.setVisible(true); // Ensure sword is visible
-        sword.setDepth(1000); // Very high depth to ensure visibility
-        sword.setAlpha(1.0); // Ensure full opacity
-        sword.clearTint(); // Remove red tint for normal appearance
-        sword.setData('isRespawnable', false); // Sword is not respawnable - one-time pickup
-        
-        // Add unique identifier for debugging
-        sword.setData('swordId', `sword_${Date.now()}`);
-        console.log(`Created sword with ID: ${sword.getData('swordId')} at (${weaponX}, ${weaponY})`);
-        console.log(`Sword visibility: ${sword.visible}, alpha: ${sword.alpha}, scale: ${sword.scaleX}, ${sword.scaleY}`);
-        console.log(`Sword texture: ${sword.texture.key}, exists: ${this.textures.exists('w_longsword')}`);
-        console.log(`Sword position: (${sword.x}, ${sword.y}), depth: ${sword.depth}`);
-        console.log(`Camera position: (${this.cameras.main.x}, ${this.cameras.main.y})`);
-        console.log(`Camera zoom: ${this.cameras.main.zoom}`);
-        
-        // Add to items array
-        this.items.push(sword);
-        
-        // Make sword clickable for pickup
-        sword.setInteractive();
-        sword.on('pointerdown', () => {
-            this.collectItem(sword);
-        });
-        
-        // Sword is ready for pickup (no bounce animation)
-        
-        console.log(`Created weapon spawn point at (${weaponX}, ${weaponY})`);
-    }
 
     private setupMinimap(): void {
         const minimapSize = 175;
@@ -1199,7 +1267,15 @@ export class World extends Phaser.Scene {
  
         // Create circular minimap camera
         this.miniMapCamera = this.cameras.add(minimapX, minimapY, minimapSize, minimapSize);
-        this.miniMapCamera.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels)
+        
+        // Safety check for tilemap dimensions
+        if (this.tilemap && this.tilemap.widthInPixels && this.tilemap.heightInPixels) {
+            this.miniMapCamera.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels);
+            console.log(`✓ Minimap bounds set: ${this.tilemap.widthInPixels}x${this.tilemap.heightInPixels}`);
+        } else {
+            console.error('❌ Tilemap dimensions not available for minimap setup');
+            this.miniMapCamera.setBounds(0, 0, 1600, 1200);
+        }
         this.miniMapCamera.setZoom(0.14);
         this.miniMapCamera.startFollow(this.player, true, 0.1, 0.1);
         
@@ -1367,12 +1443,96 @@ export class World extends Phaser.Scene {
     }
 
     private setupCollisionDetection(): void {
+        // Get collision object layer
+        const collisionLayer = this.tilemap.getObjectLayer('Collision');
+        
+        if (collisionLayer && collisionLayer.objects) {
+            console.log(`✓ Found ${collisionLayer.objects.length} collision objects`);
+            
+            // Create collision bodies for each collision object
+            collisionLayer.objects.forEach((obj, index) => {
+                if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined) {
+                    // Create a collision rectangle
+                    const collisionRect = this.add.rectangle(
+                        obj.x + obj.width / 2, 
+                        obj.y + obj.height / 2, 
+                        obj.width, 
+                        obj.height
+                    );
+                    
+                    // Make it invisible
+                    collisionRect.setVisible(false);
+                    collisionRect.setAlpha(0);
+                    
+                    // Add physics body
+                    this.physics.add.existing(collisionRect, true);
+                    
+                    // Store reference for cleanup
+                    collisionRect.setData('collisionObject', true);
+                    collisionRect.setData('objectIndex', index);
+                    
+                    console.log(`✓ Created collision object ${index} at (${obj.x}, ${obj.y}) size ${obj.width}x${obj.height}`);
+                }
+            });
+            
+            // Set up collision between player and collision objects
+            this.physics.add.collider(this.player, this.children.list.filter(child => 
+                child.getData('collisionObject') === true
+            ));
+            
+            // Set up collision between enemies and collision objects
+            this.enemies.forEach(enemy => {
+                this.physics.add.collider(enemy, this.children.list.filter(child => 
+                    child.getData('collisionObject') === true
+                ));
+            });
+            
+            // Set up collision between NPCs and collision objects
+            this.npcs.forEach(npc => {
+                this.physics.add.collider(npc, this.children.list.filter(child => 
+                    child.getData('collisionObject') === true
+                ));
+            });
+            
+            console.log('✓ Object-based collision system set up');
+        } else {
+            console.warn('❌ Collision layer not found or has no objects');
+        }
+
         // Player collision with trees
         this.physics.add.collider(this.player, this.trees);
+
+        // Player collision with tilemap layers (water, mines, walls, rocks)
+        const tilemapLayers = [
+            this.tilemap.getLayer('Walls'),
+            this.tilemap.getLayer('Rocks'),
+            this.tilemap.getLayer('Mines'),
+            this.tilemap.getLayer('Building walls'),
+            this.tilemap.getLayer('Building roofs'),
+            this.tilemap.getLayer('Building props')
+        ];
+        
+        tilemapLayers.forEach(layer => {
+            if (layer && layer.tilemapLayer) {
+                // Set collision for non-zero tiles
+                layer.tilemapLayer.setCollisionByExclusion([-1, 0]);
+                this.physics.add.collider(this.player, layer.tilemapLayer);
+                console.log(`✓ Player collision with ${layer.name} layer set up`);
+            }
+        });
 
         // Enemy collision with trees
         this.enemies.forEach(enemy => {
             this.physics.add.collider(enemy, this.trees);
+        });
+
+        // Enemy collision with tilemap layers
+        this.enemies.forEach(enemy => {
+            tilemapLayers.forEach(layer => {
+                if (layer && layer.tilemapLayer) {
+                    this.physics.add.collider(enemy, layer.tilemapLayer);
+                }
+            });
         });
 
         // Enemy collision with player
@@ -1385,26 +1545,22 @@ export class World extends Phaser.Scene {
             this.physics.add.collider(npc, this.trees);
         });
 
+        // NPC collision with tilemap layers
+        this.npcs.forEach(npc => {
+            tilemapLayers.forEach(layer => {
+                if (layer && layer.tilemapLayer) {
+                    this.physics.add.collider(npc, layer.tilemapLayer);
+                }
+            });
+        });
+
         // NPC collision with player
         this.npcs.forEach(npc => {
             this.physics.add.collider(npc, this.player);
         });
 
-        // Item collection - click-based interaction (not automatic overlap)
-        this.items.forEach(item => {
-            // Make items clickable only if they're properly added to the scene
-            if (item && item.scene && item.scene.sys) {
-                try {
-                    item.setInteractive();
-                    item.on('pointerdown', () => {
-                        this.collectItem(item);
-                    });
-                } catch (error) {
-                    console.error('Error setting up item interaction:', error);
-                }
-            }
-        });
-
+        // Item collection - now handled by proximity-based mouse pickup system
+        // Old click handlers removed to prevent pickup without proximity check
     }
 
     private loadSaveData(): void {
@@ -1583,7 +1739,8 @@ export class World extends Phaser.Scene {
                 if (respawnData.type === 'mysterious herb') {
                     this.createHerbSpawnPoint(respawnData.spawnPoint.x, respawnData.spawnPoint.y, respawnData.type);
                 } else if (respawnData.type === 'fruit') {
-                    this.createFruitSpawnPoint(respawnData.spawnPoint.x, respawnData.spawnPoint.y);
+                    // Fruit respawn removed - all items now come from tilemap object layers
+                    console.log('Fruit respawn skipped - using tilemap object layers');
                 }
             } catch (error) {
                 console.error('Error respawning item:', error);
@@ -1593,10 +1750,14 @@ export class World extends Phaser.Scene {
 
 
     private setupInteractionControls(): void {
-        // Setup E key for interaction
+        // Setup E key for interaction and proximity pickup
         this.input.keyboard?.on('keydown-E', () => {
+            // Check for NPC interaction first
             if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
                 this.questGiverNPC.interact();
+            } else {
+                // If no NPC interaction, do proximity pickup of all items in range
+                this.handleProximityPickupAll();
             }
         });
 
@@ -1609,13 +1770,18 @@ export class World extends Phaser.Scene {
 
         // Setup mouse click interaction
         this.input.on('pointerdown', (pointer: Phaser.Input.Pointer) => {
+            // Check for NPC interaction first
             if (this.questGiverNPC && this.questGiverNPC.isPlayerInRange() && !this.dialogueUI.isDialogueActive()) {
                 // Check if click is near NPC
                 const distance = Phaser.Math.Distance.Between(pointer.worldX, pointer.worldY, this.questGiverNPC.x, this.questGiverNPC.y);
                 if (distance < 50) {
                     this.questGiverNPC.interact();
+                    return; // Exit early if NPC interaction occurred
                 }
             }
+            
+            // Check for item pickup on hovered item within E key range (80 pixels)
+            this.handleItemPickupOnHover(pointer);
         });
 
         // Setup T key to force reset debug mode (in case time gets stuck)
@@ -1625,6 +1791,73 @@ export class World extends Phaser.Scene {
             }
         });
 
+    }
+
+    /**
+     * Handle E key proximity pickup - grabs all items within range
+     */
+    private handleProximityPickupAll(): void {
+        if (!this.player) return;
+
+        const itemsInRange = this.items.filter(item => 
+            item && item.active && item.visible && this.isItemInPickupRange(item)
+        );
+
+        if (itemsInRange.length > 0) {
+            console.log(`E key proximity pickup: Collecting ${itemsInRange.length} items`);
+            itemsInRange.forEach(item => {
+                this.collectItem(item);
+            });
+        }
+    }
+
+    /**
+     * Handle item pickup when clicking on hovered items within E key range
+     */
+    private handleItemPickupOnHover(pointer: Phaser.Input.Pointer): void {
+        if (!this.player) return;
+
+        // Find the item that the mouse is hovering over
+        const hoveredItem = this.findHoveredItem(pointer.worldX, pointer.worldY);
+        
+        if (hoveredItem && this.isItemInPickupRange(hoveredItem)) {
+            console.log(`Mouse pickup: Collecting ${hoveredItem.getItemType()} at distance ${this.getDistanceToItem(hoveredItem)}`);
+            this.collectItem(hoveredItem);
+        }
+    }
+
+    /**
+     * Find the item that the mouse is hovering over (within a small tolerance)
+     */
+    private findHoveredItem(clickX: number, clickY: number): Item | null {
+        const hoverTolerance = 20; // Small tolerance for hovering detection
+        
+        for (const item of this.items) {
+            if (item && item.active && item.visible) {
+                const distance = Phaser.Math.Distance.Between(clickX, clickY, item.x, item.y);
+                if (distance <= hoverTolerance) {
+                    return item;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    /**
+     * Check if an item is within pickup range (same as E key range - 80 pixels)
+     */
+    private isItemInPickupRange(item: Item): boolean {
+        if (!this.player) return false;
+        return this.getDistanceToItem(item) <= 80; // Same range as NPC E key interaction
+    }
+
+    /**
+     * Get distance from player to an item
+     */
+    private getDistanceToItem(item: Item): number {
+        if (!this.player) return Infinity;
+        return Phaser.Math.Distance.Between(this.player.x, this.player.y, item.x, item.y);
     }
 
     /**

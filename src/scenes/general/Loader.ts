@@ -42,7 +42,146 @@ export class Loader extends Phaser.Scene {
         // TILEMAP AND WORLD ASSETS
         // =====================================================================
         this.load.image('base-tileset', '/tilesets/base_tileset.png');
-        this.load.tilemapTiledJSON('tilemapJSON', '/tilesets/main-tileset-1.json');
+        
+        // =====================================================================
+        // COMPREHENSIVE TILESET LOADING FOR AETHERON.TMJ
+        // =====================================================================
+        // All tilesets referenced in aetheron.tmj with verified file paths
+        
+        // Free Pack 2.0.4 - Environment Tilesets
+        this.load.image('Water_tiles', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Tilesets/Water_tiles.png');
+        this.load.image('Floors_Tiles', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Tilesets/Floors_Tiles.png');
+        this.load.image('Dungeon_Tiles', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Tilesets/Dungeon_Tiles.png');
+        this.load.image('Wall_Tiles', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Tilesets/Wall_Tiles.png');
+        this.load.image('Wall_Variations', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Tilesets/Wall_Variations.png');
+        
+        // Free Pack 2.0.4 - Environment Props
+        this.load.image('Dungeon_Props', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Dungeon_Props.png');
+        this.load.image('Farm', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Farm.png');
+        this.load.image('Resources', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Resources.png');
+        this.load.image('Rocks', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Rocks.png');
+        this.load.image('Shadows', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Shadows.png');
+        this.load.image('Vegetation', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Vegetation.png');
+        
+        // Free Pack 2.0.4 - Tree Models (all sizes)
+        this.load.image('Tree_Model_01_Size_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_02.png');
+        this.load.image('Tree_Model_02_Size_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_02.png');
+        this.load.image('Tree_Model_03_Size_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_02.png');
+        this.load.image('Tree_Model_01_Size_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_03.png');
+        this.load.image('Tree_Model_02_Size_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_03.png');
+        this.load.image('Tree_Model_03_Size_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_03.png');
+        this.load.image('Tree_Model_01_Size_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_04.png');
+        this.load.image('Tree_Model_02_Size_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_04.png');
+        this.load.image('Tree_Model_03_Size_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_04.png');
+        this.load.image('Tree_Model_01_Size_05', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_01/Size_05.png');
+        this.load.image('Tree_Model_02_Size_05', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_02/Size_05.png');
+        this.load.image('Tree_Model_03_Size_05', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Trees/Model_03/Size_05.png');
+        
+        // Free Pack 2.0.4 - Structures
+        this.load.image('Shadows_Buildings', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Shadows.png');
+        this.load.image('Walls_Buildings', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Walls.png');
+        this.load.image('Roofs_Buildings', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Roofs.png');
+        this.load.image('Props_Buildings', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Props.png');
+        this.load.image('Floors_Buildings', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Buildings/Floors.png');
+        this.load.image('Bonfire', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire.png');
+        this.load.image('Workbench', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Workbench/Workbench.png');
+        this.load.image('Alchemy_Table_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Alchemy/Alchemy_Table_01-Sheet.png');
+        
+        // Fairy Forest 1.7 - Assets
+        this.load.image('fairyforest_Props', '/assetpacks/Pixel Crawler - Fairy Forest 1.7/Assets/Props.png');
+        this.load.image('fairy_Shadown', '/assetpacks/Pixel Crawler - Fairy Forest 1.7/Assets/Shadown.png');
+        this.load.image('fairyforest_Tiles', '/assetpacks/Pixel Crawler - Fairy Forest 1.7/Assets/Tiles.png');
+        this.load.image('fairyforest_Tree', '/assetpacks/Pixel Crawler - Fairy Forest 1.7/Assets/Tree.png');
+        this.load.image('Light_fairy', '/assetpacks/Pixel Crawler - Fairy Forest 1.7/Assets/Light.png');
+        
+        // Desert - Assets
+        this.load.image('dessert_Props', '/assetpacks/Pixel Crawler - Desert/Assets/Props.png');
+        this.load.image('dessert_Ground', '/assetpacks/Pixel Crawler - Desert/Assets/Ground.png');
+        this.load.image('Sand', '/assetpacks/Pixel Crawler - Desert/Assets/Sand.png');
+        
+        // Additional Free Pack 2.0.4 - Static Props (missing from original load)
+        this.load.image('Esoteric', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Esoteric.png');
+        this.load.image('Furniture', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Furniture.png');
+        this.load.image('Meat', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Meat.png');
+        this.load.image('Pan', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Pan.png');
+        this.load.image('Tools', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Static/Tools.png');
+        
+        // Additional Free Pack 2.0.4 - Stations (missing from original load)
+        this.load.image('Anvil', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil.png');
+        this.load.image('Furnace', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Furnace.png');
+        this.load.image('Cooking_Station', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooking Station.png');
+        this.load.image('Sawmill_Base', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Sawmill/Base.png');
+        this.load.image('Sawmill_Level_1', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Sawmill/Level_1.png');
+        
+        // Additional Free Pack 2.0.4 - Animated Props (missing from original load)
+        this.load.image('Pan_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Animated/Pan_01-Sheet.png');
+        this.load.image('Pan_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Animated/Pan_02-Sheet.png');
+        this.load.image('Pan_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Animated/Pan_03-Sheet.png');
+        this.load.image('Pan_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Animated/Pan_04-Sheet.png');
+        this.load.image('Pan_05', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Props/Animated/Pan_05-Sheet.png');
+        
+        // Additional Free Pack 2.0.4 - Cooking Station Components (missing from original load)
+        this.load.image('Butchery_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Butchery/Butchery_01-Sheet.png');
+        this.load.image('Butchery_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Butchery/Butchery_02.png');
+        this.load.image('Butchery_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Butchery/Butchery_03.png');
+        this.load.image('Butchery_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Butchery/Butchery_04.png');
+        this.load.image('Cooker_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooker/Cooker_01.png');
+        this.load.image('Cooker_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooker/Cooker_02.png');
+        this.load.image('Cooker_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooker/Cooker_03-Sheet.png');
+        this.load.image('Cooker_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Cooker/Cooker_04-Sheet.png');
+        this.load.image('Grill_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Grill/Grill_01-Sheet.png');
+        this.load.image('Grill_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Grill/Grill_02-Sheet.png');
+        this.load.image('Grill_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Grill/Grill_03-Sheet.png');
+        this.load.image('Grill_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Cooking Station/Grill/Grill_04-Sheet.png');
+        
+        // Additional Free Pack 2.0.4 - Furnace Components (missing from original load)
+        this.load.image('Bricks_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Bricks_01-Sheet.png');
+        this.load.image('Bricks_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Bricks_02-Sheet.png');
+        this.load.image('Bricks_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Bricks_03-Sheet.png');
+        this.load.image('Iron_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Iron_01-Sheet.png');
+        this.load.image('Iron_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Iron_02-Sheet.png');
+        this.load.image('Iron_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Iron_03-Sheet.png');
+        this.load.image('Stone_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Stone_01-Sheet.png');
+        this.load.image('Stone_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Stone_02-Sheet.png');
+        this.load.image('Stone_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Furnace/Stone_03-Sheet.png');
+        
+        // Additional Free Pack 2.0.4 - Sawmill Components (missing from original load)
+        this.load.image('Sawmill_Level_2', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Sawmill/Level_2-Sheet.png');
+        this.load.image('Sawmill_Level_3', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Sawmill/Level_3-Sheet.png');
+        
+        // Additional Free Pack 2.0.4 - Bonfire Components (missing from original load)
+        this.load.image('Bonfire_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_01-Sheet.png');
+        this.load.image('Bonfire_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_02-Sheet.png');
+        this.load.image('Bonfire_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_03-Sheet.png');
+        this.load.image('Bonfire_04', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_04-Sheet.png');
+        this.load.image('Bonfire_05', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_05-Sheet.png');
+        this.load.image('Bonfire_06', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_06-Sheet.png');
+        this.load.image('Bonfire_07', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_07-Sheet.png');
+        this.load.image('Bonfire_08', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_08-Sheet.png');
+        this.load.image('Bonfire_09', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_09-Sheet.png');
+        this.load.image('Bonfire_10', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Bonfire_10-Sheet.png');
+        this.load.image('Fire_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Fire_01-Sheet.png');
+        this.load.image('Fire_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Fire_02-Sheet.png');
+        this.load.image('Smoke', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Bonfire/Smoke-Sheet.png');
+        
+        // Additional Free Pack 2.0.4 - Alchemy Components (missing from original load)
+        this.load.image('Alchemy_Table_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Alchemy/Alchemy_Table_02-Sheet.png');
+        this.load.image('Alchemy_Table_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Alchemy/Alchemy_Table_03-Sheet.png');
+        
+        // Additional Free Pack 2.0.4 - Anvil Components (missing from original load)
+        this.load.image('Anvil_01', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil_01-Sheet.png');
+        this.load.image('Anvil_02', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil_02-Sheet.png');
+        this.load.image('Anvil_03', '/assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Structures/Stations/Anvil/Anvil_03-Sheet.png');
+        
+        // Additional Asset Packs - Cave
+        this.load.image('Cave_Props', '/assetpacks/Pixel Crawler - Cave/Assets/Props.png');
+        this.load.image('Cave_Tiles', '/assetpacks/Pixel Crawler - Cave/Assets/Tiles.png');
+        
+        // Additional Asset Packs - Hideout
+        this.load.image('Hideout_Light', '/assetpacks/Pixel Crawler - Hideout 1.0/Pixel Crawler - Hideout/Assets/Light.png');
+        this.load.image('Hideout_Tiles', '/assetpacks/Pixel Crawler - Hideout 1.0/Pixel Crawler - Hideout/Assets/Tiles.png');
+        
+        this.load.tilemapTiledJSON('tilemapJSON', '/tilesets/aetheron.tmj');
 
         // =====================================================================
         // ANIMATED SPRITE SHEETS
@@ -508,6 +647,13 @@ export class Loader extends Phaser.Scene {
             frameRate: 5,
             repeat: -1
         })
+
+        // =====================================================================
+        // NPC ANIMATIONS
+        // =====================================================================
+        // Create simple idle animation for NPCs (static image)
+        // Since npc-1 is a static image, we don't need to create an animation
+        // The NPC will just display the static image
         
         // Start the main menu scene with loaded save data
         this.scene.start('menuScene', { qobj: this.quest, inv: this.existing_inv });

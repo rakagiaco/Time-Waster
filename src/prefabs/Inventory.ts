@@ -36,7 +36,7 @@ export class Inventory {
         
         // Second pass: Use empty slots for remaining items
         for (let i = 0; i < this.maxSlots; i++) {
-            const [slotItemType, slotCount] = this.slots[i];
+            const [slotItemType] = this.slots[i];
             
             if (slotItemType === 'empty') {
                 // Found empty slot
@@ -64,7 +64,7 @@ export class Inventory {
         
         // Second pass: Check empty slots for remaining items
         for (let i = 0; i < this.maxSlots; i++) {
-            const [slotItemType, slotCount] = this.slots[i];
+            const [slotItemType] = this.slots[i];
             if (slotItemType === 'empty') {
                 remaining -= Math.min(remaining, this.maxStackSize);
                 if (remaining <= 0) return true;
