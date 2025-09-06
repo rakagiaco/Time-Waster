@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { SaveSystem } from '../../systems/SaveSystem';
 
 export class GameOver extends Phaser.Scene {
 
@@ -22,8 +23,8 @@ export class GameOver extends Phaser.Scene {
             .setOrigin(0.5)
             .setInteractive({ useHandCursor: true })
             .on('pointerdown', () => {
-                window.localStorage.removeItem('existing_inv');
-                window.localStorage.removeItem('existing_quest');
+                // Clear ALL localStorage keys to prevent interference
+                SaveSystem.clearAllGameData();
                 this.sound.play('click', { volume: 0.5 });
                 this.scene.start('worldScene', { inv: undefined, qobj: undefined });
             });

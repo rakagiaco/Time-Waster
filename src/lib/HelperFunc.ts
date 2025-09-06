@@ -354,23 +354,33 @@ export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.K
 
     // Update directional animations based on primary movement axis
     if (vx !== 0 || vy !== 0) {
+        let newDirection = '';
+        
         if (Math.abs(vy) > Math.abs(vx)) {
             // Vertical movement takes priority
             if (vy < 0) {
                 player.anims.play('player-walk-up', true);
-                player.lastDirection = 'up';
+                newDirection = 'up';
             } else {
                 player.anims.play('player-walk-down', true);
-                player.lastDirection = 'down';
+                newDirection = 'down';
             }
         } else {
             // Horizontal movement takes priority
             if (vx < 0) {
                 player.anims.play('player-walk-left', true);
-                player.lastDirection = 'left';
+                newDirection = 'left';
             } else {
                 player.anims.play('player-walk-right', true);
-                player.lastDirection = 'right';
+                newDirection = 'right';
+            }
+        }
+        
+        // Only update weapon position if direction actually changed
+        if (player.lastDirection !== newDirection) {
+            player.lastDirection = newDirection;
+            if (player.updateWeaponPosition) {
+                player.updateWeaponPosition();
             }
         }
     }

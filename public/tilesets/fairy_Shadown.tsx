@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<tileset version="1.10" tiledversion="1.11.2" name="fairy_Shadown" tilewidth="16" tileheight="16" tilecount="40" columns="10">
+ <image source="../assetpacks/Pixel Crawler - Fairy Forest 1.7/Assets/Shadown.png" width="160" height="64"/>
+</tileset>

@@ -140,7 +140,7 @@ class EnemySearchingState extends State {
             const dy = enemy.lastKnownPlayerPosition.y - enemy.y;
             const distance = Math.sqrt(dx * dx + dy * dy);
 
-            if (distance > 10) {
+            if (distance > 10 && enemy.body) {
                 const vx = (dx / distance) * (enemy.getVelocity() * 0.5); // Slower search speed
                 const vy = (dy / distance) * (enemy.getVelocity() * 0.5);
                 enemy.setVelocity(vx, vy);
@@ -292,7 +292,7 @@ class EnemyRevivingState extends State {
 export class Enemy extends Entity {
     public animsFSM!: StateMachine;
     private player: any; // TODO: Replace with proper Player type when available
-    public patrolDirection: number = 1;
+    public patrolDirection: number = 0; // Now stores angle in radians
     public patrolTimer: number = 0;
     private attackCooldown: boolean = false;
     public looted: boolean = false;
@@ -384,6 +384,9 @@ export class Enemy extends Entity {
             ['horizontal', 'circular', 'random', 'stationary'];
         this.patrolPattern = patterns[Math.floor(Math.random() * patterns.length)];
         
+        // Initialize patrol direction based on pattern
+        this.initializePatrolDirection();
+        
         // Set patrol radius based on enemy type
         if (this.isBoss) {
             this.patrolRadius = 80;
@@ -394,6 +397,23 @@ export class Enemy extends Entity {
         }
         
         // console.log(`Enemy ${this.entity_type} using ${this.patrolPattern} patrol pattern with radius ${this.patrolRadius}`);
+    }
+
+    private initializePatrolDirection(): void {
+        switch (this.patrolPattern) {
+            case 'horizontal':
+                this.patrolDirection = Math.random() > 0.5 ? 0 : Math.PI; // Left or right
+                break;
+            case 'circular':
+                this.patrolDirection = 0; // Will be calculated dynamically
+                break;
+            case 'random':
+                this.patrolDirection = Math.random() * Math.PI * 2; // Random angle
+                break;
+            case 'stationary':
+                this.patrolDirection = 0; // Not used for stationary
+                break;
+        }
     }
 
     private setupStateMachine(): void {
@@ -635,13 +655,15 @@ export class Enemy extends Entity {
         }
 
         // Move towards the waypoint
-        const angle = Phaser.Math.Angle.Between(this.x, this.y, waypoint.x, waypoint.y);
-        const velocity = this.VELOCITY;
+        if (this.body) {
+            const angle = Phaser.Math.Angle.Between(this.x, this.y, waypoint.x, waypoint.y);
+            const velocity = this.VELOCITY;
 
-        this.setVelocity(
-            Math.cos(angle) * velocity,
-            Math.sin(angle) * velocity
-        );
+            this.setVelocity(
+                Math.cos(angle) * velocity,
+                Math.sin(angle) * velocity
+            );
+        }
 
         return true;
     }
@@ -762,21 +784,26 @@ export class Enemy extends Entity {
 
     private patrolHorizontal(): void {
         // Traditional horizontal patrol with direction changes
-        if (this.patrolTimer > 2000 + Math.random() * 1000) {
-            this.patrolDirection *= -1;
+        if (this.patrolTimer > 4000 + Math.random() * 2000) { // 4-6 seconds between direction changes
+            // Toggle between left (π) and right (0) directions
+            this.patrolDirection = this.patrolDirection === 0 ? Math.PI : 0;
             this.patrolTimer = 0;
 
             // Occasionally pause during patrol
-            if (Math.random() < 0.3) {
-                this.setVelocity(0, 0);
+            if (Math.random() < 0.2) { // Reduced pause chance
+                if (this.body) {
+                    this.setVelocity(0, 0);
+                }
                 return;
             }
         }
 
-        const baseVelocity = this.VELOCITY * 0.7 * this.patrolDirection;
+        const baseVelocity = this.VELOCITY * 0.7 * Math.cos(this.patrolDirection);
         const verticalVariation = Math.sin(this.patrolTimer * 0.0005) * 5;
         
-        this.setVelocity(baseVelocity, verticalVariation);
+        if (this.body) {
+            this.setVelocity(baseVelocity, verticalVariation);
+        }
     }
 
     private patrolCircular(): void {
@@ -791,33 +818,41 @@ export class Enemy extends Entity {
         const dy = targetY - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
         
-        if (distance > 5) {
-            const vx = (dx / distance) * this.VELOCITY * 0.5;
-            const vy = (dy / distance) * this.VELOCITY * 0.5;
-            this.setVelocity(vx, vy);
-        } else {
-            this.setVelocity(0, 0);
+        if (this.body) {
+            if (distance > 5) {
+                const vx = (dx / distance) * this.VELOCITY * 0.5;
+                const vy = (dy / distance) * this.VELOCITY * 0.5;
+                this.setVelocity(vx, vy);
+            } else {
+                this.setVelocity(0, 0);
+            }
         }
     }
 
     private patrolRandom(): void {
         // Random movement with occasional direction changes
-        if (this.patrolTimer > 1500 + Math.random() * 1000) {
-            this.patrolDirection = Math.random() > 0.5 ? 1 : -1;
+        if (this.patrolTimer > 3000 + Math.random() * 2000) { // 3-5 seconds between direction changes
+            // Pick a new random direction and stick with it
+            const angle = Math.random() * Math.PI * 2; // Random angle 0-2π
+            this.patrolDirection = angle; // Store the angle instead of just 1/-1
             this.patrolTimer = 0;
             
             // Sometimes pause
-            if (Math.random() < 0.4) {
-                this.setVelocity(0, 0);
+            if (Math.random() < 0.3) { // Reduced pause chance
+                if (this.body) {
+                    this.setVelocity(0, 0);
+                }
                 return;
             }
         }
 
-        // Random movement in both directions
-        const vx = (Math.random() - 0.5) * this.VELOCITY * 0.6;
-        const vy = (Math.random() - 0.5) * this.VELOCITY * 0.6;
-        
-        this.setVelocity(vx, vy);
+        // Move in the chosen direction (not random every frame)
+        if (this.body) {
+            const vx = Math.cos(this.patrolDirection) * this.VELOCITY * 0.6;
+            const vy = Math.sin(this.patrolDirection) * this.VELOCITY * 0.6;
+            
+            this.setVelocity(vx, vy);
+        }
     }
 
     private patrolStationary(): void {
@@ -827,26 +862,28 @@ export class Enemy extends Entity {
             this.patrolCenter.x, this.patrolCenter.y
         );
         
-        // If too far from center, move back
-        if (distanceToCenter > this.patrolRadius) {
-            const dx = this.patrolCenter.x - this.x;
-            const dy = this.patrolCenter.y - this.y;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            
-            if (distance > 0) {
-                const vx = (dx / distance) * this.VELOCITY * 0.3;
-                const vy = (dy / distance) * this.VELOCITY * 0.3;
-                this.setVelocity(vx, vy);
-            }
-        } else {
-            // Small random movements to stay active
-            if (this.patrolTimer > 3000) {
-                const vx = (Math.random() - 0.5) * this.VELOCITY * 0.2;
-                const vy = (Math.random() - 0.5) * this.VELOCITY * 0.2;
-                this.setVelocity(vx, vy);
-                this.patrolTimer = 0;
+        if (this.body) {
+            // If too far from center, move back
+            if (distanceToCenter > this.patrolRadius) {
+                const dx = this.patrolCenter.x - this.x;
+                const dy = this.patrolCenter.y - this.y;
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance > 0) {
+                    const vx = (dx / distance) * this.VELOCITY * 0.3;
+                    const vy = (dy / distance) * this.VELOCITY * 0.3;
+                    this.setVelocity(vx, vy);
+                }
             } else {
-                this.setVelocity(0, 0);
+                // Small random movements to stay active
+                if (this.patrolTimer > 3000) {
+                    const vx = (Math.random() - 0.5) * this.VELOCITY * 0.2;
+                    const vy = (Math.random() - 0.5) * this.VELOCITY * 0.2;
+                    this.setVelocity(vx, vy);
+                    this.patrolTimer = 0;
+                } else {
+                    this.setVelocity(0, 0);
+                }
             }
         }
     }
@@ -880,7 +917,7 @@ export class Enemy extends Entity {
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 0) {
+        if (distance > 0 && this.body) {
             // Enhanced pursuit with slight prediction
             const predictionFactor = 0.1; // Predict player movement
             const predictedX = this.player.x + (this.player.body?.velocity.x || 0) * predictionFactor;
@@ -918,7 +955,7 @@ export class Enemy extends Entity {
         const dy = this.player.y - this.y;
         const distance = Math.sqrt(dx * dx + dy * dy);
 
-        if (distance > 0) {
+        if (distance > 0 && this.body) {
             // Flanking: approach from the side
             const angle = Math.atan2(dy, dx);
             const flankAngle = angle + (this.flankDirection * Math.PI / 2); // 90 degrees to the side

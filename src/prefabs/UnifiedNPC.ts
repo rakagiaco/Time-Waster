@@ -556,10 +556,12 @@ export class UnifiedNPC extends Entity {
         if (!this.currentQuest || !this.player) return false;
         
         // Check if quest is ready for completion in the quest system
-        const questSystem = this.scene.data.get('questSystem');
-        if (questSystem) {
-            const isReady = questSystem.isQuestReadyForCompletion(this.currentQuest.id);
-            return isReady;
+        if (this.scene && this.scene.data) {
+            const questSystem = this.scene.data.get('questSystem');
+            if (questSystem) {
+                const isReady = questSystem.isQuestReadyForCompletion(this.currentQuest.id);
+                return isReady;
+            }
         }
         
         // Fallback to checking inventory

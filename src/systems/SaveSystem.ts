@@ -227,6 +227,21 @@ export class SaveSystem {
         return this.deleteSaveData();
     }
 
+    public static clearAllGameData(): boolean {
+        try {
+            console.log('Clearing ALL game data from localStorage...');
+            localStorage.removeItem(this.SAVE_KEY);
+            localStorage.removeItem('existing_inv');
+            localStorage.removeItem('existing_quest');
+            localStorage.removeItem('quest_system_state');
+            console.log('All game data cleared from localStorage');
+            return true;
+        } catch (error) {
+            console.error('Failed to clear all game data:', error);
+            return false;
+        }
+    }
+
     public static getSaveInfo(): { date: number; playTime: number; version: string } | null {
         try {
             const saveDataString = localStorage.getItem(this.SAVE_KEY);
@@ -362,6 +377,36 @@ export class SaveSystem {
                     // Skip swords as they should not be saved/loaded
                     if (itemData.itemType && itemData.itemType !== 'undefined' && itemData.itemType !== 'w_longsword') {
                         const item = new Item(scene, itemData.x, itemData.y, itemData.itemType);
+                        
+                        // Restore respawn data for herbs to match new game behavior
+                        if (itemData.itemType === 'mysterious herb') {
+                            item.setData('respawnTime', 30000); // 30 seconds
+                            item.setData('originalType', 'mysterious herb');
+                            item.setData('spawnPoint', { x: itemData.x, y: itemData.y });
+                            item.setData('isRespawnable', true);
+                            
+                            // Set proper herb properties to match new game herbs
+                            item.setScale(0.8).setSize(32, 32).setOffset(0, 0);
+                            item.setVisible(true);
+                            item.setDepth(100);
+                            
+                            // Add quest icon if herb collection quest is active (with safety check)
+                            if (scene.addQuestIconToHerb && scene.questSystem) {
+                                try {
+                                    // Use a delayed call to ensure quest system is fully ready
+                                    scene.time.delayedCall(50, () => {
+                                        try {
+                                            scene.addQuestIconToHerb(item);
+                                        } catch (error) {
+                                            console.warn('Failed to add quest icon to herb during save loading:', error);
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.warn('Failed to schedule quest icon addition to herb:', error);
+                                }
+                            }
+                        }
+                        
                         scene.items.push(item);
                     } else if (itemData.itemType === 'w_longsword') {
                         console.log(`Skipping sword from save data - swords are not saved/loaded`);

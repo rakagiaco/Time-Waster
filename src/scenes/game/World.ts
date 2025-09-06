@@ -64,6 +64,8 @@ export class World extends Phaser.Scene {
 
     constructor() {
         super('worldScene');
+        // Initialize pause menu as undefined to ensure clean state
+        this.pauseMenu = undefined as any;
     }
 
     create(data: WorldData): void {
@@ -132,7 +134,8 @@ export class World extends Phaser.Scene {
 
                 if (this.treeLightEmission) {
                     if (data.isDay) {
-                        this.treeLightEmission.deactivate();
+                     
+                       this.treeLightEmission.deactivate();
                     } else {
                         this.treeLightEmission.activate();
                     }
@@ -205,15 +208,26 @@ export class World extends Phaser.Scene {
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
             
             // Add quest icons to existing items now that quest system is initialized
-            this.addQuestIconsToExistingItems();
+            // Use a delayed call to ensure all systems are ready
+            this.time.delayedCall(50, () => {
+                try {
+                    this.addQuestIconsToExistingItems();
+                } catch (error) {
+                    console.error('Error adding quest icons to existing items:', error);
+                }
+            });
             
             // Listen for quest completion events to give rewards
             this.events.on('questCompleted', this.handleQuestCompletion, this);
             
             // Listen for quest start events to add quest icons to existing items
             this.events.on('startQuest', () => {
-                // Add quest icons to existing items when a quest starts
-                this.addQuestIconsToExistingItems();
+                try {
+                    // Add quest icons to existing items when a quest starts
+                    this.addQuestIconsToExistingItems();
+                } catch (error) {
+                    console.error('Error adding quest icons on quest start:', error);
+                }
             });
 
             // Create Narvark the quest giver NPC
@@ -253,10 +267,21 @@ export class World extends Phaser.Scene {
             this.setupCollisionDetection();
             // console.log('Collision detection setup complete');
 
-            // Setup Pause Menu
-            // console.log('Setting up pause menu...');
-            this.pauseMenu = new PauseMenu(this);
-            // console.log('Pause menu setup complete');
+            // Setup Pause Menu with a delay to ensure scene is fully ready
+            this.time.delayedCall(100, () => {
+                try {
+                    // console.log('Setting up pause menu...');
+                    // Clean up any existing pause menu first
+                    if (this.pauseMenu) {
+                        this.pauseMenu.destroy();
+                    }
+                    // Always create a fresh pause menu instance
+                    this.pauseMenu = new PauseMenu(this);
+                    console.log('Pause menu created successfully');
+                } catch (error) {
+                    console.error('Error creating pause menu:', error);
+                }
+            });
 
             // Setup quest UI
             this.questUI = new QuestUI(this);
@@ -269,21 +294,27 @@ export class World extends Phaser.Scene {
                 
                 // Restore QuestSystem state and active quests in QuestUI after save data is loaded
                 this.time.delayedCall(100, () => {
-                    // console.log('World: Restoring QuestSystem state...');
-                    
-                    // Restore QuestSystem state
-                    const savedQuestState = localStorage.getItem('quest_system_state');
-                    if (savedQuestState) {
-                        try {
-                            const questState = JSON.parse(savedQuestState);
-                            this.questSystem.restoreQuestState(questState);
-                        } catch (error) {
-                            console.error('World: Failed to parse saved quest state:', error);
+                    try {
+                        // console.log('World: Restoring QuestSystem state...');
+                        
+                        // Restore QuestSystem state
+                        const savedQuestState = localStorage.getItem('quest_system_state');
+                        if (savedQuestState) {
+                            try {
+                                const questState = JSON.parse(savedQuestState);
+                                this.questSystem.restoreQuestState(questState);
+                            } catch (error) {
+                                console.error('World: Failed to parse saved quest state:', error);
+                            }
                         }
+                        
+                        // console.log('World: Restoring active quests in QuestUI...');
+                        if (this.questUI) {
+                            this.questUI.restoreActiveQuests();
+                        }
+                    } catch (error) {
+                        console.error('Error restoring quest system state:', error);
                     }
-                    
-                    // console.log('World: Restoring active quests in QuestUI...');
-                    this.questUI.restoreActiveQuests();
                 });
             }
 
@@ -310,8 +341,8 @@ export class World extends Phaser.Scene {
             }
         }
 
-        // Update player (only if it exists)
-        if (this.player) {
+        // Update player (only if it exists and is active)
+        if (this.player && this.player.active) {
             try {
                 this.player.update();
             } catch (error) {
@@ -319,10 +350,12 @@ export class World extends Phaser.Scene {
             }
         }
 
-        // Update enemies (with safety checks)
+        // Update enemies (with safety checks for physics body and active state)
         this.enemies.forEach(enemy => {
             try {
-                enemy.update();
+                if (enemy && enemy.active && enemy.body) {
+                    enemy.update();
+                }
             } catch (error) {
                 console.error('Error updating enemy:', error);
             }
@@ -331,16 +364,20 @@ export class World extends Phaser.Scene {
         // Update NPCs (with safety checks)
         this.npcs.forEach(npc => {
             try {
-                npc.update();
+                if (npc && npc.active) {
+                    npc.update();
+                }
             } catch (error) {
                 console.error('Error updating NPC:', error);
             }
         });
 
-        // Update trees (with safety checks)
+        // Update trees (with safety checks for game property and active state)
         this.trees.forEach(tree => {
             try {
-                tree.update();
+                if (tree && tree.active && tree.scene && tree.scene.game) {
+                    tree.update();
+                }
             } catch (error) {
                 console.error('Error updating tree:', error);
             }
@@ -359,9 +396,6 @@ export class World extends Phaser.Scene {
         if (this.lantern) {
             this.lantern.update();
         }
-
-        // Update NPCs
-        this.npcs.forEach(npc => npc.update());
 
         // Update Dialogue UI
         if (this.dialogueUI) {
@@ -594,75 +628,114 @@ export class World extends Phaser.Scene {
      * Add quest icons to existing items after quest system is initialized
      */
     private addQuestIconsToExistingItems(): void {
-        if (!this.questSystem) {
-            return;
-        }
-
-        // Add quest icons to existing herbs
-        this.items.forEach((item) => {
-            if (item && item.active && item.getItemType() === 'mysterious herb') {
-                this.addQuestIconToItem(item, 'mysterious herb');
+        try {
+            if (!this.questSystem) {
+                console.warn('Quest system not available for adding quest icons');
+                return;
             }
-        });
 
-        // Add quest icons to existing enemies
-        this.enemies.forEach(enemy => {
-            if (enemy && enemy.active) {
-                // Determine enemy type based on texture or other properties
-                let enemyType = 'Nepian Scout'; // Default
-                if (enemy.texture.key === 'enemy-1') {
-                    enemyType = 'Nepian Scout';
-                } else if (enemy.texture.key === 'enemy-2') {
-                    enemyType = 'Nepian Observer';
-                } else if (enemy.texture.key === 'boss-1') {
-                    enemyType = 'Electro Lord';
+            // Add quest icons to existing herbs
+            this.items.forEach((item) => {
+                try {
+                    if (item && item.active && item.getItemType() === 'mysterious herb') {
+                        this.addQuestIconToItem(item, 'mysterious herb');
+                    }
+                } catch (error) {
+                    console.error('Error adding quest icon to herb:', error);
                 }
-                this.addQuestIconToEnemy(enemy, enemyType);
-            }
-        });
+            });
+
+            // Add quest icons to existing enemies
+            this.enemies.forEach(enemy => {
+                try {
+                    if (enemy && enemy.active) {
+                        // Determine enemy type based on texture or other properties
+                        let enemyType = 'Nepian Scout'; // Default
+                        if (enemy.texture.key === 'enemy-1') {
+                            enemyType = 'Nepian Scout';
+                        } else if (enemy.texture.key === 'enemy-2') {
+                            enemyType = 'Nepian Observer';
+                        } else if (enemy.texture.key === 'boss-1') {
+                            enemyType = 'Electro Lord';
+                        }
+                        this.addQuestIconToEnemy(enemy, enemyType);
+                    }
+                } catch (error) {
+                    console.error('Error adding quest icon to enemy:', error);
+                }
+            });
+        } catch (error) {
+            console.error('Error in addQuestIconsToExistingItems:', error);
+        }
     }
 
     /**
      * Add quest icon to any item if a relevant quest is active
      */
     private addQuestIconToItem(item: Item, itemType: string): void {
-        if (!this.questSystem) {
-            // Quest system not yet initialized, skip quest icon for now
-            return;
-        }
-
-        const activeQuests = this.questSystem.getActiveQuests();
-        
-        // Check each active quest to see if this item type is required
-        for (const [questId, questProgress] of activeQuests) {
-            if (questProgress.isCompleted) continue;
-            
-            const questData = this.cache.json.get(`quest-${questId}`);
-            if (!questData || !questData.questdata) continue;
-            
-            const questRequirement = questData.questdata.type.toLowerCase();
-            const itemTypeLower = itemType.toLowerCase();
-            
-            // Check if this item matches the quest requirement
-            if (questRequirement === itemTypeLower || 
-                (questRequirement.includes('nepian') && itemTypeLower.includes('nepian')) ||
-                (questRequirement.includes('heart') && itemTypeLower.includes('heart'))) {
-                
-                // Add quest icon with sparkle animation
-                const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon');
-                questIcon.setScale(1.0); // Larger, more visible quest icon
-                questIcon.setDepth(150); // Above the item
-                questIcon.anims.play('quest-icon-bounce', true); // Use bounce animation for sparkle effect
-                
-                // Add sparkle animation to the herb itself
-                this.addSparkleAnimationToItem(item);
-                
-                // Store reference to quest icon for cleanup
-                item.setData('questIcon', questIcon);
-                
-                console.log(`✓ Added quest icon and sparkle to ${itemType} - quest ${questId} is active`);
-                break; // Only add one quest icon per item
+        try {
+            if (!this.questSystem) {
+                // Quest system not yet initialized, skip quest icon for now
+                return;
             }
+
+            if (!item || !item.active) {
+                // Item is not valid or active, skip
+                return;
+            }
+
+            const activeQuests = this.questSystem.getActiveQuests();
+            
+            // Check each active quest to see if this item type is required
+            for (const [questId, questProgress] of activeQuests) {
+                if (questProgress.isCompleted) continue;
+                
+                // Add null check for cache access
+                if (!this.cache || !this.cache.json) {
+                    console.warn('Cache not available for quest icon check');
+                    return;
+                }
+
+                let questData;
+                try {
+                    questData = this.cache.json.get(`quest-${questId}`);
+                } catch (error) {
+                    console.warn(`Failed to load quest data for ${questId}:`, error);
+                    continue;
+                }
+
+                if (!questData || !questData.questdata) continue;
+                
+                const questRequirement = questData.questdata.type.toLowerCase();
+                const itemTypeLower = itemType.toLowerCase();
+                
+                // Check if this item matches the quest requirement
+                if (questRequirement === itemTypeLower || 
+                    (questRequirement.includes('nepian') && itemTypeLower.includes('nepian')) ||
+                    (questRequirement.includes('heart') && itemTypeLower.includes('heart'))) {
+                    
+                    // Add quest icon with sparkle animation
+                    const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon');
+                    questIcon.setScale(1.0); // Larger, more visible quest icon
+                    questIcon.setDepth(150); // Above the item
+                    
+                    // Check if animation exists before playing
+                    if (questIcon.anims.exists('quest-icon-bounce')) {
+                        questIcon.anims.play('quest-icon-bounce', true); // Use bounce animation for sparkle effect
+                    }
+                    
+                    // Add sparkle animation to the herb itself
+                    this.addSparkleAnimationToItem(item);
+                    
+                    // Store reference to quest icon for cleanup
+                    item.setData('questIcon', questIcon);
+                    
+                    console.log(`✓ Added quest icon and sparkle to ${itemType} - quest ${questId} is active`);
+                    break; // Only add one quest icon per item
+                }
+            }
+        } catch (error) {
+            console.error('Error adding quest icon to item:', error);
         }
     }
 
@@ -670,30 +743,38 @@ export class World extends Phaser.Scene {
      * Add sparkle animation to an item (herbs, etc.)
      */
     private addSparkleAnimationToItem(item: Item): void {
-        // Create sparkle effect using tween animations
-        const sparkleTween = this.tweens.add({
-            targets: item,
-            scaleX: item.scaleX * 1.2,
-            scaleY: item.scaleY * 1.2,
-            duration: 800,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+        try {
+            if (!item || !item.active) {
+                return;
+            }
 
-        // Add subtle glow effect
-        const glowTween = this.tweens.add({
-            targets: item,
-            alpha: 0.7,
-            duration: 1000,
-            yoyo: true,
-            repeat: -1,
-            ease: 'Sine.easeInOut'
-        });
+            // Create sparkle effect using tween animations
+            const sparkleTween = this.tweens.add({
+                targets: item,
+                scaleX: item.scaleX * 1.2,
+                scaleY: item.scaleY * 1.2,
+                duration: 800,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
 
-        // Store tweens for cleanup
-        item.setData('sparkleTween', sparkleTween);
-        item.setData('glowTween', glowTween);
+            // Add subtle glow effect
+            const glowTween = this.tweens.add({
+                targets: item,
+                alpha: 0.7,
+                duration: 1000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            // Store tweens for cleanup
+            item.setData('sparkleTween', sparkleTween);
+            item.setData('glowTween', glowTween);
+        } catch (error) {
+            console.error('Error adding sparkle animation to item:', error);
+        }
     }
 
     /**
@@ -903,14 +984,23 @@ export class World extends Phaser.Scene {
                 // Play collection sound
                 item.collect();
                 
-                // Remove from items array
-                const index = this.items.indexOf(item);
-                if (index > -1) {
-                    this.items.splice(index, 1);
+                // Handle respawnable items differently
+                if (item.getData('isRespawnable')) {
+                    // Set collected time for respawn system
+                    item.setData('collectedTime', Date.now());
+                    // Hide the item instead of destroying it
+                    item.setVisible(false);
+                    item.setActive(false);
+                    // Don't remove from items array - let respawn system handle it
+                } else {
+                    // Remove non-respawnable items from items array
+                    const index = this.items.indexOf(item);
+                    if (index > -1) {
+                        this.items.splice(index, 1);
+                    }
+                    // Destroy the item to prevent further interactions
+                    item.destroy();
                 }
-                
-                // Destroy the item to prevent further interactions
-                item.destroy();
                 
                 console.log(`Collected ${itemType}`);
             } else {
@@ -1053,10 +1143,10 @@ export class World extends Phaser.Scene {
         this.swordCreationCount++;
         console.log(`createWeaponSpawnPoint called #${this.swordCreationCount} - items array length: ${this.items.length}`);
         
-        // Check if sword already exists in items array
-        const existingSword = this.items.find(item => item instanceof LongSword);
+        // Check if sword already exists in scene children (more reliable than items array)
+        const existingSword = this.children.list.find(child => child instanceof LongSword);
         if (existingSword) {
-            console.log(`Sword already exists, skipping creation`);
+            console.log(`Sword already exists in scene, skipping creation`);
             return;
         }
         
@@ -1302,19 +1392,31 @@ export class World extends Phaser.Scene {
 
         // Item collection - click-based interaction (not automatic overlap)
         this.items.forEach(item => {
-            // Make items clickable
-            item.setInteractive();
-            item.on('pointerdown', () => {
-                this.collectItem(item);
-            });
+            // Make items clickable only if they're properly added to the scene
+            if (item && item.scene && item.scene.sys) {
+                try {
+                    item.setInteractive();
+                    item.on('pointerdown', () => {
+                        this.collectItem(item);
+                    });
+                } catch (error) {
+                    console.error('Error setting up item interaction:', error);
+                }
+            }
         });
 
     }
 
     private loadSaveData(): void {
-        const saveData = SaveSystem.loadGame();
-        if (saveData) {
-            SaveSystem.applySaveData(this, saveData);
+        try {
+            const saveData = SaveSystem.loadGame();
+            if (saveData) {
+                SaveSystem.applySaveData(this, saveData);
+            }
+        } catch (error) {
+            console.error('Error loading save data:', error);
+            // Clear corrupted save data and continue with new game
+            SaveSystem.clearCorruptedSaveData();
         }
     }
 
@@ -1563,16 +1665,177 @@ export class World extends Phaser.Scene {
      * Clean up resources when scene is destroyed
      */
     shutdown(): void {
+        this.performCleanup();
+    }
 
-        // Stop music manager with fade out
-        if (this.musicManager) {
-            this.musicManager.stopPlaylist();
+    /**
+     * Clean up resources when scene is destroyed (called by both shutdown and destroy)
+     */
+    destroy(): void {
+        this.performCleanup();
+    }
+
+    /**
+     * Centralized cleanup method to prevent resource leaks
+     */
+    private performCleanup(): void {
+        try {
+            // Clean up pause menu
+            if (this.pauseMenu) {
+                try {
+                    this.pauseMenu.destroy();
+                } catch (error) {
+                    console.error('Error destroying pause menu:', error);
+                }
+                this.pauseMenu = undefined as any;
+            }
+
+            // Clean up game object arrays to prevent stale references
+            this.enemies.forEach(enemy => {
+                try {
+                    if (enemy && enemy.destroy) {
+                        enemy.destroy();
+                    }
+                } catch (error) {
+                    console.error('Error destroying enemy:', error);
+                }
+            });
+            this.enemies = [];
+
+            this.npcs.forEach(npc => {
+                try {
+                    if (npc && npc.destroy) {
+                        npc.destroy();
+                    }
+                } catch (error) {
+                    console.error('Error destroying NPC:', error);
+                }
+            });
+            this.npcs = [];
+
+            this.items.forEach(item => {
+                try {
+                    if (item && item.destroy) {
+                        item.destroy();
+                    }
+                } catch (error) {
+                    console.error('Error destroying item:', error);
+                }
+            });
+            this.items = [];
+
+            this.trees.forEach(tree => {
+                try {
+                    if (tree && tree.destroy) {
+                        tree.destroy();
+                    }
+                } catch (error) {
+                    console.error('Error destroying tree:', error);
+                }
+            });
+            this.trees = [];
+
+            // Clean up keyboard event listeners to prevent accumulation
+            if (this.input.keyboard) {
+                try {
+                    this.input.keyboard.removeAllListeners();
+                } catch (error) {
+                    console.error('Error removing keyboard listeners:', error);
+                }
+            }
+
+            // Clean up input event listeners
+            try {
+                this.input.removeAllListeners();
+            } catch (error) {
+                console.error('Error removing input listeners:', error);
+            }
+
+            // Clean up scene event listeners
+            try {
+                this.events.removeAllListeners();
+            } catch (error) {
+                console.error('Error removing scene event listeners:', error);
+            }
+
+            // Stop all tweens
+            try {
+                this.tweens.killAll();
+            } catch (error) {
+                console.error('Error killing tweens:', error);
+            }
+
+            // Stop all timers
+            try {
+                this.time.removeAllEvents();
+            } catch (error) {
+                console.error('Error removing timers:', error);
+            }
+
+            // Stop music manager with fade out
+            if (this.musicManager) {
+                try {
+                    this.musicManager.stopPlaylist();
+                } catch (error) {
+                    console.error('Error stopping music playlist:', error);
+                }
+            }
+
+            // Clean up day/night cycle
+            if (this.dayNightCycle) {
+                try {
+                    this.dayNightCycle.destroy();
+                } catch (error) {
+                    console.error('Error destroying day/night cycle:', error);
+                }
+            }
+
+            // Clean up other UI components
+            if (this.inventoryUI) {
+                try {
+                    this.inventoryUI.destroy();
+                } catch (error) {
+                    console.error('Error destroying inventory UI:', error);
+                }
+            }
+
+            // QuestUI cleanup handled by Phaser automatically
+
+            if (this.characterGearUI) {
+                try {
+                    this.characterGearUI.destroy();
+                } catch (error) {
+                    console.error('Error destroying character gear UI:', error);
+                }
+            }
+
+            if (this.dialogueUI) {
+                try {
+                    this.dialogueUI.destroy();
+                } catch (error) {
+                    console.error('Error destroying dialogue UI:', error);
+                }
+            }
+
+            // Clean up debug manager
+            if (this.debugManager) {
+                try {
+                    this.debugManager.destroy();
+                } catch (error) {
+                    console.error('Error destroying debug manager:', error);
+                }
+            }
+
+            // Clean up physics bodies
+            if (this.physics && this.physics.world) {
+                try {
+                    this.physics.world.destroy();
+                } catch (error) {
+                    console.error('Error destroying physics world:', error);
+                }
+            }
+        } catch (error) {
+            console.error('Error in performCleanup:', error);
         }
-
-        // Clean up day/night cycle
-        if (this.dayNightCycle) {
-            this.dayNightCycle.destroy();
-        }
-
     }
 }

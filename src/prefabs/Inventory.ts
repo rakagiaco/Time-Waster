@@ -21,15 +21,11 @@ export class Inventory {
     }
 
     public add(itemType: string, amount: number): boolean {
-        // Find first empty slot or existing stack of same item
+        // First pass: Fill existing stacks of the same item type
         for (let i = 0; i < this.maxSlots; i++) {
             const [slotItemType, slotCount] = this.slots[i];
             
-            if (slotItemType === 'empty') {
-                // Found empty slot
-                this.slots[i] = [itemType, Math.min(amount, this.maxStackSize)];
-                return true;
-            } else if (slotItemType === itemType && slotCount < this.maxStackSize) {
+            if (slotItemType === itemType && slotCount < this.maxStackSize) {
                 // Found existing stack with room
                 const canAdd = Math.min(amount, this.maxStackSize - slotCount);
                 this.slots[i] = [itemType, slotCount + canAdd];
@@ -37,20 +33,44 @@ export class Inventory {
                 if (amount <= 0) return true;
             }
         }
+        
+        // Second pass: Use empty slots for remaining items
+        for (let i = 0; i < this.maxSlots; i++) {
+            const [slotItemType, slotCount] = this.slots[i];
+            
+            if (slotItemType === 'empty') {
+                // Found empty slot
+                const amountToAdd = Math.min(amount, this.maxStackSize);
+                this.slots[i] = [itemType, amountToAdd];
+                amount -= amountToAdd;
+                if (amount <= 0) return true;
+            }
+        }
+        
         return false; // No space available
     }
 
     public canAdd(itemType: string, amount: number): boolean {
         let remaining = amount;
+        
+        // First pass: Check existing stacks of the same item type
+        for (let i = 0; i < this.maxSlots; i++) {
+            const [slotItemType, slotCount] = this.slots[i];
+            if (slotItemType === itemType) {
+                remaining -= Math.min(remaining, this.maxStackSize - slotCount);
+                if (remaining <= 0) return true;
+            }
+        }
+        
+        // Second pass: Check empty slots for remaining items
         for (let i = 0; i < this.maxSlots; i++) {
             const [slotItemType, slotCount] = this.slots[i];
             if (slotItemType === 'empty') {
                 remaining -= Math.min(remaining, this.maxStackSize);
-            } else if (slotItemType === itemType) {
-                remaining -= Math.min(remaining, this.maxStackSize - slotCount);
+                if (remaining <= 0) return true;
             }
-            if (remaining <= 0) return true;
         }
+        
         return false;
     }
 

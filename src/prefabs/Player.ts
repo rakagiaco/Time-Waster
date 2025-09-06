@@ -383,8 +383,10 @@ export class Player extends Entity {
         // Update state machine
         this.animsFSM.step();
 
-        // Update weapon position continuously to follow player movement
-        this.updateWeaponPosition();
+        // Update weapon position to follow player movement
+        if (this.equippedWeapon) {
+            this.updateWeaponPosition();
+        }
 
         // Update invincibility frames
         if (this.invincibilityFrames) {
@@ -590,51 +592,132 @@ export class Player extends Entity {
     }
 
     /**
-     * Create visual weapon attachment on player
+     * Create visual weapon attachment on player - DYNAMIC
      */
     private createWeaponAttachment(weaponName: string): void {
-        // Create weapon sprite attached to player
+        // Create weapon sprite at player position
         this.equippedWeapon = this.scene.add.image(this.x, this.y, weaponName);
         this.equippedWeapon.setOrigin(0.5, 0.8); // Anchor at bottom center
-        this.equippedWeapon.setScale(0.3); // Scale for w_longsword.png
+        
+        // Scale weapon dynamically based on character size
+        const characterSize = Math.max(
+            this.body?.width || Player.WEAPON_CONFIG.FALLBACK_WIDTH,
+            this.body?.height || Player.WEAPON_CONFIG.FALLBACK_HEIGHT
+        );
+        const weaponScale = characterSize * Player.WEAPON_CONFIG.SCALE_MULTIPLIER / 16; // Normalize to 16px base
+        this.equippedWeapon.setScale(weaponScale);
+        
         this.equippedWeapon.setDepth(this.depth + 1); // Above player
         
-        // Position weapon on player's hip
+        // Set initial position based on direction
         this.updateWeaponPosition();
     }
 
     /**
-     * Update weapon position based on player direction
+     * Weapon positioning configuration - easily adjustable
+     */
+    private static readonly WEAPON_CONFIG = {
+        // Offset multipliers as percentages of character size
+        HORIZONTAL_OFFSET: 0.5,    // 50% of character width
+        VERTICAL_OFFSET: 0.25,     // 25% of character height
+        VERTICAL_OFFSET_SMALL: 0.125, // 12.5% for left/right (smaller offset)
+        
+        // Weapon scale relative to character
+        SCALE_MULTIPLIER: 0.3,     // 30% of character size
+        
+        // Fallback dimensions if physics body is not available
+        FALLBACK_WIDTH: 16,
+        FALLBACK_HEIGHT: 16
+    };
+
+    /**
+     * Calculate dynamic weapon offsets based on character dimensions
+     */
+    private getWeaponOffsets(): { x: number; y: number } {
+        // Get character dimensions from physics body
+        const bodyWidth = this.body?.width || Player.WEAPON_CONFIG.FALLBACK_WIDTH;
+        const bodyHeight = this.body?.height || Player.WEAPON_CONFIG.FALLBACK_HEIGHT;
+        
+        // Calculate offsets as percentages of character size
+        const horizontalOffset = bodyWidth * Player.WEAPON_CONFIG.HORIZONTAL_OFFSET;
+        const verticalOffset = bodyHeight * Player.WEAPON_CONFIG.VERTICAL_OFFSET;
+        
+        return {
+            x: horizontalOffset,
+            y: verticalOffset
+        };
+    }
+
+    /**
+     * Update weapon position based on player direction - DYNAMIC
      */
     public updateWeaponPosition(): void {
         if (!this.equippedWeapon) return;
         
-        // Position weapon on player's hip based on direction
+        // Get dynamic offsets based on character size
+        const offsets = this.getWeaponOffsets();
+        
+        // Position weapon relative to character center
         switch (this.lastDirection) {
             case 'down':
-                this.equippedWeapon.setPosition(this.x + 8, this.y + 8); // Right hip
+                // Right hip - sword hangs at right side
+                this.equippedWeapon.setPosition(
+                    this.x + offsets.x, 
+                    this.y + offsets.y
+                );
                 this.equippedWeapon.setRotation(0);
-                this.equippedWeapon.setFlipX(false); // Normal orientation
+                this.equippedWeapon.setFlipX(false);
                 break;
+                
             case 'up':
-                this.equippedWeapon.setPosition(this.x - 8, this.y - 8); // Left shoulder/back
-                this.equippedWeapon.setRotation(Math.PI);
+                // Left shoulder - sword across back
+                this.equippedWeapon.setPosition(
+                    this.x - offsets.x, 
+                    this.y - offsets.y
+                );
+                this.equippedWeapon.setRotation(0);
+                this.equippedWeapon.setFlipX(false);
                 break;
+                
             case 'left':
-                this.equippedWeapon.setPosition(this.x - 8, this.y + 4); // Left hip
-                this.equippedWeapon.setRotation(0); // No rotation, just flip
-                this.equippedWeapon.setFlipX(true); // Flip horizontally for left side
+                // Left hip - sword at left side, flipped
+                this.equippedWeapon.setPosition(
+                    this.x - offsets.x, 
+                    this.y + offsets.y * Player.WEAPON_CONFIG.VERTICAL_OFFSET_SMALL
+                );
+                this.equippedWeapon.setRotation(0);
+                this.equippedWeapon.setFlipX(true); // Flip for left side
                 break;
+                
             case 'right':
-                this.equippedWeapon.setPosition(this.x + 8, this.y + 4); // Right hip
-                this.equippedWeapon.setRotation(0); // No rotation, just flip
-                this.equippedWeapon.setFlipX(false); // Normal orientation for right side
+                // Right hip - sword at right side
+                this.equippedWeapon.setPosition(
+                    this.x + offsets.x, 
+                    this.y + offsets.y * Player.WEAPON_CONFIG.VERTICAL_OFFSET_SMALL
+                );
+                this.equippedWeapon.setRotation(0);
+                this.equippedWeapon.setFlipX(false);
                 break;
         }
     }
 
     public getPosition(): [number, number] {
         return [this.x, this.y];
+    }
+
+    /**
+     * Adjust weapon positioning configuration
+     * Useful for fine-tuning sword placement without hardcoded values
+     */
+    public static adjustWeaponConfig(adjustments: Partial<typeof Player.WEAPON_CONFIG>): void {
+        Object.assign(Player.WEAPON_CONFIG, adjustments);
+    }
+
+    /**
+     * Get current weapon configuration for debugging
+     */
+    public static getWeaponConfig(): typeof Player.WEAPON_CONFIG {
+        return { ...Player.WEAPON_CONFIG };
     }
 
     public heal(amount: number): void {

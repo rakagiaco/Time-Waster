@@ -139,6 +139,8 @@ export class Menu extends Phaser.Scene {
         // New Game button
         this.createMedievalButton(centerX, centerY + 50, 'NEW GAME', () => {
             // console.log('New Game button clicked');
+            // Clear ALL localStorage keys to prevent interference with new game
+            SaveSystem.clearAllGameData();
             this.fadeToGame(false);
         });
 
@@ -151,6 +153,8 @@ export class Menu extends Phaser.Scene {
         // Freeplay button
         this.createMedievalButton(centerX, centerY + 190, 'FREEPLAY', () => {
             // console.log('Freeplay button clicked');
+            // Clear ALL localStorage keys to prevent interference with new game
+            SaveSystem.clearAllGameData();
             this.fadeToGame(false);
         });
     }
@@ -385,6 +389,8 @@ export class Menu extends Phaser.Scene {
                 duration: 1000, // 1 second fade
                 ease: 'Power2',
                 onComplete: () => {
+                    // Stop the world scene first to ensure proper cleanup
+                    this.scene.stop('worldScene');
                     // Start the game scene after fade completes
                     this.scene.start('worldScene', { loadSaveData });
                 }
@@ -395,6 +401,7 @@ export class Menu extends Phaser.Scene {
         } catch (error) {
             console.error('Error in fade transition:', error);
             // Fallback to direct scene start if fade fails
+            this.scene.stop('worldScene');
             this.scene.start('worldScene', { loadSaveData });
         }
     }

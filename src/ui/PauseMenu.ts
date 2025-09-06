@@ -13,20 +13,48 @@ export class PauseMenu {
     private scene: Phaser.Scene;
     private isVisible: boolean = false;
     private menuContainer: Phaser.GameObjects.Container | null = null;
-
     private controlsDisplay: Phaser.GameObjects.Container | null = null;
     private showingControls: boolean = false;
+    private keyboardHandler: ((event: KeyboardEvent) => void) | null = null;
+    private isDestroyed: boolean = false;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
-        this.setupInput();
+        this.isDestroyed = false;
+        
+        // Setup input after a short delay to ensure scene is ready
+        this.scene.time.delayedCall(100, () => {
+            if (!this.isDestroyed) {
+                this.setupInput();
+            }
+        });
     }
 
-    private setupInput(): void {
-        // Use a single key handler for P key only
-        this.scene.input.keyboard?.on('keydown', (event: KeyboardEvent) => {
-            // Only handle P key for pause menu toggle - prevent event propagation
+    public setupInput(): void {
+        // Don't setup if already destroyed
+        if (this.isDestroyed) {
+            return;
+        }
+
+        // Clean up any existing keyboard handler first
+        this.cleanupInput();
+
+        // Ensure keyboard input is available
+        if (!this.scene.input.keyboard) {
+            console.warn('PauseMenu: Keyboard input not available');
+            return;
+        }
+
+        // Store the keyboard handler for proper cleanup
+        this.keyboardHandler = (event: KeyboardEvent) => {
+            // Don't handle events if destroyed
+            if (this.isDestroyed) {
+                return;
+            }
+
+            // Only handle P key for pause menu toggle
             if (event.code === 'KeyP') {
+                event.preventDefault();
                 event.stopPropagation();
                 this.toggle();
                 return;
@@ -34,13 +62,29 @@ export class PauseMenu {
 
             // Handle ESC key to close controls if showing
             if (this.showingControls && event.code === 'Escape') {
+                event.preventDefault();
                 event.stopPropagation();
                 this.hideControls();
             }
-        });
+        };
+
+        // Use a single key handler for P key only
+        this.scene.input.keyboard.on('keydown', this.keyboardHandler);
+        console.log('PauseMenu: Keyboard input setup complete');
+    }
+
+    private cleanupInput(): void {
+        if (this.keyboardHandler && this.scene.input.keyboard) {
+            this.scene.input.keyboard.off('keydown', this.keyboardHandler);
+            this.keyboardHandler = null;
+        }
     }
 
     public toggle(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
         if (this.isVisible) {
             this.hide();
         } else {
@@ -49,23 +93,28 @@ export class PauseMenu {
     }
 
     public show(): void {
-        if (this.isVisible) return;
+        if (this.isDestroyed || this.isVisible) {
+            return;
+        }
 
         this.isVisible = true;
         this.createMenu();
-        // Don't use timeScale as it causes movement issues
-        // The pause menu will overlay on top of the game
     }
 
     public hide(): void {
-        if (!this.isVisible) return;
+        if (this.isDestroyed || !this.isVisible) {
+            return;
+        }
 
         this.isVisible = false;
         this.destroyMenu();
-        // No timeScale to reset
     }
 
     private createMenu(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
         const centerX = this.scene.cameras.main.width / 2;
         const centerY = this.scene.cameras.main.height / 2;
 
@@ -200,16 +249,24 @@ export class PauseMenu {
 
         // Hover effects
         button.on('pointerover', () => {
-            button.setScale(1.05);
-            buttonText.setTint(0x8B0000); // Dark red on hover
+            if (!this.isDestroyed) {
+                button.setScale(1.05);
+                buttonText.setTint(0x8B0000); // Dark red on hover
+            }
         });
 
         button.on('pointerout', () => {
-            button.setScale(1.0);
-            buttonText.setTint(0x654321); // Back to brown
+            if (!this.isDestroyed) {
+                button.setScale(1.0);
+                buttonText.setTint(0x654321); // Back to brown
+            }
         });
 
-        button.on('pointerdown', callback);
+        button.on('pointerdown', () => {
+            if (!this.isDestroyed) {
+                callback();
+            }
+        });
 
         return button;
     }
@@ -239,16 +296,24 @@ export class PauseMenu {
     }
 
     private addSaveInfo(centerX: number, centerY: number): void {
+        if (this.isDestroyed || !this.menuContainer) {
+            return;
+        }
+
         if (SaveSystem.hasSaveData()) {
             const saveInfo = this.scene.add.bitmapText(centerX, centerY, '8-bit', 'Save data available', 16);
             saveInfo.setOrigin(0.5);
             saveInfo.setTint(0x00ff00);
             saveInfo.setScrollFactor(0);
-            this.menuContainer!.add(saveInfo);
+            this.menuContainer.add(saveInfo);
         }
     }
 
     private saveGame(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
         try {
             const worldScene = this.scene as any;
 
@@ -303,32 +368,39 @@ export class PauseMenu {
             }
 
             // Show save feedback
-            const saveFeedback = this.scene.add.bitmapText(
-                this.scene.cameras.main.width / 2,
-                this.scene.cameras.main.height / 2 + 250,
-                '8-bit',
-                'Game Saved!',
-                20
-            );
-            saveFeedback.setOrigin(0.5);
-            saveFeedback.setTint(0x00ff00);
-            saveFeedback.setScrollFactor(0);
-            this.menuContainer!.add(saveFeedback);
+            if (this.menuContainer) {
+                const saveFeedback = this.scene.add.bitmapText(
+                    this.scene.cameras.main.width / 2,
+                    this.scene.cameras.main.height / 2 + 250,
+                    '8-bit',
+                    'Game Saved!',
+                    20
+                );
+                saveFeedback.setOrigin(0.5);
+                saveFeedback.setTint(0x00ff00);
+                saveFeedback.setScrollFactor(0);
+                this.menuContainer.add(saveFeedback);
 
-            // Remove feedback after 2 seconds
-            this.scene.time.delayedCall(2000, () => {
-                saveFeedback.destroy();
-            });
+                // Remove feedback after 2 seconds
+                this.scene.time.delayedCall(2000, () => {
+                    if (!this.isDestroyed && saveFeedback) {
+                        saveFeedback.destroy();
+                    }
+                });
+            }
         } catch (error) {
             console.error('Error saving game:', error);
         }
     }
 
     private showControls(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
         this.showingControls = true;
 
-        // Hide menu buttons (note: this will need updating after we fix the button storage)
-        // For now, hide the entire menu container to avoid issues
+        // Hide menu buttons
         if (this.menuContainer) {
             this.menuContainer.setVisible(false);
         }
@@ -437,6 +509,10 @@ export class PauseMenu {
     }
 
     private hideControls(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
         if (this.controlsDisplay) {
             this.controlsDisplay.destroy();
             this.controlsDisplay = null;
@@ -450,6 +526,10 @@ export class PauseMenu {
     }
 
     private exitToMenu(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
         this.hide();
 
         // Stop any playing music before transitioning to menu
@@ -470,7 +550,35 @@ export class PauseMenu {
         return this.isVisible;
     }
 
-    public destroy(): void {
+    public reinitialize(): void {
+        if (this.isDestroyed) {
+            return;
+        }
+
+        // Clean up existing state
         this.destroyMenu();
+        
+        // Reset state
+        this.isVisible = false;
+        this.showingControls = false;
+        
+        // Re-setup input
+        this.setupInput();
+    }
+
+    public destroy(): void {
+        this.isDestroyed = true;
+        
+        // Clean up menu
+        this.destroyMenu();
+        
+        // Clean up controls
+        if (this.controlsDisplay) {
+            this.controlsDisplay.destroy();
+            this.controlsDisplay = null;
+        }
+        
+        // Clean up keyboard event listeners
+        this.cleanupInput();
     }
 }

@@ -79,6 +79,11 @@ export class Lantern {
     }
 
     private createLightTexture(): void {
+        // Check if texture already exists
+        if (this.scene.textures.exists('lantern-light')) {
+            return;
+        }
+        
         const radius = 100; // base radius for light
         const rt = this.scene.textures.createCanvas('lantern-light', radius * 2, radius * 2);
 
