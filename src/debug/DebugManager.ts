@@ -292,6 +292,29 @@ export class DebugManager {
         this.debugGraphics.strokeRect(bounds.x, bounds.y, bounds.width, bounds.height);
     }
 
+    public drawVectorPoints(x: number, y: number, width: number, height: number, color: number): void {
+        if (!this.isEnabled || !this.debugGraphics) return;
+
+        // Set line style for vector points
+        this.debugGraphics.lineStyle(1, color, 0.8);
+        
+        // Draw corner points
+        const pointSize = 3;
+        this.debugGraphics.fillStyle(color, 0.6);
+        
+        // Top-left corner
+        this.debugGraphics.fillCircle(x, y, pointSize);
+        // Top-right corner
+        this.debugGraphics.fillCircle(x + width, y, pointSize);
+        // Bottom-left corner
+        this.debugGraphics.fillCircle(x, y + height, pointSize);
+        // Bottom-right corner
+        this.debugGraphics.fillCircle(x + width, y + height, pointSize);
+        
+        // Center point
+        this.debugGraphics.fillCircle(x + width / 2, y + height / 2, pointSize / 2);
+    }
+
     public addInfoText(x: number, y: number, text: string, color: number = 0xffffff): void {
         if (!this.isEnabled || !this.debugGraphics) return;
         
@@ -413,5 +436,22 @@ export class DebugManager {
      */
     public getCollisionBoxVisibility(): boolean {
         return this.showCollisionBoxes;
+    }
+
+
+    public drawCircleCollision(x: number, y: number, radius: number, color: number): void {
+        if (!this.isEnabled || !this.debugGraphics) return;
+        
+        this.debugGraphics.lineStyle(2, color, 0.6);
+        this.debugGraphics.strokeCircle(x, y, radius);
+        
+        // Draw center point
+        this.debugGraphics.fillStyle(color, 0.8);
+        this.debugGraphics.fillCircle(x, y, 2);
+        
+        // Draw radius lines (cross)
+        this.debugGraphics.lineStyle(1, color, 0.4);
+        this.debugGraphics.lineBetween(x - radius, y, x + radius, y); // Horizontal
+        this.debugGraphics.lineBetween(x, y - radius, x, y + radius); // Vertical
     }
 }

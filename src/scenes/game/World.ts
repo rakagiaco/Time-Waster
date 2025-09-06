@@ -18,14 +18,14 @@ import { QuestUI } from '../../ui/QuestUI';
 import { SaveSystem } from '../../systems/SaveSystem';
 import { MusicManager } from '../../systems/MusicManager';
 import { CharacterGearUI } from '../../ui/CharacterGearUI';
+import GameConfig from '../../config/GameConfig';
 
-/**  
- HELLO CLANKER 
- STOP HARDCODING SPAWN VALUES IN THIS FILE
- EVERY TIME I COME IN HERE TO CLEAN UP YOUR MESS I FIND MORE HARD-CODED CRAP
- ANYWHERE YOU SEE AN o7 IN THE FILE IS SOMEWHERE YOU HARD-CODED SOMETHING THAT WAS NOT NEEDED
- YOUR FRIEND XERXSEIZE
-*/
+/**
+ * World Scene - Main game world implementation
+ * 
+ * Handles tilemap rendering, collision detection, entity management,
+ * and all game systems including quests, inventory, day/night cycle, etc.
+ */
 
 interface WorldData {
     qobj?: any;
@@ -72,8 +72,14 @@ export class World extends Phaser.Scene {
             // Create tilemap
             this.createTilemap();
 
-            // player - spawn position should come from tilemap or config
-            this.player = new Player(this, 500, 400, data.inv, data.qobj);
+            // Create player at spawn position from config or tilemap
+            const playerSpawnX = GameConfig.SPAWN.PLAYER_X;
+            const playerSpawnY = GameConfig.SPAWN.PLAYER_Y;
+            this.player = new Player(this, playerSpawnX, playerSpawnY, data.inv, data.qobj);
+            // Set player depth above all tilemap layers
+            this.player.setDepth(200);
+            
+            // Collision detection is now handled in setupCollisionDetection()
 
             // Day/Night Cycle - get saved time if available
             let savedTime: number | undefined = undefined;
@@ -100,11 +106,13 @@ export class World extends Phaser.Scene {
             this.createItems();
             this.createTrees();
 
+            // Entity collision is now handled in setupCollisionDetection()
+
             // camera setup - with safety checks
             if (this.tilemap && this.tilemap.widthInPixels && this.tilemap.heightInPixels) {
                 this.cameras.main.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels);
                 this.physics.world.setBounds(0, 0, this.tilemap.widthInPixels, this.tilemap.heightInPixels);
-                this.cameras.main.startFollow(this.player);
+            this.cameras.main.startFollow(this.player);
                 console.log(`✓ Camera bounds set: ${this.tilemap.widthInPixels}x${this.tilemap.heightInPixels}`);
                 console.log(`✓ Map dimensions: ${this.tilemap.width}x${this.tilemap.height} tiles`);
             } else {
@@ -422,6 +430,65 @@ export class World extends Phaser.Scene {
         }
     }
 
+    private setupCollisionObjects(): void {
+        if (!this.tilemap) return;
+        
+        // Get the collision object layer
+        const collisionLayer = this.tilemap.getObjectLayer('Collision');
+        if (!collisionLayer) {
+            console.log('No Collision object layer found');
+            return;
+        }
+        
+        console.log(`Found ${collisionLayer.objects.length} collision objects`);
+        
+        // Create a single static group for all collision objects
+        const collisionGroup = this.physics.add.staticGroup();
+        
+        // Create physics bodies for each collision object
+        collisionLayer.objects.forEach((obj: any, index: number) => {
+            if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined) {
+                let collisionBody;
+                
+                if (obj.ellipse) {
+                    // Handle ellipse/circle collision objects
+                    const radius = Math.min(obj.width, obj.height) / 2;
+                    const centerX = obj.x + obj.width / 2;
+                    const centerY = obj.y + obj.height / 2;
+                    
+                    // Create a circle physics body
+                    collisionBody = collisionGroup.create(centerX, centerY, undefined);
+                    collisionBody.body.setCircle(radius);
+                    collisionBody.setVisible(false); // Make it invisible
+                    
+                    console.log(`Created circle collision ${index} at (${centerX}, ${centerY}) with radius ${radius}`);
+                } else {
+                    // Handle rectangle collision objects
+                    const centerX = obj.x + obj.width / 2;
+                    const centerY = obj.y + obj.height / 2;
+                    
+                    collisionBody = collisionGroup.create(centerX, centerY, undefined);
+                    collisionBody.body.setSize(obj.width, obj.height);
+                    collisionBody.setVisible(false); // Make it invisible
+                    
+                    console.log(`Created rectangle collision ${index} at (${centerX}, ${centerY}) size ${obj.width}x${obj.height}`);
+                }
+                
+                // Mark as collision object for debug visualization
+                if (collisionBody) {
+                    collisionBody.setData('collisionObject', true);
+                    collisionBody.setData('isCircle', !!obj.ellipse);
+                    collisionBody.setData('radius', obj.ellipse ? Math.min(obj.width, obj.height) / 2 : null);
+                    collisionBody.setData('objectIndex', index);
+                }
+            }
+        });
+        
+        console.log(`✓ Created collision group with ${collisionGroup.children.size} objects`);
+    }
+
+
+
     private createTilemap(): void {
         this.tilemap = this.make.tilemap({ key: 'tilemapJSON' });
         
@@ -429,7 +496,8 @@ export class World extends Phaser.Scene {
         // Create visible layers in the correct order (bottom to top) with proper tilesets
         // Start with minimal layers to isolate the problem
         
-        console.log('=== CREATING TILEMAP LAYERS ===');
+        // Set up collision objects from the Collision layer FIRST
+        this.setupCollisionObjects();
         
         // =====================================================================
         // COMPREHENSIVE TILESET BINDING FOR AETHERON.TMJ
@@ -555,8 +623,7 @@ export class World extends Phaser.Scene {
         // Collision layer is an object layer, not a tile layer
         // We'll handle collision objects separately in setupCollisionDetection()
         
-        // Debug: Check which tilesets each layer is actually using
-        console.log('=== LAYER TILESET DEBUG ===');
+        // Layer order matches JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building roofs -> Building props -> Mines -> Mine Roof -> Bushes overlayer
         const allLayers = [
             groundLayer, pathsLayer, shadowsLayer, wallsLayer, rocksLayer,
             treesUnderlayer, treesOverlayer, bushesUnderlayer, roofsLayer,
@@ -571,20 +638,22 @@ export class World extends Phaser.Scene {
         ];
         
         // Set proper depth ordering for correct rendering (lower depth = behind)
-        const depthOrder = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160, 170];
+        // Order matches JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building roofs -> Building props -> Mines -> Mine Roof -> Bushes overlayer
+        // Player depth: 200 (above all layers)
+        const depthOrder = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150];
         
         allLayers.forEach((layer, index) => {
             if (layer) {
                 // Set layer visibility and depth
                 layer.setVisible(true);
                 layer.setDepth(depthOrder[index]);
-                console.log(`${layerNames[index]} layer created successfully (depth: ${depthOrder[index]})`);
+                console.log(`✓ ${layerNames[index]} layer created successfully (depth: ${depthOrder[index]})`);
             } else {
-                console.warn(`${layerNames[index]} layer failed to create`);
+                console.warn(`❌ ${layerNames[index]} layer failed to create`);
             }
         });
         
-        console.log('=== LAYER CREATION COMPLETE ===');
+        console.log('✓ Tilemap layers created successfully');
         
         // Get object layers
         this.objlayer = this.tilemap.getObjectLayer('Item Spawn');
@@ -648,30 +717,23 @@ export class World extends Phaser.Scene {
     }
 
     private createItems(): void {
-        console.log('createItems() method called!');
         try {
-            console.log('=== CREATING ITEMS ===');
-            
             // Create collectible items from tilemap object layers
             // Uses named objects like 'bush_1' to spawn herb items
             // Positions are set visually in Tiled Map Editor
             
             // Check Item Spawn layer
             if (this.objlayer) {
-                console.log('Item Spawn layer exists, objects count:', this.objlayer.objects.length);
-                console.log('Item Spawn object names:', this.objlayer.objects.map(obj => obj.name));
                 this.objlayer.objects.forEach(element => {
                     this.createItemFromSpawnPoint(element);
                 });
             } else {
-                console.error('Item Spawn layer is null!');
+                console.error('Item Spawn layer not found!');
             }
             
             // Check NPC/Player Spawn layer for bush_1 objects
             const npcSpawnLayer = this.tilemap.getObjectLayer('NPC/Player Spawn');
             if (npcSpawnLayer) {
-                console.log('NPC/Player Spawn layer exists, objects count:', npcSpawnLayer.objects.length);
-                console.log('NPC/Player Spawn object names:', npcSpawnLayer.objects.map(obj => obj.name));
                 let bushCount = 0;
                 npcSpawnLayer.objects.forEach(element => {
                     if (element.name === 'bush_1') {
@@ -679,22 +741,15 @@ export class World extends Phaser.Scene {
                         this.createItemFromSpawnPoint(element);
                     }
                 });
-                console.log(`Found ${bushCount} bush_1 spawn points in NPC/Player Spawn layer`);
+                console.log(`✓ Created ${bushCount} herb spawn points from tilemap`);
             } else {
-                console.error('NPC/Player Spawn layer is null!');
+                console.error('NPC/Player Spawn layer not found!');
             }
 
-            // Test herbs removed - all items now come from tilemap object layers
-
-            // Weapon spawns now handled by tilemap object layers
-
-            console.log(`=== ITEM CREATION COMPLETE - Total items: ${this.items.length} ===`);
+            console.log(`✓ Item creation complete - Total items: ${this.items.length}`);
 
         } catch (error) {
             console.error('Error creating items:', error);
-            if (error instanceof Error) {
-                console.error('Error stack:', error.stack);
-            }
         }
     }
 
@@ -1402,6 +1457,39 @@ export class World extends Phaser.Scene {
             this.debugManager.drawCollisionBox(tree, 0x8B4513); // Brown for trees
         });
 
+        // Draw collision objects from collision layer
+        let collisionObjectCount = 0;
+        this.children.list.forEach(child => {
+            if (child.getData('collisionObject') === true) {
+                const isCircle = child.getData('isCircle');
+                const radius = child.getData('radius');
+                
+                if (isCircle && radius) {
+                    // Draw circle collision
+                    const sprite = child as Phaser.GameObjects.Sprite;
+                    this.debugManager.drawCircleCollision(sprite.x, sprite.y, radius, 0xffff00);
+                } else {
+                    // Draw rectangle collision with vector points
+                    this.debugManager.drawCollisionBox(child, 0xffff00); // Yellow for collision objects
+                    
+                    // Draw vector points for collision objects
+                    if ('getBounds' in child && typeof child.getBounds === 'function') {
+                        const bounds = (child as any).getBounds();
+                        if (bounds) {
+                            this.debugManager.drawVectorPoints(bounds.x, bounds.y, bounds.width, bounds.height, 0xffff00);
+                        }
+                    }
+                }
+                
+                collisionObjectCount++;
+            }
+        });
+
+        // Add debug info for collision objects
+        if (collisionObjectCount > 0) {
+            this.debugManager.addInfoText(10, 200, `Collision Objects: ${collisionObjectCount}`, 0xffff00);
+        }
+
         // Add info text for entities
         this.enemies.forEach((enemy, index) => {
             const name = enemy.entity_type && enemy.entity_type !== 'Entity' ? enemy.entity_type : `Enemy ${index + 1}`;
@@ -1443,66 +1531,36 @@ export class World extends Phaser.Scene {
     }
 
     private setupCollisionDetection(): void {
-        // Get collision object layer
-        const collisionLayer = this.tilemap.getObjectLayer('Collision');
+        // Get all collision objects that were created in setupCollisionObjects()
+        const collisionObjects = this.children.list.filter(child => 
+            child.getData('collisionObject') === true
+        );
         
-        if (collisionLayer && collisionLayer.objects) {
-            console.log(`✓ Found ${collisionLayer.objects.length} collision objects`);
-            
-            // Create collision bodies for each collision object
-            collisionLayer.objects.forEach((obj, index) => {
-                if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined) {
-                    // Create a collision rectangle
-                    const collisionRect = this.add.rectangle(
-                        obj.x + obj.width / 2, 
-                        obj.y + obj.height / 2, 
-                        obj.width, 
-                        obj.height
-                    );
-                    
-                    // Make it invisible
-                    collisionRect.setVisible(false);
-                    collisionRect.setAlpha(0);
-                    
-                    // Add physics body
-                    this.physics.add.existing(collisionRect, true);
-                    
-                    // Store reference for cleanup
-                    collisionRect.setData('collisionObject', true);
-                    collisionRect.setData('objectIndex', index);
-                    
-                    console.log(`✓ Created collision object ${index} at (${obj.x}, ${obj.y}) size ${obj.width}x${obj.height}`);
-                }
-            });
+        if (collisionObjects.length > 0) {
+            console.log(`✓ Found ${collisionObjects.length} collision objects for collision setup`);
             
             // Set up collision between player and collision objects
-            this.physics.add.collider(this.player, this.children.list.filter(child => 
-                child.getData('collisionObject') === true
-            ));
+            this.physics.add.collider(this.player, collisionObjects);
             
             // Set up collision between enemies and collision objects
             this.enemies.forEach(enemy => {
-                this.physics.add.collider(enemy, this.children.list.filter(child => 
-                    child.getData('collisionObject') === true
-                ));
+                this.physics.add.collider(enemy, collisionObjects);
             });
             
             // Set up collision between NPCs and collision objects
             this.npcs.forEach(npc => {
-                this.physics.add.collider(npc, this.children.list.filter(child => 
-                    child.getData('collisionObject') === true
-                ));
+                this.physics.add.collider(npc, collisionObjects);
             });
             
             console.log('✓ Object-based collision system set up');
         } else {
-            console.warn('❌ Collision layer not found or has no objects');
+            console.warn('❌ No collision objects found for collision setup');
         }
 
         // Player collision with trees
         this.physics.add.collider(this.player, this.trees);
 
-        // Player collision with tilemap layers (water, mines, walls, rocks)
+        // Player collision with tilemap layers (water, mines, walls, rocks, building walls)
         const tilemapLayers = [
             this.tilemap.getLayer('Walls'),
             this.tilemap.getLayer('Rocks'),
