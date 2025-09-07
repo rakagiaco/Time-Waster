@@ -14,8 +14,8 @@
  */
 
 import { Scene } from 'phaser';
-import { GameScene, Player, GameItem } from '../types/GameTypes';
 import GameConfig from '../config/GameConfig';
+import { GameItem, GameScene, Player } from '../types/GameTypes';
 
 
 // =============================================================================
@@ -121,7 +121,7 @@ export function listen(scene: GameScene, listener: any): boolean {
         player = (scene as any).player;
     } else {
         // Try to find player by searching through children
-        scene.children.list.forEach(child => {
+        scene.children.list.forEach((child: any) => {
             if (child.constructor.name === 'Player') {
                 player = child;
             }
@@ -359,19 +359,27 @@ export function updatePlayerMovement(player: any, keyUp: Phaser.Input.Keyboard.K
         if (Math.abs(vy) > Math.abs(vx)) {
             // Vertical movement takes priority
             if (vy < 0) {
-                player.anims.play('player-walk-up', true);
+                if (player.anims) {
+                    player.anims.play('player-walk-up', true);
+                }
                 newDirection = 'up';
             } else {
-                player.anims.play('player-walk-down', true);
+                if (player.anims) {
+                    player.anims.play('player-walk-down', true);
+                }
                 newDirection = 'down';
             }
         } else {
             // Horizontal movement takes priority
             if (vx < 0) {
-                player.anims.play('player-walk-left', true);
+                if (player.anims) {
+                    player.anims.play('player-walk-left', true);
+                }
                 newDirection = 'left';
             } else {
-                player.anims.play('player-walk-right', true);
+                if (player.anims) {
+                    player.anims.play('player-walk-right', true);
+                }
                 newDirection = 'right';
             }
         }

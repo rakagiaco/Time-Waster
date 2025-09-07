@@ -18,6 +18,7 @@ import { QuestUI } from '../../ui/QuestUI';
 import { SaveSystem } from '../../systems/SaveSystem';
 import { MusicManager } from '../../systems/MusicManager';
 import { CharacterGearUI } from '../../ui/CharacterGearUI';
+// import { LoreManager } from '../../systems/LoreManager'; // TODO: Implement lore system
 import GameConfig from '../../config/GameConfig';
 
 /**
@@ -59,6 +60,7 @@ export class World extends Phaser.Scene {
     private questUI!: QuestUI;
     private musicManager!: MusicManager;
     private characterGearUI!: CharacterGearUI;
+    // private loreManager!: LoreManager; // TODO: Implement lore system
 
     constructor() {
         super('worldScene');
@@ -66,18 +68,55 @@ export class World extends Phaser.Scene {
         this.pauseMenu = undefined as any;
     }
 
+    init(data: WorldData): void {
+        console.log('=== WORLD SCENE INIT ===');
+        console.log('Data received:', data);
+        console.log('loadSaveData flag:', data.loadSaveData);
+        
+        // Reset all arrays and state for new game
+        this.enemies = [];
+        this.npcs = [];
+        this.items = [];
+        this.trees = [];
+        
+        // Reset quest system state only for new game, not for save game load
+        if (this.questSystem && !data.loadSaveData) {
+            console.log('Resetting existing quest system for new game');
+            this.questSystem.reset();
+        }
+        this.questSystem = undefined as any;
+        this.questGiverNPC = undefined as any;
+        
+        console.log('World scene arrays reset');
+        console.log('=== END WORLD SCENE INIT ===');
+    }
+
     create(data: WorldData): void {
         try {
+            console.log('=== WORLD SCENE CREATE ===');
+            console.log('Data received in create:', data);
+            console.log('loadSaveData flag in create:', data.loadSaveData);
 
             // Create tilemap
             this.createTilemap();
 
-            // Create player at spawn position from config or tilemap
-            const playerSpawnX = GameConfig.SPAWN.PLAYER_X;
-            const playerSpawnY = GameConfig.SPAWN.PLAYER_Y;
+            // Create player at spawn position from tilemap
+            const playerSpawn = this.tilemap.findObject('NPC/Player Spawn', obj => obj.name === 'p_spawn');
+            let playerSpawnX = GameConfig.SPAWN.PLAYER_X; // Fallback
+            let playerSpawnY = GameConfig.SPAWN.PLAYER_Y; // Fallback
+            
+            if (playerSpawn) {
+                playerSpawnX = playerSpawn.x as number;
+                playerSpawnY = playerSpawn.y as number;
+                console.log(`✓ Player spawn position from tilemap: (${playerSpawnX}, ${playerSpawnY})`);
+            } else {
+                console.warn('⚠️ p_spawn object not found in tilemap, using config fallback');
+            }
+            
             this.player = new Player(this, playerSpawnX, playerSpawnY, data.inv, data.qobj);
-            // Set player depth above all tilemap layers
-            this.player.setDepth(200);
+            // Set player depth between trees underlayer (50) and trees overlayer (60)
+            // This ensures player appears behind trees overlayer but in front of trees underlayer
+            this.player.setDepth(55);
             
             // Collision detection is now handled in setupCollisionDetection()
 
@@ -141,6 +180,9 @@ export class World extends Phaser.Scene {
             this.inventoryUI.setGearUI(this.characterGearUI);
             this.characterGearUI.setInventoryUI(this.inventoryUI);
 
+            // Setup lore manager (TODO: Implement lore system)
+            // this.loreManager = new LoreManager(this);
+
             // Listen for day/night changes
             this.events.on('dayNightChange', (data: { isDay: boolean; isTransitioning: boolean }) => {
                 if (this.lantern) {
@@ -201,6 +243,13 @@ export class World extends Phaser.Scene {
                 // Debug: Save data cleared
             });
 
+            // Collision toggle event
+            this.events.on('debug-toggleCollisionBoxes', (visible: boolean) => {
+                if (this.debugManager) {
+                    this.debugManager.setCollisionBoxVisibility(visible);
+                }
+            });
+
             // Method 3: Registry change listener
             this.registry.events.on('changedata-debugCommand', (_parent: any, _key: string, data: any) => {
                 if (data && this.dayNightCycle) {
@@ -224,22 +273,19 @@ export class World extends Phaser.Scene {
             this.questSystem = new QuestSystem(this, this.player);
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
             
-            // Add quest icons to existing items now that quest system is initialized
-            // Use a delayed call to ensure all systems are ready
-            this.time.delayedCall(50, () => {
-                try {
-                    this.addQuestIconsToExistingItems();
-                } catch (error) {
-                    console.error('Error adding quest icons to existing items:', error);
-                }
+            // Now that quest system is initialized, add quest icons to existing items
+            // Use a small delay to ensure everything is properly set up
+            this.time.delayedCall(100, () => {
+                this.addQuestIconsToExistingItems();
             });
             
             // Listen for quest completion events to give rewards
             this.events.on('questCompleted', this.handleQuestCompletion, this);
             
             // Listen for quest start events to add quest icons to existing items
-            this.events.on('startQuest', () => {
+            this.events.on('startQuest', (questId: number) => {
                 try {
+                    console.log(`Quest ${questId} started, adding quest icons to relevant items`);
                     // Add quest icons to existing items when a quest starts
                     this.addQuestIconsToExistingItems();
                 } catch (error) {
@@ -261,8 +307,11 @@ export class World extends Phaser.Scene {
             // Setup Dialogue UI
             this.dialogueUI = new DialogueUI(this);
 
-            // Setup interaction controls
-            this.setupInteractionControls();
+        // Setup interaction controls
+        this.setupInteractionControls();
+
+        // Setup camera zoom controls for testing
+        this.setupCameraZoomControls();
 
             // Setup Tree Light Emission
             // console.log('Setting up tree light emission...');
@@ -310,9 +359,9 @@ export class World extends Phaser.Scene {
                 this.loadSaveData();
                 
                 // Restore QuestSystem state and active quests in QuestUI after save data is loaded
-                this.time.delayedCall(100, () => {
+                this.time.delayedCall(500, () => {
                     try {
-                        // console.log('World: Restoring QuestSystem state...');
+                        console.log('World: Restoring QuestSystem state...');
                         
                         // Restore QuestSystem state
                         const savedQuestState = localStorage.getItem('quest_system_state');
@@ -320,15 +369,25 @@ export class World extends Phaser.Scene {
                             try {
                                 const questState = JSON.parse(savedQuestState);
                                 this.questSystem.restoreQuestState(questState);
+                                console.log('World: QuestSystem state restored from localStorage');
                             } catch (error) {
                                 console.error('World: Failed to parse saved quest state:', error);
                             }
+                        } else {
+                            console.log('World: No saved quest state found');
                         }
                         
-                        // console.log('World: Restoring active quests in QuestUI...');
+                        console.log('World: Restoring active quests in QuestUI...');
                         if (this.questUI) {
                             this.questUI.restoreActiveQuests();
                         }
+                        
+                        // Restore NPC state from quest system
+                        this.npcs.forEach(npc => {
+                            if (npc.isQuestGiver && npc.restoreStateFromQuestSystem) {
+                                npc.restoreStateFromQuestSystem();
+                            }
+                        });
                     } catch (error) {
                         console.error('Error restoring quest system state:', error);
                     }
@@ -423,10 +482,21 @@ export class World extends Phaser.Scene {
         if (this.treeLightEmission) {
             this.treeLightEmission.update(delta);
         }
+
+        // Update entity depths based on position
+        this.updatePlayerDepth();
+
+        this.updateNPCsDepth();
+        this.updateEnemiesDepth();
         // Update debug manager
         if (this.debugManager) {
             this.updateDebugInfo();
             this.debugManager.update();
+            
+            // Draw debug visuals if debug mode is enabled
+            if (this.debugManager.isDebugEnabled()) {
+                this.drawDebugVisuals();
+            }
         }
     }
 
@@ -447,47 +517,223 @@ export class World extends Phaser.Scene {
         
         // Create physics bodies for each collision object
         collisionLayer.objects.forEach((obj: any, index: number) => {
-            if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined) {
+            try {
                 let collisionBody;
                 
                 if (obj.ellipse) {
-                    // Handle ellipse/circle collision objects
-                    const radius = Math.min(obj.width, obj.height) / 2;
-                    const centerX = obj.x + obj.width / 2;
-                    const centerY = obj.y + obj.height / 2;
-                    
-                    // Create a circle physics body
-                    collisionBody = collisionGroup.create(centerX, centerY, undefined);
-                    collisionBody.body.setCircle(radius);
-                    collisionBody.setVisible(false); // Make it invisible
-                    
-                    console.log(`Created circle collision ${index} at (${centerX}, ${centerY}) with radius ${radius}`);
-                } else {
-                    // Handle rectangle collision objects
-                    const centerX = obj.x + obj.width / 2;
-                    const centerY = obj.y + obj.height / 2;
-                    
-                    collisionBody = collisionGroup.create(centerX, centerY, undefined);
-                    collisionBody.body.setSize(obj.width, obj.height);
-                    collisionBody.setVisible(false); // Make it invisible
-                    
-                    console.log(`Created rectangle collision ${index} at (${centerX}, ${centerY}) size ${obj.width}x${obj.height}`);
-                }
+                // Handle ellipse/circle collision objects
+                const radius = Math.min(obj.width, obj.height) / 2;
+                const centerX = obj.x + obj.width / 2;
+                const centerY = obj.y + obj.height / 2;
                 
+                // Create a circle physics body
+                collisionBody = collisionGroup.create(centerX, centerY, undefined);
+                collisionBody.body.setCircle(radius);
+                collisionBody.setVisible(false); // Make it invisible
+                
+                console.log(`✓ Created circle collision ${index} at (${centerX}, ${centerY}) with radius ${radius}`);
+            } else if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined) {
+                // Handle rectangle collision objects
+                const centerX = obj.x + obj.width / 2;
+                const centerY = obj.y + obj.height / 2;
+                
+                collisionBody = collisionGroup.create(centerX, centerY, undefined);
+                collisionBody.body.setSize(obj.width, obj.height);
+                collisionBody.setVisible(false); // Make it invisible
+                
+                console.log(`✓ Created rectangle collision ${index} at (${centerX}, ${centerY}) size ${obj.width}x${obj.height}`);
+            } else {
+                console.warn(`⚠️ Skipping collision object ${index} - invalid geometry`);
+                console.warn(`  Object data:`, obj);
+                return;
+            }
+            
                 // Mark as collision object for debug visualization
                 if (collisionBody) {
                     collisionBody.setData('collisionObject', true);
                     collisionBody.setData('isCircle', !!obj.ellipse);
+                    collisionBody.setData('isRectangle', !obj.ellipse);
                     collisionBody.setData('radius', obj.ellipse ? Math.min(obj.width, obj.height) / 2 : null);
                     collisionBody.setData('objectIndex', index);
+                    // Store original object data for accurate debug drawing
+                    collisionBody.setData('originalX', obj.x);
+                    collisionBody.setData('originalY', obj.y);
+                    collisionBody.setData('originalWidth', obj.width);
+                    collisionBody.setData('originalHeight', obj.height);
                 }
+            } catch (error) {
+                console.error(`❌ Error creating collision object ${index}:`, error);
+                console.error(`  Object data:`, obj);
             }
         });
         
         console.log(`✓ Created collision group with ${collisionGroup.children.size} objects`);
+        
+        // Log collision object statistics
+        const ellipseCount = collisionLayer.objects.filter(obj => obj.ellipse).length;
+        const rectangleCount = collisionLayer.objects.filter(obj => !obj.ellipse && obj.width && obj.height).length;
+        const skippedCount = collisionLayer.objects.length - ellipseCount - rectangleCount;
+        console.log(`  - Ellipse objects: ${ellipseCount}`);
+        console.log(`  - Rectangle objects: ${rectangleCount}`);
+        if (skippedCount > 0) {
+            console.log(`  - Skipped objects: ${skippedCount}`);
+        }
     }
 
 
+
+    /**
+     * Helper function to create a layer with error handling and logging
+     */
+    private createLayerWithErrorHandling(layerName: string, tilesets: any[]): Phaser.Tilemaps.TilemapLayer | null {
+        const layer = this.tilemap.createLayer(layerName, tilesets);
+        if (!layer) {
+            console.warn(`⚠️ Layer '${layerName}' not found in tilemap`);
+        } else {
+            console.log(`✓ Layer '${layerName}' created successfully`);
+        }
+        return layer;
+    }
+
+    /**
+     * Advanced perspective depth system for AI entities
+     * Uses both Y-coordinate and X-coordinate for true perspective depth
+     * Static objects (trees, buildings, rocks) keep their fixed depths
+     */
+    private updateEntityDepth(entity: any): void {
+        if (!entity || !entity.y || !entity.setDepth) return;
+
+        const entityY = entity.y;
+        const entityX = entity.x;
+
+        // Calculate perspective depth based on Y and X position
+        let entityDepth = this.calculatePerspectiveDepth(entityY, entityX);
+
+        // Apply the calculated depth to AI entity
+        entity.setDepth(entityDepth);
+    }
+
+    /**
+     * Calculate perspective depth based on Y and X coordinates
+     * This creates a more realistic depth system
+     */
+    private calculatePerspectiveDepth(y: number, x: number): number {
+        // =====================================================================
+        // PERSPECTIVE DEPTH CONFIGURATION
+        // Adjust these values to match your map layout and visual preferences
+        // =====================================================================
+        
+        // Map dimensions - UPDATE THESE TO MATCH YOUR ACTUAL MAP SIZE
+        const MAP_HEIGHT = 2400; // Your map height in pixels
+        const MAP_WIDTH = 2400;  // Your map width in pixels
+        
+        // Depth range - how much depth variation across the map
+        const MIN_DEPTH = 35;    // Minimum depth (front of map)
+        const MAX_DEPTH = 135;   // Maximum depth (back of map)
+        const DEPTH_RANGE = MAX_DEPTH - MIN_DEPTH; // 100 depth units
+        
+        // X-axis depth variation - how much left/right affects depth
+        const X_DEPTH_VARIATION = 10; // -5 to +5 depth variation
+        
+        // Static object depths - these should match your layer depths
+        const STATIC_DEPTHS = {
+            ROCKS: 40,
+            TREES_UNDER: 50,
+            TREES_OVER: 60,
+            BUILDING_WALLS: 90,
+            BUILDING_PROPS_OVER: 130
+        };
+        
+        // Depth zones - UPDATE THESE COORDINATES TO MATCH YOUR MAP LAYOUT
+        const DEPTH_ZONES = [
+            {
+                name: 'rocks',
+                yMin: 200, yMax: 400, yThreshold: 300,
+                aboveDepth: STATIC_DEPTHS.ROCKS + 5,
+                belowDepth: STATIC_DEPTHS.ROCKS - 5
+            },
+            {
+                name: 'trees',
+                yMin: 100, yMax: 500, yThreshold: 300,
+                aboveDepth: STATIC_DEPTHS.TREES_UNDER + 5,
+                belowDepth: STATIC_DEPTHS.TREES_OVER - 5
+            },
+            {
+                name: 'buildings',
+                yMin: 300, yMax: 600, yThreshold: 450,
+                aboveDepth: STATIC_DEPTHS.BUILDING_WALLS + 5,
+                belowDepth: STATIC_DEPTHS.BUILDING_PROPS_OVER - 5
+            }
+        ];
+        
+        // =====================================================================
+        // CALCULATION LOGIC (usually no need to change this)
+        // =====================================================================
+        
+        // Normalize coordinates (0-1 range)
+        const normalizedY = Math.max(0, Math.min(1, y / MAP_HEIGHT));
+        const normalizedX = Math.max(0, Math.min(1, x / MAP_WIDTH));
+        
+        // Calculate base depth from Y position (primary perspective factor)
+        // Higher Y = further back = higher depth value
+        let baseDepth = MIN_DEPTH + (normalizedY * DEPTH_RANGE);
+        
+        // Add X-based depth variation for more realistic perspective
+        const xVariation = (normalizedX - 0.5) * X_DEPTH_VARIATION;
+        baseDepth += xVariation;
+        
+        // Apply depth zones for specific areas
+        for (const zone of DEPTH_ZONES) {
+            if (y >= zone.yMin && y <= zone.yMax) {
+                if (y < zone.yThreshold) {
+                    baseDepth = zone.aboveDepth;
+                } else {
+                    baseDepth = zone.belowDepth;
+                }
+                break; // Use the first matching zone
+            }
+        }
+        
+        // Ensure depth stays within reasonable bounds
+        return Math.max(MIN_DEPTH, Math.min(MAX_DEPTH, Math.round(baseDepth)));
+    }
+
+    /**
+     * Update player depth (wrapper for backward compatibility)
+     */
+    private updatePlayerDepth(): void {
+        if (this.player) {
+            this.updateEntityDepth(this.player);
+        }
+    }
+
+    /**
+     * Update all NPCs depth
+     */
+    private updateNPCsDepth(): void {
+        if (this.npcs && this.npcs.length > 0) {
+            this.npcs.forEach((npc: any) => {
+                if (npc && npc.active) {
+                    this.updateEntityDepth(npc);
+                }
+            });
+        }
+    }
+
+    /**
+     * Update all enemies depth
+     */
+    private updateEnemiesDepth(): void {
+        if (this.enemies && this.enemies.length > 0) {
+            this.enemies.forEach((enemy: any) => {
+                if (enemy && enemy.active) {
+                    this.updateEntityDepth(enemy);
+                    
+                    // Quest icons are now only added to new items, not updated on existing ones
+                }
+            });
+        }
+    }
 
     private createTilemap(): void {
         this.tilemap = this.make.tilemap({ key: 'tilemapJSON' });
@@ -584,63 +830,104 @@ export class World extends Phaser.Scene {
             tsTree
         ].filter(ts => ts !== null);
         
+        // Log tileset loading results
+        console.log('=== TILESET LOADING ANALYSIS ===');
+        const tilesetNames = [
+            'Water_tiles', 'Floors_Tiles', 'Dungeon_Tiles', 'Wall_Tiles', 'Wall_Variations',
+            'Dungeon_Props', 'Farm', 'Resources', 'Rocks', 'Shadows', 'Vegetation',
+            'Size_02', 'Size_02_type02', 'Size_02_type3', 'Size_03', 'Size_03_type02', 'Size_03_type03',
+            'Size_04', 'Size_04_type02', 'Size_04_type03', 'Size_05', 'Size_05_type02', 'Size_05_type03',
+            'Shadows_Buildings', 'Walls_Buildings', 'Roofs_Buildings', 'Props_Buildings', 'Floors_Buildings',
+            'Bonfire', 'Workbench', 'Alchemy_Table_01-Sheet',
+            'fairyforest_Props', 'fairy_Shadown', 'fairyforest_Tiles', 'fairyforest_Tree', 'Light_fairy',
+            'dessert_Props', 'dessert_Ground', 'Sand',
+            'Tree'
+        ];
+        const tilesetValues = [
+            tsWater, tsFloors, tsDungeon, tsWallTiles, tsWallVariations,
+            tsDungeonProps, tsFarm, tsResources, tsRocks, tsShadows, tsVegetation,
+            tsSize02, tsSize02Type02, tsSize02Type3, tsSize03, tsSize03Type02, tsSize03Type03,
+            tsSize04, tsSize04Type02, tsSize04Type03, tsSize05, tsSize05Type02, tsSize05Type03,
+            tsShadowsBuildings, tsWallsBuildings, tsRoofsBuildings, tsPropsBuildings, tsFloorsBuildings,
+            tsBonfire, tsWorkbench, tsAlchemy,
+            tsFairyProps, tsFairyShadows, tsFairyTiles, tsFairyTree, tsFairyLight,
+            tsDesertProps, tsDesertGround, tsSand,
+            tsTree
+        ];
+        
+        tilesetNames.forEach((name, index) => {
+            const tileset = tilesetValues[index];
+            if (tileset) {
+                console.log(`✓ Tileset loaded: ${name}`);
+            } else {
+                console.warn(`❌ Tileset failed to load: ${name}`);
+            }
+        });
+        console.log(`✓ Total tilesets loaded: ${allTilesets.length}/${tilesetNames.length}`);
+        console.log('=== TILESET LOADING ANALYSIS COMPLETE ===');
+        
         // Create visible layers in the correct order (bottom to top)
         // Order based on JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building walls -> Building roofs -> Building props -> Mines -> Bushes overlayer
         
-        // Base layers (bottom)
-        const groundLayer = this.tilemap.createLayer('Ground', allTilesets);
-        const pathsLayer = this.tilemap.createLayer('Paths', allTilesets);
-        const shadowsLayer = this.tilemap.createLayer('Shadows', allTilesets);
-        const wallsLayer = this.tilemap.createLayer('Walls', allTilesets);
-        const rocksLayer = this.tilemap.createLayer('Rocks', allTilesets);
+        // Base layers (bottom) - with error handling
+        const groundLayer = this.createLayerWithErrorHandling('Ground', allTilesets);
+        const pathsLayer = this.createLayerWithErrorHandling('Paths', allTilesets);
+        const shadowsLayer = this.createLayerWithErrorHandling('Shadows', allTilesets);
+        const wallsLayer = this.createLayerWithErrorHandling('Walls', allTilesets);
+        const rocksLayer = this.createLayerWithErrorHandling('Rocks', allTilesets);
         
-        // Tree layers (under and over)
-        const treesUnderlayer = this.tilemap.createLayer('Trees underlayer', allTilesets);
-        const treesOverlayer = this.tilemap.createLayer('Trees overlayer', allTilesets);
+        // Tree layers (under and over) - with error handling
+        const treesUnderlayer = this.createLayerWithErrorHandling('Trees underlayer', allTilesets);
+        const treesOverlayer = this.createLayerWithErrorHandling('Trees overlayer', allTilesets);
         
-        // Bush layers (under and over)
-        const bushesUnderlayer = this.tilemap.createLayer('Bushes underlayer', allTilesets);
+        // Bush layers (under and over) - with error handling
+        const bushesUnderlayer = this.createLayerWithErrorHandling('Bushes underlayer', allTilesets);
         
-        // Roofs layer
-        const roofsLayer = this.tilemap.createLayer('Roofs', allTilesets);
+        // Roofs layer - with error handling
+        const roofsLayer = this.createLayerWithErrorHandling('Roofs', allTilesets);
         
-        // Building layers (first instance)
-        const buildingWallsLayer1 = this.tilemap.createLayer('Building walls', allTilesets);
-        const propsDetailsLayer = this.tilemap.createLayer('Props/Details', allTilesets);
+        // Building layers (first instance) - with error handling
+        const buildingWallsLayer1 = this.createLayerWithErrorHandling('Building walls', allTilesets);
+        const propsDetailsLayer = this.createLayerWithErrorHandling('Props/Details', allTilesets);
         
-        // Building layers (second instance - skip duplicate name)
-        // const buildingWallsLayer2 = this.tilemap.createLayer('Building walls', allTilesets); // Skip duplicate
-        const buildingRoofsLayer = this.tilemap.createLayer('Building roofs', allTilesets);
-        const buildingPropsLayer = this.tilemap.createLayer('Building props', allTilesets);
+        // Building layers (second instance - handle duplicate name by getting by ID)
+        // Note: We'll skip the second Building walls layer for now as it has the same name
+        // const buildingWallsLayer2 = null; // Skip duplicate layer name
         
-        // Mine layers
-        const minesLayer = this.tilemap.createLayer('Mines', allTilesets);
-        const mineRoofLayer = this.tilemap.createLayer('Mine Roof', allTilesets);
+        const buildingRoofsLayer = this.createLayerWithErrorHandling('Building roofs', allTilesets);
         
-        // Bush overlayer (top)
-        const bushesOverlayer = this.tilemap.createLayer('Bushes overlayer', allTilesets);
+        // Fix: Handle the correct layer names from TMJ file - with error handling
+        const buildingPropsUnderlayer = this.createLayerWithErrorHandling('Building props underlayer', allTilesets);
+        const buildingPropsOverlayer = this.createLayerWithErrorHandling('Building props overlayer', allTilesets);
+        
+        // Mine layers - with error handling
+        const minesLayer = this.createLayerWithErrorHandling('Mines', allTilesets);
+        const mineRoofLayer = this.createLayerWithErrorHandling('Mine Roof', allTilesets);
+        
+        // Bush overlayer (top) - with error handling
+        const bushesOverlayer = this.createLayerWithErrorHandling('Bushes overlayer', allTilesets);
         
         // Collision layer is an object layer, not a tile layer
         // We'll handle collision objects separately in setupCollisionDetection()
         
-        // Layer order matches JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building roofs -> Building props -> Mines -> Mine Roof -> Bushes overlayer
+        // Layer order matches JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building props underlayer -> Building roofs -> Building props overlayer -> Mines -> Mine Roof -> Bushes overlayer
         const allLayers = [
             groundLayer, pathsLayer, shadowsLayer, wallsLayer, rocksLayer,
             treesUnderlayer, treesOverlayer, bushesUnderlayer, roofsLayer,
-            buildingWallsLayer1, propsDetailsLayer, buildingRoofsLayer, buildingPropsLayer,
+            buildingWallsLayer1, propsDetailsLayer, buildingPropsUnderlayer, buildingRoofsLayer, buildingPropsOverlayer,
             minesLayer, mineRoofLayer, bushesOverlayer
         ];
         const layerNames = [
             'Ground', 'Paths', 'Shadows', 'Walls', 'Rocks',
             'Trees underlayer', 'Trees overlayer', 'Bushes underlayer', 'Roofs',
-            'Building walls', 'Props/Details', 'Building roofs', 'Building props',
+            'Building walls', 'Props/Details', 'Building props underlayer', 'Building roofs', 'Building props overlayer',
             'Mines', 'Mine Roof', 'Bushes overlayer'
         ];
         
         // Set proper depth ordering for correct rendering (lower depth = behind)
-        // Order matches JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building roofs -> Building props -> Mines -> Mine Roof -> Bushes overlayer
-        // Player depth: 200 (above all layers)
-        const depthOrder = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150];
+        // Order matches JSON structure: Ground -> Paths -> Shadows -> Walls -> Rocks -> Trees underlayer -> Player (55) -> Trees overlayer -> Bushes underlayer -> Roofs -> Building walls -> Props/Details -> Building props underlayer -> Building roofs -> Building props overlayer -> Mines -> Mine Roof -> Bushes overlayer
+        // Player depth: 55 (between trees underlayer 50 and trees overlayer 60)
+        const depthOrder = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100, 110, 120, 130, 140, 150, 160];
         
         allLayers.forEach((layer, index) => {
             if (layer) {
@@ -655,8 +942,30 @@ export class World extends Phaser.Scene {
         
         console.log('✓ Tilemap layers created successfully');
         
-        // Get object layers
+        // Get object layers and log their contents
         this.objlayer = this.tilemap.getObjectLayer('Item Spawn');
+        
+        // Log all object layers
+        console.log('=== OBJECT LAYERS ANALYSIS ===');
+        const allObjectLayers = this.tilemap.layers.filter((layer: any) => layer.type === 'objectgroup');
+        allObjectLayers.forEach((layer: any) => {
+            console.log(`✓ Object Layer: ${layer.name} (ID: ${layer.id})`);
+            if (layer.objects) {
+                console.log(`  - Objects count: ${layer.objects.length}`);
+                
+                // Group objects by name for better analysis
+                const objectGroups = layer.objects.reduce((groups: any, obj: any) => {
+                    const name = obj.name || 'unnamed';
+                    groups[name] = (groups[name] || 0) + 1;
+                    return groups;
+                }, {});
+                
+                Object.entries(objectGroups).forEach(([name, count]) => {
+                    console.log(`    - ${name}: ${count}`);
+                });
+            }
+        });
+        console.log('=== OBJECT LAYERS ANALYSIS COMPLETE ===');
     }
 
 
@@ -684,6 +993,8 @@ export class World extends Phaser.Scene {
                 }
                 
                 if (enemy!) {
+                    // Set enemy depth above paths (10) and roads (20) but below player (200)
+                    enemy.setDepth(150);
                     this.enemies.push(enemy);
                 }
             })
@@ -757,10 +1068,10 @@ export class World extends Phaser.Scene {
     /**
      * Create herb spawn point with respawn capability
      */
-    private createHerbSpawnPoint(x: number, y: number, herbType: string = 'mysterious herb'): void {
+    private createHerbSpawnPoint(x: number, y: number, herbType: string = 'dimensional herb'): void {
         console.log(`Creating herb spawn point: ${herbType} at (${x}, ${y})`);
         
-        const herb = new Item(this, x, y, 'mysterious-herb', { 
+        const herb = new Item(this, x, y, 'dimensional-herb', { 
             sound: 'collect-herb', 
             volume: 0.5 
         });
@@ -769,9 +1080,6 @@ export class World extends Phaser.Scene {
         herb.setVisible(true);
         herb.setDepth(100); // Higher depth to ensure visibility
         
-        // Add quest icon if herb collection quest is active
-        this.addQuestIconToHerb(herb);
-        
         // Add respawn capability
         herb.setData('respawnTime', 30000); // 30 seconds
         herb.setData('originalType', herbType);
@@ -779,17 +1087,76 @@ export class World extends Phaser.Scene {
         herb.setData('isRespawnable', true);
         
         this.items.push(herb);
+        
+        // Add quest icon if quest 1 is active (dimensional herb quest)
+        this.addQuestIconToNewItem(herb, herbType);
+        
         console.log(`✓ Herb created successfully. Total items: ${this.items.length}`);
     }
 
 
 
 
+
     /**
-     * Add quest icon to herb if herb collection quest is active
+     * Add quest icon to a newly created item if a relevant quest is active
      */
-    private addQuestIconToHerb(herb: Item): void {
-        this.addQuestIconToItem(herb, 'mysterious herb');
+    private addQuestIconToNewItem(item: Item, itemType: string): void {
+        try {
+            if (!this.questSystem) {
+                console.log(`Quest system not yet initialized, skipping quest icon for ${itemType}`);
+                return;
+            }
+
+            const activeQuests = this.questSystem.getActiveQuests();
+            console.log(`Checking quest icons for ${itemType}, active quests:`, Array.from(activeQuests.keys()));
+            const itemTypeLower = itemType.toLowerCase();
+
+            // Check if any active quest requires this item type
+            for (const [questId, questProgress] of activeQuests) {
+                if (questProgress.isCompleted) continue;
+
+                const questData = this.cache.json.get(`quest-${questId}`);
+                if (!questData) continue;
+
+                const questRequirement = questData.questdata.type.toLowerCase();
+
+                // Check if this item matches the quest requirement
+                if (questRequirement === itemTypeLower || 
+                    (questRequirement.includes('nepian') && itemTypeLower.includes('nepian')) ||
+                    (questRequirement.includes('heart') && itemTypeLower.includes('heart'))) {
+                    
+                    // Check if quest icon already exists
+                    if (item.getData('questIcon')) {
+                        console.log(`Quest icon already exists for ${itemType}, skipping quest ${questId}`);
+                        break;
+                    }
+                    
+                    console.log(`Adding quest icon for new ${itemType} - quest ${questId} is active`);
+                    
+                    // Add quest icon with sparkle animation
+                    const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon');
+                    questIcon.setScale(1.0); // Larger, more visible quest icon
+                    questIcon.setDepth(150); // Above the item
+                    
+                    // Check if animation exists before playing
+                    if (questIcon.anims.exists('quest-icon-bounce')) {
+                        questIcon.anims.play('quest-icon-bounce', true); // Use bounce animation for sparkle effect
+                    }
+                    
+                    // Add sparkle animation to the herb itself
+                    this.addSparkleAnimationToItem(item);
+                    
+                    // Store reference to quest icon for cleanup
+                    item.setData('questIcon', questIcon);
+                    
+                    console.log(`✓ Added quest icon and sparkle to new ${itemType} - quest ${questId} is active`);
+                    break; // Only add one quest icon per item
+                }
+            }
+        } catch (error) {
+            console.error('Error adding quest icon to new item:', error);
+        }
     }
 
     /**
@@ -802,11 +1169,14 @@ export class World extends Phaser.Scene {
                 return;
             }
 
-            // Add quest icons to existing herbs
+            // Clean up any existing quest icons to start fresh
+            this.cleanupAllQuestIcons();
+            
+            // Add quest icons to existing items if relevant quests are active
             this.items.forEach((item) => {
                 try {
-                    if (item && item.active && item.getItemType() === 'mysterious herb') {
-                        this.addQuestIconToItem(item, 'mysterious herb');
+                    if (item && item.active && item.getItemType() === 'dimensional herb') {
+                        this.addQuestIconToNewItem(item, 'dimensional herb');
                     }
                 } catch (error) {
                     console.error('Error adding quest icon to herb:', error);
@@ -838,74 +1208,47 @@ export class World extends Phaser.Scene {
     }
 
     /**
-     * Add quest icon to any item if a relevant quest is active
+     * Clean up all existing quest icons to start fresh
      */
-    private addQuestIconToItem(item: Item, itemType: string): void {
-        try {
-            if (!this.questSystem) {
-                // Quest system not yet initialized, skip quest icon for now
-                return;
-            }
-
-            if (!item || !item.active) {
-                // Item is not valid or active, skip
-                return;
-            }
-
-            const activeQuests = this.questSystem.getActiveQuests();
-            
-            // Check each active quest to see if this item type is required
-            for (const [questId, questProgress] of activeQuests) {
-                if (questProgress.isCompleted) continue;
-                
-                // Add null check for cache access
-                if (!this.cache || !this.cache.json) {
-                    console.warn('Cache not available for quest icon check');
-                    return;
+    private cleanupAllQuestIcons(): void {
+        // Clean up quest icons from all items
+        this.items.forEach(item => {
+            if (item && item.active) {
+                const questIcon = item.getData('questIcon');
+                if (questIcon) {
+                    questIcon.destroy();
+                    item.setData('questIcon', null);
                 }
-
-                let questData;
-                try {
-                    questData = this.cache.json.get(`quest-${questId}`);
-                } catch (error) {
-                    console.warn(`Failed to load quest data for ${questId}:`, error);
-                    continue;
+                
+                // Clean up sparkle animations
+                const sparkleTween = item.getData('sparkleTween');
+                const glowTween = item.getData('glowTween');
+                if (sparkleTween) {
+                    sparkleTween.destroy();
+                    item.setData('sparkleTween', null);
                 }
-
-                if (!questData || !questData.questdata) continue;
-                
-                const questRequirement = questData.questdata.type.toLowerCase();
-                const itemTypeLower = itemType.toLowerCase();
-                
-                // Check if this item matches the quest requirement
-                if (questRequirement === itemTypeLower || 
-                    (questRequirement.includes('nepian') && itemTypeLower.includes('nepian')) ||
-                    (questRequirement.includes('heart') && itemTypeLower.includes('heart'))) {
-                    
-                    // Add quest icon with sparkle animation
-                    const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon');
-                    questIcon.setScale(1.0); // Larger, more visible quest icon
-                    questIcon.setDepth(150); // Above the item
-                    
-                    // Check if animation exists before playing
-                    if (questIcon.anims.exists('quest-icon-bounce')) {
-                        questIcon.anims.play('quest-icon-bounce', true); // Use bounce animation for sparkle effect
-                    }
-                    
-                    // Add sparkle animation to the herb itself
-                    this.addSparkleAnimationToItem(item);
-                    
-                    // Store reference to quest icon for cleanup
-                    item.setData('questIcon', questIcon);
-                    
-                    console.log(`✓ Added quest icon and sparkle to ${itemType} - quest ${questId} is active`);
-                    break; // Only add one quest icon per item
+                if (glowTween) {
+                    glowTween.destroy();
+                    item.setData('glowTween', null);
                 }
             }
-        } catch (error) {
-            console.error('Error adding quest icon to item:', error);
-        }
+        });
+        
+        // Clean up quest icons from all enemies
+        this.enemies.forEach(enemy => {
+            if (enemy && enemy.active) {
+                const questIcon = enemy.getData('questIcon');
+                if (questIcon) {
+                    questIcon.destroy();
+                    enemy.setData('questIcon', null);
+                }
+            }
+        });
+        
+        console.log('✓ Cleaned up all existing quest icons');
     }
+
+    // Removed old addQuestIconToItem method - replaced with addQuestIconToNewItem to prevent multiple icons
 
     /**
      * Add sparkle animation to an item (herbs, etc.)
@@ -1131,6 +1474,9 @@ export class World extends Phaser.Scene {
             const added = this.player.p1Inventory.addItem(itemType, 1);
             
             if (added) {
+                // Emit item collected event for quest system
+                this.events.emit('itemCollected', itemType, 1);
+                
                 // Update quest progress when item is collected
                 if (this.questSystem) {
                     this.questSystem.updateQuestProgress(itemType, 1);
@@ -1234,6 +1580,36 @@ export class World extends Phaser.Scene {
         }
     }
 
+
+    /**
+     * Setup camera zoom controls for testing
+     */
+    private setupCameraZoomControls(): void {
+        if (!this.input.keyboard) return;
+
+        // Zoom in with + key
+        this.input.keyboard.on('keydown-PLUS', () => {
+            const currentZoom = this.cameras.main.zoom;
+            const newZoom = Math.min(currentZoom + 0.1, 3.0); // Max zoom 3x
+            this.cameras.main.setZoom(newZoom);
+            console.log(`Camera zoom: ${newZoom.toFixed(1)}x`);
+        });
+
+        // Zoom out with - key
+        this.input.keyboard.on('keydown-MINUS', () => {
+            const currentZoom = this.cameras.main.zoom;
+            const newZoom = Math.max(currentZoom - 0.1, 0.5); // Min zoom 0.5x
+            this.cameras.main.setZoom(newZoom);
+            console.log(`Camera zoom: ${newZoom.toFixed(1)}x`);
+        });
+
+        // Reset zoom with 0 key
+        this.input.keyboard.on('keydown-ZERO', () => {
+            this.cameras.main.setZoom(1.0);
+            console.log('Camera zoom reset to 1.0x');
+        });
+    }
+
     private createTrees(): void {
         try {
             // Create environmental trees from tilemap object layer
@@ -1261,9 +1637,14 @@ export class World extends Phaser.Scene {
      * Create items from tilemap spawn points
      */
     private createItemFromSpawnPoint(element: any): void {
+        console.log('=== CREATING ITEM FROM SPAWN POINT ===');
+        console.log('Element name:', element.name);
+        console.log('Element position:', element.x, element.y);
+        
         if (element.name === 'bush_1') {
-            // Create mysterious herb from bush_1 spawn point
-            const herb = new Item(this, element.x as number, element.y as number, 'mysterious-herb', { 
+            console.log('Creating dimensional herb from bush_1 spawn point');
+            // Create dimensional herb from bush_1 spawn point
+            const herb = new Item(this, element.x as number, element.y as number, 'dimensional-herb', { 
                 sound: 'collect-herb', 
                 volume: 0.5 
             });
@@ -1272,22 +1653,24 @@ export class World extends Phaser.Scene {
             herb.setVisible(true);
             herb.setDepth(100);
             
-            // Add quest icon if herb collection quest is active
-            this.addQuestIconToHerb(herb);
+            // Quest icons will be added when quests start via event listener
             
             // Add respawn capability
             herb.setData('respawnTime', 30000); // 30 seconds
-            herb.setData('originalType', 'mysterious herb');
+            herb.setData('originalType', 'dimensional herb');
             herb.setData('spawnPoint', { x: element.x, y: element.y });
             herb.setData('isRespawnable', true);
             
             this.items.push(herb);
             
+            // Add quest icon if quest 1 is active (dimensional herb quest)
+            this.addQuestIconToNewItem(herb, 'dimensional herb');
+            
             // Herb pickup now handled by proximity-based mouse pickup system
             
             // Herbs don't bounce - only player-dropped items bounce
             
-            console.log(`Created herb from tilemap at (${element.x}, ${element.y})`);
+            console.log(`Created dimensional herb from tilemap at (${element.x}, ${element.y})`);
         } else if (element.name === 'sword_spawn') {
             // Create sword from sword_spawn spawn point
             const sword = new LongSword(this, element.x as number, element.y as number);
@@ -1316,12 +1699,14 @@ export class World extends Phaser.Scene {
      */
 
     private setupMinimap(): void {
-        const minimapSize = 175;
-        const minimapX = 20;
-        const minimapY = 20;
+        console.log('=== SETTING UP MINIMAP ===');
+        const minimapSize = 120; // Smaller minimap for reduced canvas size
+        const minimapX = 15;
+        const minimapY = 15;
  
         // Create circular minimap camera
         this.miniMapCamera = this.cameras.add(minimapX, minimapY, minimapSize, minimapSize);
+        console.log('Minimap camera created:', this.miniMapCamera);
         
         // Safety check for tilemap dimensions
         if (this.tilemap && this.tilemap.widthInPixels && this.tilemap.heightInPixels) {
@@ -1344,11 +1729,15 @@ export class World extends Phaser.Scene {
         this.minimapMask.fillStyle(0xffffff, 1);
         this.minimapMask.fillCircle(minimapX + minimapSize / 2, minimapY + minimapSize / 2, minimapSize / 2);
         this.miniMapCamera.ignore(this.minimapMask)
+        console.log('Minimap mask created');
 
         // Create medieval-themed minimap ring with ornate compass design
         const minimapRing = this.createMedievalMinimapRing(minimapX, minimapY, minimapSize);
         minimapRing.setScrollFactor(0).setDepth(1000); // Fix the ring in place on the screen
         this.miniMapCamera.ignore(minimapRing);
+        console.log('Minimap ring created:', minimapRing);
+
+        console.log('Minimap ring created successfully');
 
         // ignore the day night cycle overlay
         this.miniMapCamera.ignore(this.dayNightCycle.getOverlay());
@@ -1459,25 +1848,41 @@ export class World extends Phaser.Scene {
 
         // Draw collision objects from collision layer
         let collisionObjectCount = 0;
+        const totalChildren = this.children.list.length;
+        const collisionChildren = this.children.list.filter(child => child.getData('collisionObject') === true);
+        
+        console.log(`Debug: Found ${totalChildren} total children, ${collisionChildren.length} collision objects`);
+        
         this.children.list.forEach(child => {
             if (child.getData('collisionObject') === true) {
                 const isCircle = child.getData('isCircle');
                 const radius = child.getData('radius');
                 
                 if (isCircle && radius) {
-                    // Draw circle collision
-                    const sprite = child as Phaser.GameObjects.Sprite;
-                    this.debugManager.drawCircleCollision(sprite.x, sprite.y, radius, 0xffff00);
-                } else {
-                    // Draw rectangle collision with vector points
-                    this.debugManager.drawCollisionBox(child, 0xffff00); // Yellow for collision objects
+                    // Draw circle collision using original object data
+                    const originalX = child.getData('originalX');
+                    const originalY = child.getData('originalY');
+                    const originalWidth = child.getData('originalWidth');
+                    const originalHeight = child.getData('originalHeight');
                     
-                    // Draw vector points for collision objects
-                    if ('getBounds' in child && typeof child.getBounds === 'function') {
-                        const bounds = (child as any).getBounds();
-                        if (bounds) {
-                            this.debugManager.drawVectorPoints(bounds.x, bounds.y, bounds.width, bounds.height, 0xffff00);
-                        }
+                    if (originalX !== undefined && originalY !== undefined) {
+                        const centerX = originalX + originalWidth / 2;
+                        const centerY = originalY + originalHeight / 2;
+                        this.debugManager.drawCircleCollision(centerX, centerY, radius, 0xffff00);
+                    }
+                } else {
+                    // Draw rectangle collision using original object data
+                    const originalX = child.getData('originalX');
+                    const originalY = child.getData('originalY');
+                    const originalWidth = child.getData('originalWidth');
+                    const originalHeight = child.getData('originalHeight');
+                    
+                    if (originalX !== undefined && originalY !== undefined && originalWidth !== undefined && originalHeight !== undefined) {
+                        // Draw rectangle outline
+                        this.debugManager.drawRectangleCollision(originalX, originalY, originalWidth, originalHeight, 0xffff00);
+                        
+                        // Draw vector points at corners
+                        this.debugManager.drawVectorPoints(originalX, originalY, originalWidth, originalHeight, 0xffff00);
                     }
                 }
                 
@@ -1529,6 +1934,7 @@ export class World extends Phaser.Scene {
             }
         });
     }
+
 
     private setupCollisionDetection(): void {
         // Get all collision objects that were created in setupCollisionObjects()
@@ -1794,7 +2200,7 @@ export class World extends Phaser.Scene {
         // Respawn items that are ready
         itemsToRespawn.forEach(respawnData => {
             try {
-                if (respawnData.type === 'mysterious herb') {
+                if (respawnData.type === 'dimensional herb') {
                     this.createHerbSpawnPoint(respawnData.spawnPoint.x, respawnData.spawnPoint.y, respawnData.type);
                 } else if (respawnData.type === 'fruit') {
                     // Fruit respawn removed - all items now come from tilemap object layers

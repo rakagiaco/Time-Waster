@@ -421,14 +421,8 @@ export class DebugManager {
         this.showCollisionBoxes = !this.showCollisionBoxes;
         console.log(`Collision boxes ${this.showCollisionBoxes ? 'enabled' : 'disabled'}`);
         
-        // Update all game objects to show/hide collision boxes
-        if (this.scene && this.scene.children) {
-            this.scene.children.list.forEach((child: any) => {
-                if (child.body && child.body.debugShowBody !== undefined) {
-                    child.body.debugShowBody = this.showCollisionBoxes;
-                }
-            });
-        }
+        // Emit event to World scene to toggle collision drawing
+        this.scene.events.emit('debug-toggleCollisionBoxes', this.showCollisionBoxes);
     }
 
     /**
@@ -436,6 +430,13 @@ export class DebugManager {
      */
     public getCollisionBoxVisibility(): boolean {
         return this.showCollisionBoxes;
+    }
+
+    /**
+     * Set collision box visibility state
+     */
+    public setCollisionBoxVisibility(visible: boolean): void {
+        this.showCollisionBoxes = visible;
     }
 
 
@@ -453,5 +454,22 @@ export class DebugManager {
         this.debugGraphics.lineStyle(1, color, 0.4);
         this.debugGraphics.lineBetween(x - radius, y, x + radius, y); // Horizontal
         this.debugGraphics.lineBetween(x, y - radius, x, y + radius); // Vertical
+    }
+
+    public drawRectangleCollision(x: number, y: number, width: number, height: number, color: number): void {
+        if (!this.isEnabled || !this.debugGraphics) return;
+        
+        // Draw rectangle outline
+        this.debugGraphics.lineStyle(2, color, 0.8);
+        this.debugGraphics.strokeRect(x, y, width, height);
+        
+        // Draw center point
+        this.debugGraphics.fillStyle(color, 0.8);
+        this.debugGraphics.fillCircle(x + width / 2, y + height / 2, 2);
+        
+        // Draw diagonal lines to show it's a collision box
+        this.debugGraphics.lineStyle(1, color, 0.4);
+        this.debugGraphics.lineBetween(x, y, x + width, y + height); // Top-left to bottom-right
+        this.debugGraphics.lineBetween(x + width, y, x, y + height); // Top-right to bottom-left
     }
 }

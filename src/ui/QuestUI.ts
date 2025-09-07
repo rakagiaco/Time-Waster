@@ -1,19 +1,11 @@
 /**
- * Quest UI System
+ * Modern Quest UI System
  * 
- * Displays current quest information in the top right corner of the screen.
- * Follows the same pattern as the health bar with fixed camera positioning.
- * 
- * Features:
- * - Quest title and description display
- * - Progress tracking (e.g., "Collect 3/5 mysterious herbs")
- * - Dynamic updates when quest progress changes
- * - Medieval aesthetic matching the game's theme
- * - Event-driven system for future quest integration
+ * A sleek, compact quest tracking system positioned in the top-right corner.
+ * Features modern styling, progress bars, and smooth animations.
  */
 
 import Phaser from 'phaser';
-
 
 export interface QuestData {
     id: string;
@@ -31,13 +23,17 @@ export class QuestUI {
     private questTitle: Phaser.GameObjects.BitmapText | null = null;
     private questDescription: Phaser.GameObjects.BitmapText | null = null;
     private questProgress: Phaser.GameObjects.BitmapText | null = null;
+    private progressBar: Phaser.GameObjects.Graphics | null = null;
+    private progressBarBg: Phaser.GameObjects.Graphics | null = null;
     private currentQuest: QuestData | null = null;
     private isVisible: boolean = false;
 
-    // UI dimensions
-    private readonly QUEST_WIDTH = 350;
-    private readonly QUEST_HEIGHT = 180; // Increased height for longer text
-    private readonly PADDING = 20;
+    // Modern UI dimensions - compact and sleek
+    private readonly QUEST_WIDTH = 280;
+    private readonly QUEST_HEIGHT = 120;
+    private readonly PADDING = 15;
+    private readonly PROGRESS_BAR_WIDTH = 200;
+    private readonly PROGRESS_BAR_HEIGHT = 8;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -45,350 +41,382 @@ export class QuestUI {
     }
 
     private setupEventListeners(): void {
-        // Listen for quest events
         this.scene.events.on('questAccepted', this.onQuestAccepted, this);
         this.scene.events.on('questProgress', this.onQuestProgress, this);
-        this.scene.events.on('questReadyForCompletion', this.onQuestReadyForCompletion, this);
         this.scene.events.on('questCompleted', this.onQuestCompleted, this);
         this.scene.events.on('questAbandoned', this.onQuestAbandoned, this);
     }
 
-    public showQuest(questData: QuestData): void {
-        // showQuest called with quest
-        // Current visibility state
-        
-        if (this.isVisible) {
-            // Quest UI already visible, hiding first
-            this.hideQuest();
-        }
-        
+    private onQuestAccepted(questData: QuestData): void {
         this.currentQuest = questData;
-        this.isVisible = true;
-        this.createQuestUI();
-        // Quest UI shown successfully
+        this.showQuestUI();
+        this.updateQuestDisplay();
     }
 
-    public hideQuest(): void {
-        this.isVisible = false;
-        this.currentQuest = null;
-        this.destroyQuestUI();
-    }
-
-    public updateQuestProgress(current: number): void {
+    private onQuestProgress(currentAmount: number): void {
         if (this.currentQuest) {
-            this.currentQuest.current = current;
+            this.currentQuest.current = currentAmount;
             this.updateQuestDisplay();
         }
     }
 
-    private createQuestUI(): void {
-        if (!this.currentQuest) return;
-
-        // Create container for quest UI
-        this.questContainer = this.scene.add.container(0, 0);
-        this.questContainer.setDepth(10000);
-        this.questContainer.setScrollFactor(0);
-
-        // Create background
-        this.createQuestBackground();
-
-        // Create text elements
-        this.createQuestText();
-
-        // Position in top right
-        this.updateQuestPosition();
-    }
-
-    private createQuestBackground(): void {
-        if (!this.questContainer) return;
-
-        this.questBackground = this.scene.add.graphics();
-        this.questContainer.add(this.questBackground);
-
-        // Create gradient-like effect with multiple layers
-        // Base layer - dark brown
-        this.questBackground.fillStyle(0x1a0f0a, 0.95);
-        this.questBackground.fillRoundedRect(0, 0, this.QUEST_WIDTH, this.QUEST_HEIGHT, 12);
-
-        // Middle layer - slightly lighter
-        this.questBackground.fillStyle(0x2d1810, 0.8);
-        this.questBackground.fillRoundedRect(2, 2, this.QUEST_WIDTH - 4, this.QUEST_HEIGHT - 4, 10);
-
-        // Inner layer - parchment-like
-        this.questBackground.fillStyle(0x3d2815, 0.6);
-        this.questBackground.fillRoundedRect(4, 4, this.QUEST_WIDTH - 8, this.QUEST_HEIGHT - 8, 8);
-
-        // Outer border - gold
-        this.questBackground.lineStyle(3, 0xd4af37, 1);
-        this.questBackground.strokeRoundedRect(0, 0, this.QUEST_WIDTH, this.QUEST_HEIGHT, 12);
-
-        // Middle border - bronze
-        this.questBackground.lineStyle(2, 0xcd7f32, 0.8);
-        this.questBackground.strokeRoundedRect(2, 2, this.QUEST_WIDTH - 4, this.QUEST_HEIGHT - 4, 10);
-
-        // Inner border - copper
-        this.questBackground.lineStyle(1, 0xb87333, 0.6);
-        this.questBackground.strokeRoundedRect(4, 4, this.QUEST_WIDTH - 8, this.QUEST_HEIGHT - 8, 8);
-
-        // Add decorative corner elements
-        this.createDecorativeCorners();
-    }
-
-    private createDecorativeCorners(): void {
-        if (!this.questBackground) return;
-
-        const cornerSize = 8;
-        const cornerColor = 0xd4af37;
-
-        // Top-left corner decoration
-        this.questBackground.fillStyle(cornerColor, 0.8);
-        this.questBackground.fillCircle(cornerSize, cornerSize, cornerSize / 2);
-
-        // Top-right corner decoration
-        this.questBackground.fillStyle(cornerColor, 0.8);
-        this.questBackground.fillCircle(this.QUEST_WIDTH - cornerSize, cornerSize, cornerSize / 2);
-
-        // Bottom-left corner decoration
-        this.questBackground.fillStyle(cornerColor, 0.8);
-        this.questBackground.fillCircle(cornerSize, this.QUEST_HEIGHT - cornerSize, cornerSize / 2);
-
-        // Bottom-right corner decoration
-        this.questBackground.fillStyle(cornerColor, 0.8);
-        this.questBackground.fillCircle(this.QUEST_WIDTH - cornerSize, this.QUEST_HEIGHT - cornerSize, cornerSize / 2);
-    }
-
-    private createQuestText(): void {
-        if (!this.questContainer || !this.currentQuest) return;
-
-        // Quest title with better styling
-        this.questTitle = this.scene.add.bitmapText(
-            this.PADDING, this.PADDING,
-            'pixel-white', this.currentQuest.title, 16
-        );
-        this.questTitle.setTint(0xffd700); // Gold color
-        this.questTitle.setMaxWidth(this.QUEST_WIDTH - this.PADDING * 2);
-        this.questContainer.add(this.questTitle);
-
-        // Quest description with better truncation and wrapping
-        const maxDescLength = 120; // Increased from 60 to 120 characters
-        let description = this.currentQuest.description;
-        if (description.length > maxDescLength) {
-            description = description.substring(0, maxDescLength) + '...';
+    private onQuestCompleted(questData: QuestData): void {
+        if (this.currentQuest && this.currentQuest.id === questData.id) {
+            this.showCompletionAnimation();
+            this.scene.time.delayedCall(1500, () => { // Reduced from 3000ms to 1500ms
+                this.hideQuestUI();
+            });
         }
-
-        // Calculate dynamic Y position based on title height
-        const titleHeight = this.questTitle.height || 20;
-        const descriptionY = this.PADDING + titleHeight + 5;
-
-        this.questDescription = this.scene.add.bitmapText(
-            this.PADDING, descriptionY,
-            'pixel-white', description, 11
-        );
-        this.questDescription.setTint(0xf5f5dc); // Beige color for better readability
-        this.questDescription.setMaxWidth(this.QUEST_WIDTH - this.PADDING * 2);
-        this.questContainer.add(this.questDescription);
-
-        // Calculate dynamic Y position for progress based on description height
-        const descriptionHeight = this.questDescription.height || 30;
-        const progressY = descriptionY + descriptionHeight + 10;
-
-        // Quest progress with better styling
-        this.questProgress = this.scene.add.bitmapText(
-            this.PADDING, progressY,
-            'pixel-white', this.getProgressText(), 13
-        );
-        this.questProgress.setTint(0x32cd32); // Forest green color
-        this.questProgress.setMaxWidth(this.QUEST_WIDTH - this.PADDING * 2);
-        this.questContainer.add(this.questProgress);
-
-        // Add a decorative line separator
-        this.createSeparatorLine();
     }
 
-    private createSeparatorLine(): void {
-        if (!this.questBackground || !this.questProgress) return;
-
-        // Position separator line just above the progress text
-        const lineY = this.questProgress.y - 5;
-        const lineStartX = this.PADDING;
-        const lineEndX = this.QUEST_WIDTH - this.PADDING;
-
-        // Decorative line with gradient effect
-        this.questBackground.lineStyle(2, 0xd4af37, 0.8);
-        this.questBackground.lineBetween(lineStartX, lineY, lineEndX, lineY);
-        
-        this.questBackground.lineStyle(1, 0xffd700, 0.6);
-        this.questBackground.lineBetween(lineStartX, lineY - 1, lineEndX, lineY - 1);
+    private onQuestAbandoned(questData: QuestData): void {
+        if (this.currentQuest && this.currentQuest.id === questData.id) {
+            this.hideQuestUI();
+        }
     }
 
-    private getProgressText(): string {
-        if (!this.currentQuest) return '';
+    private showQuestUI(): void {
+        if (this.isVisible) return;
         
-        const progress = this.currentQuest.current;
-        const total = this.currentQuest.amount;
-        const percentage = Math.round((progress / total) * 100);
+        const screenWidth = this.scene.cameras.main.width;
+        const screenHeight = this.scene.cameras.main.height;
         
-        return `Progress: ${progress}/${total} (${percentage}%)`;
-    }
-
-    private updateQuestPosition(): void {
-        if (!this.questContainer) return;
-
-        // Position in top right corner
-        const x = this.scene.cameras.main.width - this.QUEST_WIDTH - 20;
+        // Position in top-right corner (start off-screen to the right)
+        const startX = screenWidth + 300; // Start off-screen
+        const endX = screenWidth - 20;    // End position
         const y = 20;
         
-        this.questContainer.setPosition(x, y);
+        this.questContainer = this.scene.add.container(startX, y);
+        this.questContainer.setDepth(15000);
+        this.questContainer.setScrollFactor(0);
+        
+        console.log(`QuestUI: Created container at (${startX}, ${y}) with depth 15000`);
+        
+        this.createQuestPanel();
+        this.isVisible = true;
+        
+        // Slide in animation
+        this.scene.tweens.add({
+            targets: this.questContainer,
+            x: endX,
+            duration: 500,
+            ease: 'Power2.easeOut'
+        });
+    }
+
+    private createQuestPanel(): void {
+        if (!this.questContainer) return;
+        
+        // Modern quest panel background
+        this.questBackground = this.scene.add.graphics();
+        this.questContainer.add(this.questBackground);
+        
+        // Main panel with modern styling
+        this.questBackground.fillStyle(0x1a1a1a, 0.95);
+        this.questBackground.fillRoundedRect(
+            -this.QUEST_WIDTH, 0,
+            this.QUEST_WIDTH, this.QUEST_HEIGHT,
+            8
+        );
+        
+        // Subtle border
+        this.questBackground.lineStyle(2, 0x4a4a4a, 0.8);
+        this.questBackground.strokeRoundedRect(
+            -this.QUEST_WIDTH, 0,
+            this.QUEST_WIDTH, this.QUEST_HEIGHT,
+            8
+        );
+        
+        // Inner highlight
+        this.questBackground.lineStyle(1, 0x666666, 0.6);
+        this.questBackground.strokeRoundedRect(
+            -this.QUEST_WIDTH + 2, 2,
+            this.QUEST_WIDTH - 4, this.QUEST_HEIGHT - 4,
+            6
+        );
+        
+        // Quest header with icon
+        this.createQuestHeader();
+        
+        // Quest content
+        this.createQuestContent();
+    }
+
+    private createQuestHeader(): void {
+        if (!this.questContainer) return;
+        
+        // Quest icon (simple circle for now)
+        const questIcon = this.scene.add.graphics();
+        questIcon.fillStyle(0xFFD700, 0.8);
+        questIcon.fillCircle(-this.QUEST_WIDTH + 25, 20, 8);
+        questIcon.lineStyle(2, 0xFFA500, 0.9);
+        questIcon.strokeCircle(-this.QUEST_WIDTH + 25, 20, 8);
+        this.questContainer.add(questIcon);
+        
+        // Quest title - dynamic sizing based on quest UI height
+        const titleSize = Math.min(14, Math.floor(this.QUEST_HEIGHT * 0.12)); // Scale to fit quest UI height
+        this.questTitle = this.scene.add.bitmapText(
+            -this.QUEST_WIDTH + 45, 15,
+            'pixel-white', '', titleSize
+        );
+        this.questTitle.setTint(0xFFD700);
+        // Set maximum width to prevent text from bleeding off the quest UI
+        this.questTitle.setMaxWidth(this.QUEST_WIDTH - 60); // Account for icon space and padding
+        this.questContainer.add(this.questTitle);
+    }
+
+    private createQuestContent(): void {
+        if (!this.questContainer) return;
+        
+        // Quest description - dynamic sizing based on quest UI height
+        const descriptionSize = Math.min(10, Math.floor(this.QUEST_HEIGHT * 0.08)); // Scale to fit quest UI height
+        this.questDescription = this.scene.add.bitmapText(
+            -this.QUEST_WIDTH + this.PADDING, 45, // Moved down to account for title wrapping
+            'pixel-white', '', descriptionSize
+        );
+        this.questDescription.setTint(0xCCCCCC);
+        this.questDescription.setMaxWidth(this.QUEST_WIDTH - (this.PADDING * 2));
+        this.questContainer.add(this.questDescription);
+        
+        // Progress bar background
+        this.progressBarBg = this.scene.add.graphics();
+        this.questContainer.add(this.progressBarBg);
+        
+        // Progress bar
+        this.progressBar = this.scene.add.graphics();
+        this.questContainer.add(this.progressBar);
+        
+        // Progress text - dynamic sizing based on quest UI height
+        const progressSize = Math.min(10, Math.floor(this.QUEST_HEIGHT * 0.08)); // Scale to fit quest UI height
+        this.questProgress = this.scene.add.bitmapText(
+            -this.QUEST_WIDTH + this.PADDING, 95, // Moved down to account for progress bar being lower
+            'pixel-white', '', progressSize
+        );
+        this.questProgress.setTint(0xFFFFFF);
+        this.questContainer.add(this.questProgress);
     }
 
     private updateQuestDisplay(): void {
-        if (!this.questProgress || !this.currentQuest) return;
+        if (!this.currentQuest || !this.isVisible) return;
         
-        this.questProgress.setText(this.getProgressText());
+        // Update title
+        if (this.questTitle) {
+            try {
+                this.questTitle.setText(this.currentQuest.title);
+            } catch (error) {
+                console.warn('QuestUI: Error updating quest title:', error);
+            }
+        }
         
-        // Update separator line position if it exists
-        if (this.questBackground) {
-            this.createSeparatorLine();
+        // Update description
+        if (this.questDescription) {
+            try {
+                this.questDescription.setText(this.currentQuest.description);
+            } catch (error) {
+                console.warn('QuestUI: Error updating quest description:', error);
+            }
+        }
+        
+        // Update progress
+        this.updateProgressBar();
+        this.updateProgressText();
+    }
+
+    private updateProgressBar(): void {
+        if (!this.progressBar || !this.progressBarBg || !this.currentQuest) return;
+        
+        const progressX = -this.QUEST_WIDTH + this.PADDING;
+        const progressY = 80; // Moved down to account for description being lower
+        
+        // Clear previous progress
+        this.progressBar.clear();
+        this.progressBarBg.clear();
+        
+        // Progress bar background
+        this.progressBarBg.fillStyle(0x333333, 0.8);
+        this.progressBarBg.fillRoundedRect(
+            progressX, progressY,
+            this.PROGRESS_BAR_WIDTH, this.PROGRESS_BAR_HEIGHT,
+            4
+        );
+        
+        // Progress bar border
+        this.progressBarBg.lineStyle(1, 0x555555, 0.6);
+        this.progressBarBg.strokeRoundedRect(
+            progressX, progressY,
+            this.PROGRESS_BAR_WIDTH, this.PROGRESS_BAR_HEIGHT,
+            4
+        );
+        
+        // Calculate progress percentage
+        const progressPercent = Math.min(this.currentQuest.current / this.currentQuest.amount, 1);
+        const progressWidth = this.PROGRESS_BAR_WIDTH * progressPercent;
+        
+        // Progress bar fill with gradient effect
+        if (progressWidth > 0) {
+            this.progressBar.fillStyle(0x4CAF50, 0.9); // Green for progress
+            this.progressBar.fillRoundedRect(
+                progressX, progressY,
+                progressWidth, this.PROGRESS_BAR_HEIGHT,
+                4
+            );
+            
+            // Progress bar highlight
+            this.progressBar.fillStyle(0x66BB6A, 0.7);
+            this.progressBar.fillRoundedRect(
+                progressX, progressY,
+                progressWidth, this.PROGRESS_BAR_HEIGHT / 2,
+                4
+            );
         }
     }
 
-    private destroyQuestUI(): void {
+    private updateProgressText(): void {
+        if (!this.questProgress || !this.currentQuest) return;
+        
+        // Safety check to ensure the BitmapText is properly initialized
+        try {
+            const progressText = `${this.currentQuest.current}/${this.currentQuest.amount}`;
+            this.questProgress.setText(progressText);
+        } catch (error) {
+            console.warn('QuestUI: Error updating progress text, BitmapText may not be ready:', error);
+            return;
+        }
+        
+        // Change color based on completion
+        if (this.currentQuest.current >= this.currentQuest.amount) {
+            this.questProgress.setTint(0x4CAF50); // Green when complete
+        } else {
+            this.questProgress.setTint(0xFFFFFF); // White when in progress
+        }
+    }
+
+    private showCompletionAnimation(): void {
+        if (!this.questContainer) return;
+        
+        // Add completion effect - dynamic sizing based on quest UI height
+        const completionSize = Math.min(16, Math.floor(this.QUEST_HEIGHT * 0.13)); // Scale to fit quest UI height
+        const completionText = this.scene.add.bitmapText(
+            -this.QUEST_WIDTH / 2, this.QUEST_HEIGHT / 2,
+            'pixel-white', 'QUEST COMPLETE!', completionSize
+        );
+        completionText.setOrigin(0.5);
+        completionText.setTint(0x4CAF50);
+        this.questContainer.add(completionText);
+        
+        // Animate completion
+        this.scene.tweens.add({
+            targets: completionText,
+            alpha: 0,
+            y: completionText.y - 20,
+            duration: 2000,
+            ease: 'Power2'
+        });
+    }
+
+    private hideQuestUI(): void {
+        if (!this.isVisible) return;
+        
+        this.isVisible = false;
+        this.currentQuest = null;
+        
         if (this.questContainer) {
-            this.questContainer.destroy();
-            this.questContainer = null;
+            const screenWidth = this.scene.cameras.main.width;
+            const endX = screenWidth + 300; // Slide off-screen to the right
+            
+            // Slide out animation
+            this.scene.tweens.add({
+                targets: this.questContainer,
+                x: endX,
+                duration: 500,
+                ease: 'Power2.easeIn',
+                onComplete: () => {
+                    this.questContainer?.destroy();
+                    this.questContainer = null;
+                }
+            });
         }
         
         this.questBackground = null;
         this.questTitle = null;
         this.questDescription = null;
         this.questProgress = null;
+        this.progressBar = null;
+        this.progressBarBg = null;
     }
 
-    // Event handlers
-    private onQuestAccepted(questData: QuestData): void {
-        this.showQuest(questData);
-    }
-
-    private onQuestProgress(progress: number): void {
-        this.updateQuestProgress(progress);
-    }
-
-    private onQuestReadyForCompletion(_questData: any): void {
-        // Make the quest UI glow green to indicate it's ready for completion
-        if (this.questContainer && this.questBackground) {
-            // Add a green glow effect
-            this.questBackground.lineStyle(4, 0x00ff00, 0.8);
-            this.questBackground.strokeRoundedRect(-2, -2, this.QUEST_WIDTH + 4, this.QUEST_HEIGHT + 4, 14);
-            
-            // Update progress text to show ready status
-            if (this.questProgress) {
-                this.questProgress.setText('Ready to Complete!');
-                this.questProgress.setTint(0x00ff00); // Green color
-            }
-        }
-    }
-
-    private onQuestCompleted(questData: any): void {
-        // Show completion message briefly, then hide
-        if (this.questProgress) {
-            this.questProgress.setText(`Quest Completed: ${questData.questName}!`);
-            this.questProgress.setTint(0x00ff00); // Green for completion
-            
-            // Wait a moment for the quest system to update, then check for other active quests
-            this.scene.time.delayedCall(100, () => {
-                const questSystem = this.scene.data.get('questSystem');
-                const hasOtherActiveQuests = questSystem && questSystem.getActiveQuests().size > 0;
-                
-                
-                if (hasOtherActiveQuests) {
-                    // Hide after 3 seconds if there are other quests
-                    this.scene.time.delayedCall(2900, () => {
-                        this.hideQuest();
-                    });
-                } else {
-                    // Swipe out animation if no other active quests
-                    this.scene.time.delayedCall(1900, () => {
-                        this.swipeOutQuest();
-                    });
-                }
-            });
-        }
-    }
-
-    private onQuestAbandoned(): void {
-        this.hideQuest();
-    }
-
-    private swipeOutQuest(): void {
-        if (!this.questContainer) return;
-        
-        
-        // Get the current position
-        this.questContainer.x;
-        const endX = this.scene.cameras.main.width + this.QUEST_WIDTH; // Swipe right off screen
-        
-        // Create swipe-out animation
-        this.scene.tweens.add({
-            targets: this.questContainer,
-            x: endX,
-            duration: 800,
-            ease: 'Power2.easeInOut',
-            onComplete: () => {
-                this.hideQuest();
-            }
-        });
-    }
-
-    public getCurrentQuest(): QuestData | null {
-        return this.currentQuest;
+    public getQuestContainer(): Phaser.GameObjects.Container | null {
+        return this.questContainer;
     }
 
     public isQuestVisible(): boolean {
         return this.isVisible;
     }
 
-    /**
-     * Restores active quests from the QuestSystem after game load
-     */
     public restoreActiveQuests(): void {
+        console.log('QuestUI: Restoring active quests from quest system...');
+        
+        // Get the quest system from the scene
         const questSystem = this.scene.data.get('questSystem');
         if (!questSystem) {
+            console.warn('QuestUI: Quest system not available for restoration');
             return;
         }
-        
+
+        // Get active quests from quest system
         const activeQuests = questSystem.getActiveQuests();
-        if (activeQuests.size === 0) {
-            return;
-        }
+        console.log('QuestUI: Active quests to restore:', Array.from(activeQuests.keys()));
+        console.log('QuestUI: Active quests size:', activeQuests.size);
         
-        // Get the first active quest (assuming only one quest is active at a time)
-        const [questId, questProgress] = activeQuests.entries().next().value;
-        
-        if (questProgress) {
-            // Get quest data from cache
-            const questData = this.scene.cache.json.get(`quest-${questId}`);
-            if (questData) {
+        // Debug: Log each active quest
+        activeQuests.forEach((progress, questId) => {
+            console.log(`QuestUI: Active quest ${questId}: ${progress.currentAmount}/${progress.requiredAmount}, completed: ${progress.isCompleted}`);
+        });
+
+        if (activeQuests.size > 0) {
+            // Find the current quest (lowest ID active quest)
+            const currentQuestId = Math.min(...Array.from(activeQuests.keys()));
+            const questProgress = activeQuests.get(currentQuestId);
+            
+            console.log(`QuestUI: Processing quest ${currentQuestId}, progress:`, questProgress);
+            
+            if (questProgress && !questProgress.isCompleted) {
+                // Restore the quest UI with current progress
+                const questData = this.scene.cache.json.get(`quest-${currentQuestId}`);
+                console.log(`QuestUI: Quest data for ${currentQuestId}:`, questData);
                 
-                // Create quest data for QuestUI
-                const questUIData: QuestData = {
-                    id: questId.toString(),
-                    title: questData.name,
-                    description: questData.requirements,
-                    type: questData.questdata.type,
-                    amount: questData.questdata.amount,
-                    current: questProgress.currentAmount
-                };
-                
-                // Show the quest UI with restored data
-                this.showQuest(questUIData);
-                
-                // If quest is ready for completion, show the green glow
-                if (questProgress.isReadyForCompletion) {
-                    this.onQuestReadyForCompletion({ questId: questId, questName: questData.name });
+                if (questData) {
+                    this.currentQuest = {
+                        id: currentQuestId.toString(),
+                        title: questData.name,
+                        description: questData.requirements, // Use requirements instead of description
+                        current: questProgress.currentAmount,
+                        amount: questProgress.requiredAmount,
+                        isCompleted: questProgress.isCompleted,
+                        isReadyForCompletion: questProgress.isReadyForCompletion
+                    };
+                    
+                    console.log(`QuestUI: Created quest object:`, this.currentQuest);
+                    
+                    // Show the quest UI with restored progress
+                    this.showQuestUI();
+                    
+                    // Add a small delay to ensure UI is fully created before updating
+                    this.scene.time.delayedCall(100, () => {
+                        this.updateQuestDisplay();
+                    });
+                    
+                    console.log(`QuestUI: ✅ Successfully restored quest ${currentQuestId} with progress ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
+                } else {
+                    console.error(`QuestUI: Failed to load quest data for quest ${currentQuestId}`);
                 }
             } else {
-                console.error(`QuestUI: Quest data not found for quest ${questId}`);
+                console.log(`QuestUI: Quest ${currentQuestId} is completed or invalid, not restoring UI`);
             }
+        } else {
+            console.log('QuestUI: No active quests to restore, quest UI will remain hidden');
         }
+        
+        console.log('QuestUI: Active quests restoration complete');
     }
 }

@@ -84,7 +84,8 @@ export class SaveSystem {
         trees: Tree[], 
         items: Item[], 
         gameState: any,
-        gearSlotState?: any
+        gearSlotState?: any,
+        scene?: any
     ): boolean {
         try {
             const saveData: SaveData = {
@@ -155,6 +156,15 @@ export class SaveSystem {
             };
 
             localStorage.setItem(this.SAVE_KEY, JSON.stringify(saveData));
+            
+            // Save quest system state separately
+            const questSystem = scene.data.get('questSystem');
+            if (questSystem && questSystem.saveQuestState) {
+                const questState = questSystem.saveQuestState();
+                localStorage.setItem('quest_system_state', JSON.stringify(questState));
+                console.log('QuestSystem: Quest state saved to localStorage');
+            }
+            
             return true;
         } catch (error) {
             console.error('Failed to save game:', error);
@@ -229,12 +239,15 @@ export class SaveSystem {
 
     public static clearAllGameData(): boolean {
         try {
-            console.log('Clearing ALL game data from localStorage...');
+            console.log('=== CLEARING ALL GAME DATA ===');
+            console.log('Before clearing - localStorage keys:', Object.keys(localStorage));
             localStorage.removeItem(this.SAVE_KEY);
             localStorage.removeItem('existing_inv');
             localStorage.removeItem('existing_quest');
             localStorage.removeItem('quest_system_state');
+            console.log('After clearing - localStorage keys:', Object.keys(localStorage));
             console.log('All game data cleared from localStorage');
+            console.log('=== END CLEARING GAME DATA ===');
             return true;
         } catch (error) {
             console.error('Failed to clear all game data:', error);
@@ -376,12 +389,25 @@ export class SaveSystem {
                     // Skip items with undefined itemType (corrupted save data)
                     // Skip swords as they should not be saved/loaded
                     if (itemData.itemType && itemData.itemType !== 'undefined' && itemData.itemType !== 'w_longsword') {
-                        const item = new Item(scene, itemData.x, itemData.y, itemData.itemType);
+                        // Map quest item types to texture keys
+                        let textureKey = itemData.itemType;
+                        if (itemData.itemType === 'dimensional herb') {
+                            textureKey = 'dimensional-herb';
+                        } else if (itemData.itemType === 'mysterious herb') {
+                            textureKey = 'mysterious-herb';
+                        }
+                        
+                        const item = new Item(scene, itemData.x, itemData.y, textureKey);
                         
                         // Restore respawn data for herbs to match new game behavior
                         if (itemData.itemType === 'mysterious herb') {
                             item.setData('respawnTime', 30000); // 30 seconds
                             item.setData('originalType', 'mysterious herb');
+                            item.setData('spawnPoint', { x: itemData.x, y: itemData.y });
+                            item.setData('isRespawnable', true);
+                        } else if (itemData.itemType === 'dimensional herb') {
+                            item.setData('respawnTime', 30000); // 30 seconds
+                            item.setData('originalType', 'dimensional herb');
                             item.setData('spawnPoint', { x: itemData.x, y: itemData.y });
                             item.setData('isRespawnable', true);
                             
@@ -390,21 +416,7 @@ export class SaveSystem {
                             item.setVisible(true);
                             item.setDepth(100);
                             
-                            // Add quest icon if herb collection quest is active (with safety check)
-                            if (scene.addQuestIconToHerb && scene.questSystem) {
-                                try {
-                                    // Use a delayed call to ensure quest system is fully ready
-                                    scene.time.delayedCall(50, () => {
-                                        try {
-                                            scene.addQuestIconToHerb(item);
-                                        } catch (error) {
-                                            console.warn('Failed to add quest icon to herb during save loading:', error);
-                                        }
-                                    });
-                                } catch (error) {
-                                    console.warn('Failed to schedule quest icon addition to herb:', error);
-                                }
-                            }
+                            // Quest icons will be added when quests start via event listener
                         }
                         
                         scene.items.push(item);

@@ -241,4 +241,20 @@ export abstract class Entity extends Phaser.Physics.Arcade.Sprite {
             this.entity_text.setPosition(this.x, this.y - 30);
         }
     }
+
+    /**
+     * Gets the health bar graphics object
+     * @returns The health bar graphics object
+     */
+    public getHealthBar(): Phaser.GameObjects.Graphics | undefined {
+        return this.healthBar;
+    }
+
+    /**
+     * Gets the health bar text object
+     * @returns The health bar text object
+     */
+    public getHealthBarText(): Phaser.GameObjects.BitmapText | undefined {
+        return this.healthBarText;
+    }
 }

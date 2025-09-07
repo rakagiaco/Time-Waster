@@ -1,0 +1,12 @@
+{   
+    "name" : "The Anchor Fragment",
+    "description" : "Before we can activate the gateway, we need to understand more about the Reality Anchors. The Electro Lord's heart mentioned that the Crystalline Anchor was corrupted, but there might be fragments of it scattered throughout the valley. I need you to search for any remaining pieces of the Crystalline Anchor.",
+    "requirements" : "Narvark wants you to find and collect 3 Reality Anchor fragments",
+    "completiontext" : "Incredible! These fragments still contain traces of the original Reality Anchor's power. They're heavily corrupted, but they give us insight into how the anchors worked. This knowledge will be crucial for our mission.",
+    "questdata" : {
+        "questnumber": 9,
+        "verb" : "collect",
+        "type" : "anchor fragment",
+        "amount" : 3
+    }
+}

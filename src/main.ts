@@ -35,6 +35,7 @@ import { Menu } from './scenes/general/Menu';
 import { World } from './scenes/game/World';
 import { Credits } from './scenes/general/Credits';
 import { GameOver } from './scenes/general/GameOver';
+import { MemoryManager } from './systems/MemoryManager';
 
 /**
  * Phaser Game Configuration
@@ -44,13 +45,18 @@ import { GameOver } from './scenes/general/GameOver';
  */
 const config: Phaser.Types.Core.GameConfig = {
     parent: 'gameContainer',           // HTML element ID to mount the game
-    type: Phaser.WEBGL,               // Use WebGL for better performance
-    width: 1200,                      // Game canvas width in pixels (increased for better quality)
-    height: 900,                      // Game canvas height in pixels (increased for better quality)
+    type: Phaser.AUTO,                // Use AUTO to fallback to Canvas if WebGL fails
+    width: 1000,                      // Reasonable canvas size
+    height: 750,                      // Reasonable canvas size
     
     // Rendering configuration
     render: {
         pixelArt: true,               // Crisp pixel art rendering without smoothing
+        antialias: false,             // Disable antialiasing to save memory
+        roundPixels: true,            // Round pixels for crisp rendering
+        powerPreference: "high-performance",  // Enable hardware acceleration
+        maxTextures: 8,               // Limit texture count to prevent memory overflow
+        batchSize: 1000               // Reduce batch size to save memory
     },
     
     // Scaling and responsive design
@@ -72,7 +78,44 @@ const config: Phaser.Types.Core.GameConfig = {
     },
     
     // Scene loading order - scenes are loaded in array order
-    scene: [Loader, Menu, World, Credits, GameOver]
+    scene: [Loader, Menu, World, Credits, GameOver],
+    
+    // Audio configuration for memory efficiency
+    audio: {
+        disableWebAudio: false,       // Keep Web Audio enabled
+        noAudio: false               // Enable audio but with limits
+    },
+    
+    // WebGL context attributes (optimized for memory efficiency)
+    webgl: {
+        contextCreationConfig: {
+            alpha: false,               // Disable alpha to save memory
+            depth: false,               // Disable depth buffer to save memory
+            antialias: false,           // Disable antialiasing
+            premultipliedAlpha: false,  // Disable premultiplied alpha
+            stencil: false,             // Disable stencil buffer
+            preserveDrawingBuffer: false, // Don't preserve drawing buffer
+            failIfMajorPerformanceCaveat: false,
+            powerPreference: "low-power" // Use low power to reduce memory usage
+        }
+    },
+    
+    // Memory management callbacks
+    callbacks: {
+        postBoot: (game: Phaser.Game) => {
+            // Limit texture size to reduce memory usage
+            if (game.renderer && (game.renderer as any).gl) {
+                const gl = (game.renderer as any).gl;
+                const maxTextureSize = Math.min(gl.getParameter(gl.MAX_TEXTURE_SIZE), 2048); // Reduced from 4096 to 2048
+                console.log(`Max texture size limited to: ${maxTextureSize}px`);
+            }
+            
+            // Set up memory monitoring
+            const memoryManager = MemoryManager.getInstance();
+            memoryManager.startMemoryMonitoring();
+            console.log(`Memory status: ${memoryManager.getMemoryStatus()}`);
+        }
+    }
 };
 
 /**
@@ -100,6 +143,18 @@ window.addEventListener('error', (event) => {
 
 // Catch unhandled Promise rejections
 window.addEventListener('unhandledrejection', (event) => {
+    // Log audio errors but don't crash the game
+    if (event.reason && (
+        event.reason.message && event.reason.message.includes('decodeAudioData') ||
+        event.reason.message && event.reason.message.includes('Unable to decode audio data') ||
+        event.reason.name === 'EncodingError'
+    )) {
+        console.warn('Audio decoding error:', event.reason.message || event.reason);
+        console.warn('This might be due to file format or corruption issues');
+        event.preventDefault(); // Prevent the error from crashing the game
+        return;
+    }
+    
     console.error('=== UNHANDLED PROMISE REJECTION ===');
     console.error('Reason:', event.reason);
     console.error('Promise:', event.promise);

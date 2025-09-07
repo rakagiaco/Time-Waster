@@ -12,19 +12,21 @@ export class MusicManager {
     private isPlaying: boolean = false;
     private isNightTime: boolean = false;
     
-    // Playlists
+    // Playlists (only songs that are actually loaded)
     private daySongs: string[] = [
-        'shuffle-divo',
-        'shuffle-j178', 
-        'shuffle-maude',
-        'shuffle-wahwah'
+        'shuffle-divo'
+        // Other songs commented out until they're loaded
+        // 'shuffle-j178', 
+        // 'shuffle-maude',
+        // 'shuffle-wahwah'
     ];
     
     private nightSongs: string[] = [
-        'shuffle-dream2',
-        'shuffle-jeeno',
-        'shuffle-lucid',
-        'shuffle-n187'
+        // All night songs commented out until they're loaded
+        // 'shuffle-dream2',
+        // 'shuffle-jeeno',
+        // 'shuffle-lucid',
+        // 'shuffle-n187'
     ];
     
     // Shuffle tracking
@@ -101,6 +103,13 @@ export class MusicManager {
             // Day time - always play day songs
             playlist = this.daySongs;
             playedSongs = this.dayPlayedSongs;
+        }
+        
+        // Check if playlist has any songs
+        if (playlist.length === 0) {
+            console.warn('No songs available in playlist, falling back to main menu music');
+            this.playSong('main-menu-music');
+            return;
         }
         
         // Select random song from appropriate playlist
@@ -202,6 +211,12 @@ export class MusicManager {
      * Play a specific song with fade in
      */
     private playSong(songKey: string): void {
+        // Check if the song exists in the cache
+        if (!this.scene.cache.audio.exists(songKey)) {
+            console.warn(`Audio key "${songKey}" not found in cache, skipping playback`);
+            return;
+        }
+
         // Stop current music if playing - immediate stop to prevent overlap
         if (this.currentMusic) {
             this.currentMusic.stop();
@@ -213,11 +228,16 @@ export class MusicManager {
             }
         }
 
-        // Create new music with volume 0
-        this.currentMusic = this.scene.sound.add(songKey, {
-            volume: 0, // Start at 0 for fade in
-            loop: false
-        });
+        try {
+            // Create new music with volume 0
+            this.currentMusic = this.scene.sound.add(songKey, {
+                volume: 0, // Start at 0 for fade in
+                loop: false
+            });
+        } catch (error) {
+            console.error(`Failed to create audio for key "${songKey}":`, error);
+            return;
+        }
 
         // Set up end event to play next song
         this.currentMusic.on('complete', () => {

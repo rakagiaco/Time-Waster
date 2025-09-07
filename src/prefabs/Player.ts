@@ -12,8 +12,7 @@ export let keyUp: Phaser.Input.Keyboard.Key;
 export let keyDown: Phaser.Input.Keyboard.Key;
 export let keyLeft: Phaser.Input.Keyboard.Key;
 export let keyRight: Phaser.Input.Keyboard.Key;
-export let keyAttackLight: Phaser.Input.Keyboard.Key;
-export let keyAttackHeavy: Phaser.Input.Keyboard.Key;
+// Attack key exports removed - old combat system disabled
 export let keyInventory: Phaser.Input.Keyboard.Key;
 export let keySprint: Phaser.Input.Keyboard.Key;
 export let keyInteract: Phaser.Input.Keyboard.Key;
@@ -25,7 +24,9 @@ class PlayerIdleState extends State {
         player.setVelocity(0, 0);
 
         // Stop any currently playing animation to prevent infinite loops
-        player.anims.stop();
+        if (player.anims) {
+            player.anims.stop();
+        }
 
         // Set idle frame directly based on last direction
         // Knight_1 idle frames: 0=down, 1=right, 2=left, 3=up (0-indexed!)
@@ -48,7 +49,10 @@ class PlayerIdleState extends State {
                 break;
         }
         
-        player.setFrame(idleFrame);
+        // Only set frame if the player has a valid texture
+        if (player.texture && player.texture.key) {
+            player.setFrame(idleFrame);
+        }
     }
 
     execute(_scene: Phaser.Scene, player: Player): void {
@@ -63,14 +67,14 @@ class PlayerIdleState extends State {
             player.animsFSM.transition('walking');
         }
 
-        // Check for attack input (with null checks)
-        if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
-            player.animsFSM.transition('attacking-light');
-        }
+        // Attack input disabled - old combat system removed
+        // if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
+        //     player.animsFSM.transition('attacking-light');
+        // }
 
-        if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
-            player.animsFSM.transition('attacking-heavy');
-        }
+        // if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
+        //     player.animsFSM.transition('attacking-heavy');
+        // }
 
         // Check for proximity pickup input
         if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
@@ -124,14 +128,14 @@ class PlayerWalkingState extends State {
             player.animsFSM.transition('idle');
         }
 
-        // Check for attack input
-        if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
-            player.animsFSM.transition('attacking-light');
-        }
+        // Attack input disabled - old combat system removed
+        // if (keyAttackLight && keyAttackLight.isDown && !player.attackLightCooldown) {
+        //     player.animsFSM.transition('attacking-light');
+        // }
 
-        if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
-            player.animsFSM.transition('attacking-heavy');
-        }
+        // if (keyAttackHeavy && keyAttackHeavy.isDown && !player.attackHeavyCooldown) {
+        //     player.animsFSM.transition('attacking-heavy');
+        // }
 
         // Check for proximity pickup input
         if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
@@ -188,57 +192,7 @@ class PlayerSprintingState extends State {
     }
 }
 
-class PlayerAttackingLightState extends State {
-    enter(scene: Phaser.Scene, player: Player): void {
-        player.attackLightCooldown = true;
-
-        // Check if animation exists before playing
-        if (player.anims.exists('player-light-attack')) {
-            player.anims.play('player-light-attack', true);
-        }
-
-        // Play attack sound
-        scene.sound.play('attack-light', { volume: 0.5 });
-
-        // Set cooldown
-        scene.time.delayedCall(GameConfig.TIMING.ATTACK_LIGHT_COOLDOWN, () => {
-            player.attackLightCooldown = false;
-        });
-    }
-
-    execute(_scene: Phaser.Scene, player: Player): void {
-        // Check if animation is complete
-        if (!player.anims.isPlaying) {
-            player.animsFSM.transition('idle');
-        }
-    }
-}
-
-class PlayerAttackingHeavyState extends State {
-    enter(scene: Phaser.Scene, player: Player): void {
-        player.attackHeavyCooldown = true;
-
-        // Check if animation exists before playing
-        if (player.anims.exists('player-heavy-attack')) {
-            player.anims.play('player-heavy-attack', true);
-        }
-
-        // Play attack sound
-        scene.sound.play('attack-heavy', { volume: 0.5 });
-
-        // Set cooldown
-        scene.time.delayedCall(GameConfig.TIMING.ATTACK_HEAVY_COOLDOWN, () => {
-            player.attackHeavyCooldown = false;
-        });
-    }
-
-    execute(_scene: Phaser.Scene, player: Player): void {
-        // Check if animation is complete
-        if (!player.anims.isPlaying) {
-            player.animsFSM.transition('idle');
-        }
-    }
-}
+// Attack state classes removed - old combat system disabled
 
 export class Player extends Entity {
     public p1Inventory!: Inventory;
@@ -247,8 +201,9 @@ export class Player extends Entity {
     public windowOpen: boolean = false;
     public currentWindow: any = { objs: [] };
 
-    public attackLightCooldown: boolean = false;
-    public attackHeavyCooldown: boolean = false;
+    // Attack cooldowns removed - old combat system disabled
+    // public attackLightCooldown: boolean = false;
+    // public attackHeavyCooldown: boolean = false;
     public sprintCooldown: boolean = false;
     public pickupCooldown: boolean = false;
     public invincibilityFrames: boolean = false;
@@ -352,8 +307,9 @@ export class Player extends Entity {
             keyDown = (keyboard as any).addKey('S');
             keyLeft = (keyboard as any).addKey('A');
             keyRight = (keyboard as any).addKey('D');
-            keyAttackLight = (keyboard as any).addKey('ONE');
-            keyAttackHeavy = (keyboard as any).addKey('TWO');
+            // Attack keys disabled - old combat system removed
+            // keyAttackLight = (keyboard as any).addKey('ONE');
+            // keyAttackHeavy = (keyboard as any).addKey('TWO');
             keyInventory = (keyboard as any).addKey('I');
             keySprint = (keyboard as any).addKey('SHIFT');
             keyInteract = (keyboard as any).addKey('E');
@@ -365,9 +321,8 @@ export class Player extends Entity {
         const states = {
             'idle': new PlayerIdleState(),
             'walking': new PlayerWalkingState(),
-            'sprinting': new PlayerSprintingState(),
-            'attacking-light': new PlayerAttackingLightState(),
-            'attacking-heavy': new PlayerAttackingHeavyState()
+            'sprinting': new PlayerSprintingState()
+            // Attack states removed - old combat system disabled
         };
 
         this.animsFSM = new StateMachine('idle', states, [this.scene, this]);
@@ -394,6 +349,8 @@ export class Player extends Entity {
             if (this.invincibilityTimer <= 0) {
                 this.invincibilityFrames = false;
                 this.invincibilityTimer = 0;
+                // Ensure tint is reset when invincibility ends
+                this.setTint(0xffffff);
             }
         }
 
@@ -463,7 +420,7 @@ export class Player extends Entity {
 
     private createDamageFlash(): void {
         // Flash the player red using Phaser tweens
-        const originalTint = this.tint;
+        // Always reset to white (0xffffff) to ensure proper color restoration
 
         // Create flashing effect using Phaser tweens
         this.scene.tweens.add({
@@ -473,7 +430,8 @@ export class Player extends Entity {
             yoyo: true,
             repeat: 3,
             onComplete: () => {
-                this.setTint(originalTint);
+                // Always reset to white to prevent permanent red tint
+                this.setTint(0xffffff);
             }
         });
     }
@@ -531,27 +489,36 @@ export class Player extends Entity {
     }
 
     private createDamageParticles(): void {
-        // Create damage particles around the player
-        for (let i = 0; i < 8; i++) {
+        // Create damage particles around the player - more contained and realistic
+        for (let i = 0; i < 4; i++) {
             const particle = this.scene.add.graphics();
             particle.fillStyle(0xff0000, 0.8);
-            particle.fillCircle(0, 0, 1);
+            particle.fillCircle(0, 0, 1.5); // Smaller, more subtle particles
 
-            // Random position around player
-            const angle = (i / 8) * Math.PI * 2;
-            const distance = 15;
+            // Random position around player (closer to player)
+            const angle = (i / 4) * Math.PI * 2;
+            const distance = 8 + Math.random() * 6; // 8-14 pixels from player
             const x = this.x + Math.cos(angle) * distance;
             const y = this.y + Math.sin(angle) * distance;
 
             particle.setPosition(x, y);
+            particle.setDepth(this.depth + 1); // Ensure particles are visible
 
-            // Animate particle outward
+            // Animate particle outward with more contained movement
+            const endAngle = angle + (Math.random() - 0.5) * Math.PI * 0.3; // Less randomness
+            const endDistance = 15 + Math.random() * 10; // 15-25 pixels (shorter distance)
+            const endX = x + Math.cos(endAngle) * endDistance;
+            const endY = y + Math.sin(endAngle) * endDistance;
+
             this.scene.tweens.add({
                 targets: particle,
-                x: x + Math.cos(angle) * 30,
-                y: y + Math.sin(angle) * 30,
+                x: endX,
+                y: endY,
                 alpha: 0,
-                duration: 600,
+                scaleX: 0.3,
+                scaleY: 0.3,
+                duration: 300 + Math.random() * 150, // Shorter duration
+                ease: 'Power2',
                 onComplete: () => {
                     particle.destroy();
                 }
@@ -838,7 +805,7 @@ export class Player extends Entity {
     }
 
     private isMysteriousHerb(itemType: string): boolean {
-        const herbTypes = ['mysterious herb', 'mysterious-herb', 'bush-1'];
+        const herbTypes = ['mysterious herb', 'mysterious-herb', 'bush-1', 'dimensional herb', 'dimensional-herb'];
         return herbTypes.includes(itemType);
     }
 

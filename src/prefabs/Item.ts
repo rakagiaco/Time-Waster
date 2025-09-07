@@ -21,7 +21,7 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
             console.warn(`Item texture '${itemType}' does not exist, creating fallback texture`);
             this.createMissingTextureFallback(itemType);
         } else {
-            // Item texture exists and loaded
+            console.log(`Item texture '${itemType}' exists and loaded successfully`);
         }
         
         // Setup physics
@@ -37,6 +37,8 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
         // Map texture names to quest item types
         if (this.itemType === 'bush-1' || this.itemType === 'mysterious-herb') {
             return 'mysterious herb'; // Return quest item type for consistency
+        } else if (this.itemType === 'dimensional-herb') {
+            return 'dimensional herb'; // Return quest item type for consistency
         }
         return this.itemType;
     }
@@ -47,8 +49,12 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
 
     public collect(): void {
         // Play collect sound if available
-        if (this.soundEffect) {
-            this.scene.sound.play(this.soundEffect.sound, { volume: this.soundEffect.volume });
+        if (this.soundEffect && this.scene && this.scene.sound) {
+            try {
+                this.scene.sound.play(this.soundEffect.sound, { volume: this.soundEffect.volume });
+            } catch (error) {
+                console.warn('Item: Error playing collect sound:', error);
+            }
         }
         
         // If item is respawnable, mark as collected instead of destroying

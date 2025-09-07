@@ -1,12 +1,12 @@
 {   
-    "name" : "The Frozen Heart of the Nepian King",
-    "description" : "Excellent work, traveler. Thanks to your bravery, I can continue my experimentation. Traveler, the herbs you have collected me, along with the blood of the fallen Nepian should be enough to begin to create an elixir strong enough to quell whatever curse or binding has entrapped this valley. Traveler, there is one more task I must ask of you. As you know, the Nepian have completely overtaken the valley. They crawl through every corner of it, spewing their vile aura onto anything that comes within their reach. This must come to an end, one way or the other. A Nepian Electro Lord is said to reside in the southeastern corner of the valley. Traveler, I want you to defeat this foul creature, and bring me its heart.",
-    "requirements" : "Xavius Silverleaf wants you to collect the Frozen Heart of the Electro Lord",
-    "completiontext" : "Y..Your A..A..Alive…. I never expected this.",
+    "name" : "The Electro Lord's Heart",
+    "description" : "I've discovered something crucial. The Nepian aren't just random invaders - they're being led by something called an Electro Lord. This creature is a Void entity that's been corrupting the valley's dimensional anchors. If we can destroy it and claim its heart, we might be able to begin restoring the dimensional barriers. The Electro Lord resides in the southeastern corner of the valley. This will be dangerous, but it's our only hope.",
+    "requirements" : "Narvark wants you to defeat the Electro Lord and claim its heart",
+    "completiontext" : "Incredible! You've done what I thought impossible. The Electro Lord's heart contains the key to understanding the Void corruption. With this, we can begin the real work.",
     "questdata" : {
         "questnumber": 4,
         "verb" : "collect",
-        "type" : "Frozen Heart",
-        "ammount" : 1
+        "type" : "Electro Lord Heart",
+        "amount" : 1
     }
 }

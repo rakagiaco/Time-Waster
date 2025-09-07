@@ -688,6 +688,8 @@ export class InventoryUI {
         let textureName = itemType;
         if (itemType === 'mysterious herb') {
             textureName = 'mysterious-herb';
+        } else if (itemType === 'dimensional herb') {
+            textureName = 'dimensional-herb';
         } else if (itemType === 'w_longsword') {
             // Use the weapon texture for weapons in inventory
             textureName = 'w_longsword';
@@ -742,11 +744,19 @@ export class InventoryUI {
             case 'mysterious herb':
                 // Create a simple green herb texture
                     graphics.fillStyle(0x228B22); // Forest green color
+                    graphics.fillRect(0, 0, 32, 32);
+                    graphics.generateTexture(itemType, 32, 32);
+                break;
+            case 'dimensional herb':
+                // Create a dimensional herb texture with purple/blue colors
+                    graphics.fillStyle(0x8A2BE2); // Blue violet color
+                    graphics.fillRect(0, 0, 32, 32);
+                    graphics.fillStyle(0x00BFFF); // Deep sky blue
+                    graphics.fillRect(8, 8, 16, 16);
+                    graphics.fillStyle(0x9370DB); // Medium purple
                     graphics.fillCircle(16, 16, 10);
-                    graphics.lineStyle(2, 0x006400); // Darker green border
+                    graphics.lineStyle(2, 0x4B0082); // Indigo border
                     graphics.strokeCircle(16, 16, 10);
-                    // Add some detail
-                    graphics.fillStyle(0x32CD32); // Lime green
                     graphics.fillCircle(16, 16, 6);
                     graphics.generateTexture(itemType, 32, 32);
                 break;
@@ -986,6 +996,8 @@ export class InventoryUI {
         let textureName = itemType;
         if (itemType === 'mysterious herb') {
             textureName = 'mysterious-herb';
+        } else if (itemType === 'dimensional herb') {
+            textureName = 'dimensional-herb';
         } else if (itemType === 'w_longsword') {
             // Use the weapon texture for weapons in inventory
             textureName = 'w_longsword';
@@ -1128,6 +1140,8 @@ export class InventoryUI {
         let textureName = itemType;
         if (itemType === 'mysterious herb') {
             textureName = 'mysterious-herb';
+        } else if (itemType === 'dimensional herb') {
+            textureName = 'dimensional-herb';
         } else if (itemType === 'w_longsword') {
             // Use the weapon texture for weapons in inventory
             textureName = 'w_longsword';
@@ -1527,6 +1541,7 @@ export class InventoryUI {
             'ancient-fruit': 'Ancient Fruit',
             'tree-of-life-fruit': 'Life Fruit',
             'mysterious herb': 'Mysterious Herb',
+            'dimensional herb': 'Dimensional Herb',
             'nepian-blood': 'Nepian Blood',
             'frozen-heart': 'Frozen Heart'
         };
@@ -1545,6 +1560,7 @@ export class InventoryUI {
             'ancient-fruit': 'Restores 25 HP',
             'tree-of-life-fruit': 'Restores 50 HP',
             'mysterious herb': 'A strange herb',
+            'dimensional herb': 'Pulses with dimensional energy',
             'nepian-blood': 'Ancient essence',
             'frozen-heart': 'Cold to the touch'
         };
@@ -1896,6 +1912,10 @@ export class InventoryUI {
 
     public isInventoryVisible(): boolean {
         return this.isVisible;
+    }
+
+    public getInventoryContainer(): Phaser.GameObjects.Container {
+        return this.inventoryContainer;
     }
 
     public destroy(): void {

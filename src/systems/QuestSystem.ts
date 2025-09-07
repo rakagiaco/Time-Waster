@@ -45,6 +45,7 @@ export class QuestSystem {
         
         // Listen for quest start events
         this.scene.events.on('startQuest', (questId: number) => {
+            console.log(`QuestSystem: Received startQuest event for quest ${questId}`);
             this.startQuest(questId);
         });
     }
@@ -54,9 +55,11 @@ export class QuestSystem {
     }
 
     public startQuest(questId: number): void {
+        console.log(`QuestSystem: Starting quest ${questId}`);
+        
         // Check if quest is already active
         if (this.activeQuests.has(questId)) {
-            // Quest is already active, skipping start
+            console.log(`Quest ${questId} is already active, skipping start`);
             return;
         }
         
@@ -82,6 +85,17 @@ export class QuestSystem {
         };
         
         this.activeQuests.set(questId, questProgress);
+        
+        // Emit quest accepted event for UI
+        this.scene.events.emit('questAccepted', {
+            id: questId.toString(),
+            title: questData.name,
+            description: questData.requirements, // Use requirements instead of full description
+            type: questData.questdata.type,
+            amount: questData.questdata.amount,
+            current: questProgress.currentAmount
+        });
+        
         // Started quest
         // Player already has required items
         
@@ -98,7 +112,7 @@ export class QuestSystem {
         }
     }
 
-    public updateQuestProgress(itemType: string, _amount: number): void {
+    public updateQuestProgress(itemType: string, amount: number): void {
         // Check all active quests for matching requirements
         this.activeQuests.forEach((progress, questId) => {
             if (progress.isCompleted) return;
@@ -109,18 +123,19 @@ export class QuestSystem {
             const questItemType = questData.questdata.type.toLowerCase().replace(/[-\s]/g, '');
             const currentItemType = itemType.toLowerCase().replace(/[-\s]/g, '');
             
-            // Check if this item matches the quest requirement
-            if (questItemType === currentItemType || 
-                questItemType.includes(currentItemType) ||
-                currentItemType.includes(questItemType)) {
-                
-                // Update progress based on current inventory count (not just the amount collected)
-                const currentInventoryCount = this.player.p1Inventory.getItemCount(questData.questdata.type);
-                progress.currentAmount = Math.min(currentInventoryCount, progress.requiredAmount);
-                
-                console.log(`QuestSystem: Quest ${questId} progress update - Item: ${itemType}, Quest needs: ${questData.questdata.type}, Inventory count: ${currentInventoryCount}, Progress: ${progress.currentAmount}/${progress.requiredAmount}`);
-                
-                // console.log(`QuestSystem: Quest ${questId} progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+            // Only match if the types are exactly the same (exact match)
+            if (questItemType === currentItemType) {
+                // Handle different quest types
+                if (questData.questdata.verb === 'kill') {
+                    // For kill quests, increment the progress directly
+                    progress.currentAmount = Math.min(progress.currentAmount + amount, progress.requiredAmount);
+                    console.log(`QuestSystem: Quest ${questId} progress update - Enemy: ${itemType}, Quest needs: ${questData.questdata.type}, Progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+                } else {
+                    // For collect quests, use inventory count
+                    const currentInventoryCount = this.player.p1Inventory.getItemCount(questData.questdata.type);
+                    progress.currentAmount = Math.min(currentInventoryCount, progress.requiredAmount);
+                    console.log(`QuestSystem: Quest ${questId} progress update - Item: ${itemType}, Quest needs: ${questData.questdata.type}, Inventory count: ${currentInventoryCount}, Progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+                }
                 
                 // Emit quest progress event for QuestUI
                 this.scene.events.emit('questProgress', progress.currentAmount);
@@ -174,15 +189,18 @@ export class QuestSystem {
         // Remove from active quests
         this.activeQuests.delete(questId);
         
-        // Emit quest completion event
+        // Emit quest completion event with proper QuestData structure and reward
         this.scene.events.emit('questCompleted', {
-            questId: questId,
-            questName: questData.name,
-            reward: reward
+            id: questId.toString(), // Convert to string to match QuestUI interface
+            title: questData.name,
+            description: questData.description,
+            type: questData.questdata.type,
+            amount: questData.questdata.amount,
+            current: questData.questdata.amount, // Quest is complete, so current equals amount
+            reward: reward // Include the reward information
         });
         
-        // Automatically start the next quest in sequence
-        this.startNextQuest(questId);
+        // Don't automatically start the next quest - let the NPC handle it through dialogue
         
         return true;
     }
@@ -212,13 +230,20 @@ export class QuestSystem {
     private getQuestReward(questId: number): any {
         // Define rewards for each quest
         const rewards: { [key: number]: any } = {
-            1: { type: 'gold-coin', amount: 10 }, // Mysterious herbs quest
+            1: { type: 'gold-coin', amount: 10 }, // Dimensional herbs quest
             2: { type: 'gold-coin', amount: 15 }, // Nepian scouts quest
             3: { type: 'gold-coin', amount: 20 }, // Nepian blood quest
             4: { type: 'gold-coin', amount: 50 }, // Electro Lord quest
-            5: { type: 'gold-coin', amount: 100 }, // 1000 scouts quest
-            6: { type: 'gold-coin', amount: 150 }, // 1000 observers quest
-            7: { type: 'gold-coin', amount: 200 }  // 1000 hearts quest
+            5: { type: 'gold-coin', amount: 100 }, // Mine gateway quest
+            6: { type: 'gold-coin', amount: 150 }, // Valley cleansing quest
+            7: { type: 'gold-coin', amount: 200 }, // Gateway investigation quest
+            8: { type: 'gold-coin', amount: 250 }, // Pure dimensional energy quest
+            9: { type: 'gold-coin', amount: 300 }, // Anchor fragment quest
+            10: { type: 'gold-coin', amount: 400 }, // Nepian stronghold quest
+            11: { type: 'gold-coin', amount: 500 }, // Gateway activation quest
+            12: { type: 'gold-coin', amount: 600 }, // Empire ruins quest
+            13: { type: 'gold-coin', amount: 750 }, // Sand Kingdoms quest
+            14: { type: 'gold-coin', amount: 1000 } // Elden Forest quest
         };
         
         return rewards[questId] || { type: 'gold-coin', amount: 10 };
@@ -305,6 +330,15 @@ export class QuestSystem {
     }
 
     /**
+     * Reset the quest system for new game
+     */
+    public reset(): void {
+        console.log('QuestSystem: Resetting for new game');
+        this.activeQuests.clear();
+        this.completedQuests.clear();
+    }
+
+    /**
      * Saves the QuestSystem state to the player's quest status
      */
     public saveQuestState(): any {
@@ -312,7 +346,9 @@ export class QuestSystem {
             activeQuests: Array.from(this.activeQuests.entries()),
             completedQuests: Array.from(this.completedQuests)
         };
-        // console.log('QuestSystem: Saving quest state:', questState);
+        console.log('QuestSystem: Saving quest state:', questState);
+        console.log('QuestSystem: Active quests count:', this.activeQuests.size);
+        console.log('QuestSystem: Completed quests count:', this.completedQuests.size);
         return questState;
     }
 
@@ -325,15 +361,18 @@ export class QuestSystem {
             return;
         }
 
-        // console.log('QuestSystem: Restoring quest state:', savedState);
+        console.log('QuestSystem: Restoring quest state:', savedState);
 
         // Restore active quests
         if (savedState.activeQuests && Array.isArray(savedState.activeQuests)) {
             this.activeQuests.clear();
+            console.log(`QuestSystem: Restoring ${savedState.activeQuests.length} active quests`);
             savedState.activeQuests.forEach(([questId, questProgress]: [number, QuestProgress]) => {
                 this.activeQuests.set(questId, questProgress);
-                // console.log(`QuestSystem: Restored active quest ${questId}: ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
+                console.log(`QuestSystem: Restored active quest ${questId}: ${questProgress.currentAmount}/${questProgress.requiredAmount}, completed: ${questProgress.isCompleted}`);
             });
+        } else {
+            console.log('QuestSystem: No active quests to restore');
         }
 
         // Restore completed quests
@@ -341,8 +380,55 @@ export class QuestSystem {
             this.completedQuests.clear();
             savedState.completedQuests.forEach((questId: number) => {
                 this.completedQuests.add(questId);
-                // console.log(`QuestSystem: Restored completed quest ${questId}`);
+                console.log(`QuestSystem: Restored completed quest ${questId}`);
             });
         }
+        
+        // Synchronize quest progress with current inventory after restoration
+        this.synchronizeQuestProgressWithInventory();
+    }
+
+    /**
+     * Synchronizes quest progress with current inventory count
+     * This is called after save data is loaded to ensure quest progress matches inventory
+     */
+    private synchronizeQuestProgressWithInventory(): void {
+        console.log('QuestSystem: Synchronizing quest progress with inventory...');
+        
+        this.activeQuests.forEach((progress, questId) => {
+            if (progress.isCompleted) return;
+            
+            const questData = this.scene.cache.json.get(`quest-${questId}`);
+            if (!questData) return;
+            
+            // Only sync inventory-based quests (collect quests), not kill quests
+            if (questData.questdata.verb === 'kill') {
+                console.log(`QuestSystem: Quest ${questId} is a kill quest, preserving saved progress: ${progress.currentAmount}/${progress.requiredAmount}`);
+                // For kill quests, keep the saved progress as-is
+                return;
+            }
+            
+            const currentInventoryCount = this.player.p1Inventory.getItemCount(questData.questdata.type);
+            const newProgress = Math.min(currentInventoryCount, progress.requiredAmount);
+            
+            console.log(`QuestSystem: Quest ${questId} sync - Inventory: ${currentInventoryCount}, Saved progress: ${progress.currentAmount}, New progress: ${newProgress}`);
+            
+            // Update progress to match inventory (this ensures consistency after save load)
+            progress.currentAmount = newProgress;
+            
+            // Check if quest requirements are met
+            if (progress.currentAmount >= progress.requiredAmount && !progress.isReadyForCompletion) {
+                progress.isReadyForCompletion = true;
+                console.log(`QuestSystem: Quest ${questId} requirements met after sync - ready for completion`);
+                
+                // Emit quest ready event for QuestUI to show green
+                this.scene.events.emit('questReadyForCompletion', {
+                    questId: questId,
+                    questName: questData.name
+                });
+            }
+        });
+        
+        console.log('QuestSystem: Quest progress synchronization complete');
     }
 }

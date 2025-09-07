@@ -1,0 +1,12 @@
+{   
+    "name" : "The Sand Kingdoms' Last Stand",
+    "description" : "The Empire's knowledge has revealed the locations of the other Reality Anchors. The Sand Anchor is hidden in the eastern desert regions, protected by the Sand Kingdoms' last strongholds. However, these strongholds are under siege by the Nepian. If they fall, the eastern realm will be lost forever. I need you to venture into the desert and help defend the Sand Kingdoms.",
+    "requirements" : "Narvark wants you to defend the Sand Kingdoms' final stronghold in the eastern desert",
+    "completiontext" : "The Sand Kingdoms are safe! Their ancient defenses are holding strong, and the Nepian siege has been broken. The eastern realm is secure, and we can now access the Sand Anchor. The Sand Kingdoms' gratitude is immense - they've agreed to help us in our mission.",
+    "questdata" : {
+        "questnumber": 13,
+        "verb" : "defend",
+        "type" : "Sand Kingdom stronghold",
+        "amount" : 1
+    }
+}

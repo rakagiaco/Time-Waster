@@ -113,6 +113,7 @@ export class UnifiedNPC extends Entity {
     private questDeclined: boolean = false;
     private interactionPrompt: Phaser.GameObjects.Container | null = null;
     private playerInRangeLastFrame: boolean = false;
+    private dialogueJustOpened: boolean = false;
 
     // NPC type and behavior
     public entity_type: string = 'NPC';
@@ -126,6 +127,13 @@ export class UnifiedNPC extends Entity {
         this.MAX_HIT_POINTS = 100;
         this.VELOCITY = 0; // NPCs don't move
         this.isQuestGiver = isQuestGiver;
+        
+        // Reset quest state for new game (will be overridden by save data if loading)
+        this.hasHadInitialConversation = false;
+        this.questAccepted = false;
+        this.questDeclined = false;
+        this.currentQuest = null;
+        this.completedQuests.clear();
 
         // Setup state machine
         this.setupStateMachine();
@@ -215,6 +223,108 @@ export class UnifiedNPC extends Entity {
         this.initializeQuests();
     }
 
+    /**
+     * Restore NPC state from quest system after save data is loaded
+     */
+    public restoreStateFromQuestSystem(): void {
+        console.log('=== RESTORING NPC STATE FROM QUEST SYSTEM ===');
+        
+        // Get the quest system from the scene
+        const questSystem = this.scene.data.get('questSystem');
+        if (!questSystem) {
+            console.warn('Quest system not available for NPC state restoration');
+            return;
+        }
+
+        // Get active quests from quest system
+        const activeQuests = questSystem.getActiveQuests();
+        console.log('Active quests from quest system:', Array.from(activeQuests.keys()));
+
+        if (activeQuests.size > 0) {
+            // Find the current quest (lowest ID active quest)
+            const currentQuestId = Math.min(...Array.from(activeQuests.keys()) as number[]);
+            const questProgress = activeQuests.get(currentQuestId);
+            
+            if (questProgress && !questProgress.isCompleted) {
+                // Restore the current quest
+                const questData = this.scene.cache.json.get(`quest-${currentQuestId}`);
+                if (questData) {
+                    this.currentQuest = {
+                        id: questData.questdata.questnumber,
+                        name: questData.name,
+                        description: questData.description,
+                        requirements: questData.requirements,
+                        completionText: questData.completiontext,
+                        questData: {
+                            questNumber: questData.questdata.questnumber,
+                            verb: questData.questdata.verb,
+                            type: questData.questdata.type,
+                            amount: questData.questdata.amount
+                        }
+                    };
+                    
+                    // Mark as accepted since it's active in quest system
+                    this.questAccepted = true;
+                    this.questDeclined = false;
+                    this.hasHadInitialConversation = true;
+                    
+                    console.log(`Restored NPC state: Quest ${currentQuestId} active, accepted: ${this.questAccepted}`);
+                }
+            } else if (questProgress && questProgress.isCompleted) {
+                // Quest is completed, advance to next quest
+                this.advanceToNextQuest();
+                console.log('Quest was completed, advanced to next quest');
+            }
+        } else {
+            // No active quests, check if we should start the first quest or advance to next available quest
+            const completedQuests = questSystem.getCompletedQuests();
+            console.log('Completed quests from quest system:', Array.from(completedQuests));
+            
+            if (completedQuests.size > 0) {
+                // Find the highest completed quest ID and advance to the next one
+                const highestCompletedQuestId = Math.max(...Array.from(completedQuests) as number[]);
+                const nextQuestId = highestCompletedQuestId + 1;
+                
+                if (nextQuestId <= 14) {
+                    // Load the next quest
+                    const questData = this.scene.cache.json.get(`quest-${nextQuestId}`);
+                    if (questData) {
+                        this.currentQuest = {
+                            id: questData.questdata.questnumber,
+                            name: questData.name,
+                            description: questData.description,
+                            requirements: questData.requirements,
+                            completionText: questData.completiontext,
+                            questData: {
+                                questNumber: questData.questdata.questnumber,
+                                verb: questData.questdata.verb,
+                                type: questData.questdata.type,
+                                amount: questData.questdata.amount
+                            }
+                        };
+                        
+                        // Mark as not accepted yet (player needs to accept the new quest)
+                        this.questAccepted = false;
+                        this.questDeclined = false;
+                        this.hasHadInitialConversation = false;
+                        
+                        console.log(`Restored NPC state: Quest ${nextQuestId} available after completing quest ${highestCompletedQuestId}`);
+                    }
+                } else {
+                    // All quests completed
+                    this.currentQuest = null;
+                    console.log('All quests completed');
+                }
+            } else {
+                // No completed quests, start with first quest
+                this.initializeQuests();
+                console.log('No completed quests, initialized first quest');
+            }
+        }
+        
+        console.log('=== END NPC STATE RESTORATION ===');
+    }
+
     private setupEventListeners(): void {
         // Listen for dialogue events
         this.scene.events.on('dialogueAction', this.handleDialogueAction, this);
@@ -259,39 +369,68 @@ export class UnifiedNPC extends Entity {
     }
 
     public interact(): void {
-        if (!this.player || this.isInteracting) return;
+        console.log('=== NPC INTERACT CALLED ===');
+        console.log('Player exists:', !!this.player);
+        console.log('Is interacting:', this.isInteracting);
+        console.log('Is quest giver:', this.isQuestGiver);
+        console.log('Has had initial conversation:', this.hasHadInitialConversation);
+        console.log('Quest accepted:', this.questAccepted);
+        console.log('Quest declined:', this.questDeclined);
+        console.log('Current quest:', this.currentQuest);
+        
+        if (!this.player || this.isInteracting) {
+            console.log('Cannot interact - no player or already interacting');
+            return;
+        }
         
         this.isInteracting = true;
         
         if (this.isQuestGiver) {
+            console.log('Handling quest interaction');
             this.handleQuestInteraction();
         } else {
+            console.log('Handling basic interaction');
             this.handleBasicInteraction();
         }
     }
 
     private handleQuestInteraction(): void {
+        console.log('=== HANDLING QUEST INTERACTION ===');
+        console.log('hasAcceptedQuest():', this.hasAcceptedQuest());
+        console.log('questDeclined:', this.questDeclined);
+        console.log('hasHadInitialConversation:', this.hasHadInitialConversation);
+        console.log('isQuestCompleted():', this.isQuestCompleted());
+        console.log('questDeclined:', this.questDeclined);
+        console.log('currentQuest:', this.currentQuest);
         
         // Check if player has accepted the quest
         if (this.hasAcceptedQuest()) {
+            console.log('Quest has been accepted');
             // Check if quest is completed
             if (this.isQuestCompleted()) {
+                console.log('Quest is completed, starting completion dialogue');
                 this.startQuestCompleteDialogue();
             } else {
+                console.log('Quest is active but not completed, starting incomplete dialogue');
                 this.startQuestIncompleteDialogue();
             }
         } else if (!this.hasHadInitialConversation) {
+            console.log('First time meeting - showing quest offer');
             // First time meeting - show full quest offer
             this.startQuestOfferDialogue();
             this.hasHadInitialConversation = true;
         } else if (this.questDeclined) {
+            console.log('Quest was declined, showing return dialogue');
             // Player previously declined quest - show return dialogue
             this.startReturnDialogue();
         } else {
+            console.log('Return visit - checking for quest to offer');
             // Return visit - check if there's a quest to offer
             if (this.currentQuest) {
+                console.log('Current quest exists, offering quest');
                 this.startQuestOfferDialogue();
             } else {
+                console.log('No current quest, showing return dialogue');
                 this.startReturnDialogue();
             }
         }
@@ -305,9 +444,59 @@ export class UnifiedNPC extends Entity {
     private startQuestOfferDialogue(): void {
         if (!this.currentQuest) return;
         
+        // Create proper dialogue based on quest ID instead of using quest description
+        let dialogueText = '';
+        
+        switch (this.currentQuest.id) {
+            case 1:
+                dialogueText = "Greetings, traveler. I am Narvark, a scholar of the dimensional arts. You've entered the Convergence Valley - a place where three realms once met in harmony. Now it's a reality storm where time and space constantly shift. Strange herbs grow here, pulsing with dimensional energy. Will you help me collect five of these dimensional herbs?";
+                break;
+            case 2:
+                dialogueText = "My analysis reveals something disturbing. The herbs contain traces of Void energy - the same force corrupting this valley. Creatures called Nepian emerged when the dimensional barriers collapsed. I need you to eliminate five Nepian scouts in the southern regions. They're spreading the corruption.";
+                break;
+            case 3:
+                dialogueText = "Your success has given me an idea. The Nepian's blood contains concentrated Void energy. If we can collect enough, we might create a weapon against them. I need you to collect the blood of three Nepian warriors. Be careful - their blood is highly corrosive.";
+                break;
+            case 4:
+                dialogueText = "I've discovered something crucial. The Nepian are being led by an Electro Lord - a Void entity corrupting the valley's dimensional anchors. If we can destroy it and claim its heart, we might restore the dimensional barriers. The Electro Lord resides in the southeastern corner.";
+                break;
+            case 5:
+                dialogueText = "The Electro Lord's heart has revealed the truth. This valley was once the Convergence Point where three realms met. The old mine contains a gateway to the Crystalline Empire's ruins. I need you to clear the mine of Nepian forces and secure the gateway.";
+                break;
+            case 6:
+                dialogueText = "The Electro Lord's defeat has weakened the Nepian's hold on the valley, but they're not giving up easily. More scouts and warriors are moving in to replace their fallen leader. I need you to clear the valley of these reinforcements.";
+                break;
+            case 7:
+                dialogueText = "With the valley secured, we can now safely investigate the mine gateway. The Electro Lord's heart revealed that it leads to the Crystalline Empire's ruins. I need you to explore the mine and gather information about the gateway's mechanism.";
+                break;
+            case 8:
+                dialogueText = "The crystal fragments have given me an idea. The gateway requires pure dimensional energy to activate, but the valley's energy is corrupted. I need you to collect pure energy crystals from the northern regions.";
+                break;
+            case 9:
+                dialogueText = "Before we can activate the gateway, we need to understand more about the Reality Anchors. There might be fragments of the Crystalline Anchor scattered throughout the valley. I need you to search for any remaining pieces.";
+                break;
+            case 10:
+                dialogueText = "The Nepian have established a major stronghold in the valley's eastern regions. They're using it as a staging ground for their invasion. I need you to assault their stronghold and eliminate their leader.";
+                break;
+            case 11:
+                dialogueText = "With the Nepian threat neutralized and all components gathered, we can now attempt to activate the gateway to the Crystalline Empire's ruins. I need you to activate the gateway and secure the passage.";
+                break;
+            case 12:
+                dialogueText = "The gateway has opened a path to the Crystalline Empire's ruins. These ancient structures contain the knowledge we need to understand the Reality Anchors. I need you to explore the ruins and recover the Empire's knowledge.";
+                break;
+            case 13:
+                dialogueText = "The Empire's knowledge has revealed the locations of the other Reality Anchors. The Sand Anchor is protected by the Sand Kingdoms' last strongholds, but they're under siege. I need you to venture into the desert and help defend them.";
+                break;
+            case 14:
+                dialogueText = "The final piece of the puzzle. The Forest Anchor is deep in the western forest regions, but the Elden Forest has been corrupted by the Void. I need you to venture into the forest and help cleanse the corruption.";
+                break;
+            default:
+                dialogueText = this.currentQuest.description; // Fallback to description for other quests
+        }
+        
         const dialogue: DialogueData = {
             id: 'quest_offer',
-            text: this.currentQuest.description,
+            text: dialogueText,
             responses: [
                 {
                     text: "I'll help you with this task.",
@@ -376,12 +565,19 @@ export class UnifiedNPC extends Entity {
         this.questDeclined = false;
         
         // Start quest in QuestSystem
-        this.scene.events.emit('startQuest', this.currentQuest.id);
+        console.log(`NPC: Emitting startQuest event for quest ${this.currentQuest.id}`);
+        if (this.scene && this.scene.events) {
+            this.scene.events.emit('startQuest', this.currentQuest.id);
+        } else {
+            console.error('NPC: Scene or events not available for quest start');
+            return;
+        }
         
         // Wait a moment for QuestSystem to process the quest start, then emit quest accepted event
-        this.scene.time.delayedCall(50, () => {
-            // Get current progress from QuestSystem
-            const questSystem = this.scene.data.get('questSystem');
+        if (this.scene && this.scene.time) {
+            this.scene.time.delayedCall(50, () => {
+                // Get current progress from QuestSystem
+                const questSystem = this.scene.data.get('questSystem');
             let currentProgress = 0;
             if (questSystem && this.currentQuest) {
                 const activeQuests = questSystem.getActiveQuests();
@@ -402,7 +598,10 @@ export class UnifiedNPC extends Entity {
                     current: currentProgress
                 });
             }
-        });
+            });
+        } else {
+            console.error('NPC: Scene or time not available for quest start');
+        }
         
         // Just close the dialogue and return to game
         this.scene.events.emit('hideDialogue');
@@ -448,6 +647,11 @@ export class UnifiedNPC extends Entity {
             return;
         }
         
+        // Safety check for scene
+        if (!this.scene || !this.scene.data) {
+            console.error('UnifiedNPC: Scene or scene.data not available for quest completion');
+            return;
+        }
         
         // Use the quest system to complete the quest
         const questSystem = this.scene.data.get('questSystem');
@@ -474,10 +678,35 @@ export class UnifiedNPC extends Entity {
         }
     }
 
+    private completeQuestOnly(): void {
+        if (!this.currentQuest) {
+            return;
+        }
+        
+        // Use the quest system to complete the quest
+        const questSystem = this.scene.data.get('questSystem');
+        if (questSystem) {
+            const success = questSystem.completeQuestAtNPC(this.currentQuest.id);
+            if (success) {
+                // Mark quest as completed in NPC
+                this.completedQuests.add(this.currentQuest.id);
+                
+                // Close dialogue and return to game
+                this.scene.events.emit('hideDialogue');
+                
+                // Move to next quest but don't start it automatically
+                this.advanceToNextQuest();
+            } else {
+            }
+        } else {
+            console.error('NPC: Quest system not found');
+        }
+    }
+
     private advanceToNextQuest(): void {
         const nextQuestId = this.currentQuest!.id + 1;
         
-        if (nextQuestId <= 7) {
+        if (nextQuestId <= 14) {
             const questData = this.scene.cache.json.get(`quest-${nextQuestId}`);
             this.currentQuest = {
                 id: questData.questdata.questnumber,
@@ -506,6 +735,7 @@ export class UnifiedNPC extends Entity {
             this.questDeclined = false;
         }
     }
+
 
     private showNextQuestPlaceholder(): void {
         if (!this.currentQuest) return;
@@ -539,6 +769,9 @@ export class UnifiedNPC extends Entity {
     }
 
     private showDialogue(dialogue: DialogueData): void {
+        // Set flag to prevent immediate closing
+        this.dialogueJustOpened = true;
+        
         // Emit event to show dialogue UI with NPC reference for distance checking
         this.scene.events.emit('showDialogue', dialogue, this);
     }
@@ -574,6 +807,8 @@ export class UnifiedNPC extends Entity {
         switch (questItemType) {
             case 'mysterious herb':
                 return 'mysterious herbs';
+            case 'dimensional herb':
+                return 'dimensional herbs';
             case 'lesser nepian blood':
                 return 'lesser nepian blood samples';
             case 'nepian scout':
@@ -623,7 +858,7 @@ export class UnifiedNPC extends Entity {
             text: this.currentQuest.completionText,
             responses: [
                 {
-                    text: "Here are the herbs you requested.",
+                    text: "Here are the items you requested.",
                     action: 'complete_quest_and_reward'
                 }
             ],
@@ -660,13 +895,20 @@ export class UnifiedNPC extends Entity {
             case 'complete_quest_and_reward':
                 this.completeQuestAndReward();
                 break;
+            case 'complete_quest_only':
+                this.completeQuestOnly();
+                break;
             case 'continue':
                 // console.log('NPC: Player will continue quest, closing dialogue');
-                this.scene.events.emit('hideDialogue');
+                if (this.scene && this.scene.events) {
+                    this.scene.events.emit('hideDialogue');
+                }
                 break;
             case 'close_dialogue':
                 // console.log('NPC: Closing dialogue and returning to game');
-                this.scene.events.emit('hideDialogue');
+                if (this.scene && this.scene.events) {
+                    this.scene.events.emit('hideDialogue');
+                }
                 break;
             case 'show_snarky_remark':
                 // console.log('NPC: Showing snarky remark');
@@ -699,7 +941,17 @@ export class UnifiedNPC extends Entity {
 
     private declineQuest(): void {
         // console.log('NPC: Quest declined');
-        // Quest decline logic would go here
+        // Emit quest abandoned event to hide quest UI
+        if (this.currentQuest) {
+            this.scene.events.emit('questAbandoned', {
+                id: this.currentQuest.id.toString(),
+                title: this.currentQuest.name,
+                description: this.currentQuest.description,
+                type: this.currentQuest.questData.type,
+                amount: this.currentQuest.questData.amount,
+                current: 0
+            });
+        }
     }
 
     private handleDialogueEnded(): void {
@@ -846,18 +1098,35 @@ export class UnifiedNPC extends Entity {
         // Update interaction prompt position
         this.updatePosition();
         
-        // Check for interaction
-        const playerInRange = this.player && this.isPlayerInRange() && !this.isInteracting;
+        // Check for interaction proximity (separate from interaction state)
+        const playerInRange = this.player && this.isPlayerInRange();
         
-        if (playerInRange && !this.playerInRangeLastFrame) {
+        if (playerInRange && !this.playerInRangeLastFrame && !this.isInteracting) {
             // Player just entered range - show interaction prompt
             this.showInteractionPrompt();
         } else if (!playerInRange && this.playerInRangeLastFrame) {
-            // Player just left range - hide interaction prompt
+            // Player just left range - hide interaction prompt and close dialogue
             this.hideInteractionPrompt();
+            // Only close dialogue if it wasn't just opened (to prevent immediate closing)
+            if (!this.dialogueJustOpened) {
+                this.closeDialogueIfOpen();
+            }
+        }
+        
+        // Reset dialogue just opened flag after a short delay
+        if (this.dialogueJustOpened) {
+            this.scene.time.delayedCall(200, () => {
+                this.dialogueJustOpened = false;
+            });
         }
         
         this.playerInRangeLastFrame = playerInRange ?? false;
+    }
+
+    private closeDialogueIfOpen(): void {
+        // Check if dialogue is currently open and close it
+        console.log('NPC: Closing dialogue due to player leaving range');
+        this.scene.events.emit('closeDialogue');
     }
 
     public takeDamage(_amount: number): void {

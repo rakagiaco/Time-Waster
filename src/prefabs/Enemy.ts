@@ -967,31 +967,9 @@ export class Enemy extends Entity {
     }
 
     public showAlertIndicator(): void {
-        try {
-            // Clean up existing indicator
-            this.cleanupAlertIndicator();
-
-            // Create a small visual indicator above the enemy
-            this.alertIndicator = this.scene.add.graphics();
-            this.alertIndicator.fillStyle(0xff0000, 0.8);
-            this.alertIndicator.fillCircle(0, -30, 3);
-            this.alertIndicator.setDepth(1000);
-
-            // Make it follow the enemy
-            this.scene.tweens.add({
-                targets: this.alertIndicator,
-                alpha: 0,
-                duration: 500,
-                yoyo: true,
-                repeat: 1,
-                onComplete: () => {
-                    this.cleanupAlertIndicator();
-                }
-            });
-        } catch (error) {
-            console.error('Error showing alert indicator:', error);
-            this.cleanupAlertIndicator();
-        }
+        // Alert indicator disabled to prevent visual issues
+        // The red circle was causing graphical problems
+        return;
     }
 
     /**
@@ -1111,48 +1089,9 @@ export class Enemy extends Entity {
     }
 
     private createAttackEffects(): void {
-
-        // Create attack slash effect
-        const slashEffect = this.scene.add.graphics();
-        slashEffect.lineStyle(3, 0xff0000, 0.8);
-
-        // Draw attack line from enemy to player
-        const startX = this.x;
-        const startY = this.y;
-        const endX = this.player.x;
-        const endY = this.player.y;
-
-        slashEffect.beginPath();
-        slashEffect.moveTo(startX, startY);
-        slashEffect.lineTo(endX, endY);
-        slashEffect.strokePath();
-
-        // Animate the slash effect
-        this.scene.tweens.add({
-            targets: slashEffect,
-            alpha: 0,
-            duration: 300,
-            onComplete: () => {
-                slashEffect.destroy();
-            }
-        });
-
-        // Create impact effect at player position
-        const impactEffect = this.scene.add.graphics();
-        impactEffect.fillStyle(0xff0000, 0.6);
-        impactEffect.fillCircle(endX, endY, 15);
-
-        this.scene.tweens.add({
-            targets: impactEffect,
-            scaleX: 2,
-            scaleY: 2,
-            alpha: 0,
-            duration: 400,
-            onComplete: () => {
-                impactEffect.destroy();
-            }
-        });
-
+        // Simplified attack effects - removed slash and impact effects
+        // Only keep screen shake for feedback
+        
         // Create screen shake effect
         this.createScreenShake();
     }
@@ -1191,39 +1130,12 @@ export class Enemy extends Entity {
             this.player.setTint(originalTint);
         });
 
-        // Create blood splatter effect
-        this.createBloodSplatter();
+        // Blood splatter effect removed - using player's damage particles instead
+        // this.createBloodSplatter();
     }
 
-    private createBloodSplatter(): void {
-        if (!this.player) return;
-
-        // Create multiple blood particles
-        for (let i = 0; i < 5; i++) {
-            const bloodParticle = this.scene.add.graphics();
-            bloodParticle.fillStyle(0x8B0000, 0.8);
-            bloodParticle.fillCircle(0, 0, 2);
-
-            // Random position around player
-            const angle = Math.random() * Math.PI * 2;
-            const distance = Math.random() * 20 + 10;
-            const x = this.player.x + Math.cos(angle) * distance;
-            const y = this.player.y + Math.sin(angle) * distance;
-
-            bloodParticle.setPosition(x, y);
-
-            // Animate blood particle
-            this.scene.tweens.add({
-                targets: bloodParticle,
-                y: bloodParticle.y + Math.random() * 30 + 10,
-                alpha: 0,
-                duration: 800 + Math.random() * 400,
-                onComplete: () => {
-                    bloodParticle.destroy();
-                }
-            });
-        }
-    }
+    // Blood splatter method removed - using player's damage particles instead
+    // private createBloodSplatter(): void { ... }
 
     private createScreenShake(): void {
         // Get the main camera only - minimap camera should not be affected

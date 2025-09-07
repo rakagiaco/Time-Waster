@@ -1,13 +1,12 @@
 {   
-    "name" : "The Valley's Ancient Curse",
-    "description" : "Greetings, traveler. I am Narvark, keeper of the valley's secrets and last guardian of its forgotten lore. You have stumbled into a place of great mystery and greater danger. This valley was once called the Infinite Flux - a land of endless bounty where two mighty civilizations, the Kingdom of Ahll and the Republic of Vorth, flourished for centuries. The valley's soil was so fertile that crops grew overnight, trees bore fruit year-round, and precious metals surfaced from the earth like water from a spring. But prosperity breeds greed, and greed breeds war. The two nations, once trading partners, became bitter rivals, each seeking to claim the valley's power for themselves alone. The War of the Infinite Flux lasted three hundred years, draining both civilizations of their strength and their souls. In their desperation, the Kingdom of Ahll discovered something in the valley's depths - an ancient idol of unknown origin, pulsing with otherworldly energy. They believed it was the source of the valley's endless bounty. But when they tried to destroy it to deny their enemies its power, they found it indestructible. In their final hour, they sought the counsel of an ancient hermit who had lived in the valley since before memory. The hermit claimed to know how to destroy the idol, but warned that doing so would end the valley's blessing forever. The hermit disappeared into the valley's heart, and the next day, the bounty ceased. Crops withered, trees died, and the valley became a wasteland. Both civilizations collapsed within a generation. Now, three thousand years later, the valley shows signs of awakening. Strange herbs have begun to grow in its soil - herbs that pulse with the same otherworldly energy as the ancient idol. I believe these herbs hold the key to understanding what truly happened here. Traveler, I am too old to gather them myself, but you... you have the strength and courage needed for this task. Will you help me collect five of these mysterious herbs so that I may study their properties and perhaps unlock the valley's secrets?", 
-    "requirements" : "Narvark wants you to collect 5 mysterious herbs scattered in the valley's northern reaches",
-    "completiontext" : "Ah, you have returned! And I see you have gathered the herbs I requested. These specimens are remarkable - they pulse with the same energy that once flowed through this valley. With these, I may finally begin to understand the true nature of the curse that befell this land. Here, take these gold coins as payment for your service. You have done well, traveler.", 
-    
+    "name" : "Echoes of the Convergence",
+    "description" : "Greetings, traveler. I am Narvark, a scholar of the dimensional arts. You've entered the Convergence Valley - a place where three realms once met in harmony. Now it's a reality storm where time and space constantly shift. Strange herbs grow here, pulsing with dimensional energy. They may hold the key to understanding what happened to this place. Will you help me collect five of these dimensional herbs?",
+    "requirements" : "Narvark wants you to collect 5 dimensional herbs scattered throughout the valley",
+    "completiontext" : "Excellent! These herbs contain traces of pure dimensional energy. They're not corrupted like everything else here. This gives me hope that we can still save this place.",
     "questdata" : {
         "questnumber": 1,
         "verb" : "collect",
-        "type" : "mysterious herb",
+        "type" : "dimensional herb",
         "amount" : 5
     }
 }

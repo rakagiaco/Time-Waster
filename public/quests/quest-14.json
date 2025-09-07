@@ -1,0 +1,12 @@
+{   
+    "name" : "The Elden Forest's Corruption",
+    "description" : "The final piece of the puzzle. The Forest Anchor is deep in the western forest regions, but the Elden Forest has been corrupted by the Void. The forest guardians are fighting a losing battle against the Nepian's influence. If the forest falls, the western realm will be lost forever. I need you to venture into the forest and help cleanse the corruption.",
+    "requirements" : "Narvark wants you to help cleanse the Elden Forest of Void corruption",
+    "completiontext" : "The forest is cleansed! The guardians are free from the Void's influence, and the Forest Anchor is secure. All three realms are now protected, and we have access to all three Reality Anchors. We can finally attempt to restore the Convergence Valley and seal the dimensional rifts forever.",
+    "questdata" : {
+        "questnumber": 14,
+        "verb" : "cleanse",
+        "type" : "Void corruption",
+        "amount" : 1
+    }
+}

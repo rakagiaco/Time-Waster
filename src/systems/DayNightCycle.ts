@@ -93,14 +93,14 @@ export class DayNightCycle {
         this.overlay.setScrollFactor(0); // Fixed to camera
         this.overlay.setBlendMode(Phaser.BlendModes.NORMAL); // Normal blend so ERASE can work on it
 
-        // Create time display
+        // Create time display - positioned at center top to avoid quest UI
         this.timeText = this.scene.add.bitmapText(
-            this.scene.cameras.main.width - 200,
-            20,
+            this.scene.cameras.main.width / 2, // Center of screen
+            20, // Top of screen
             '8-bit',
             '',
             16
-        ).setOrigin(1, 0);
+        ).setOrigin(0.5, 0); // Center-aligned
         this.timeText.setDepth(1001);
         this.timeText.setScrollFactor(0);
         this.timeText.setScale(2)

@@ -1,12 +1,12 @@
 {   
-    "name" : "Reclaiming the Valley II",
-    "description" : "Traveler, you must continue to clear the valley of Nepian",
-    "requirements" : "Xavius Silverleaf wants you to kill 1000 Nepian Observer",
-    "completiontext" : "Continue on, Traveler",
+    "name" : "Cleansing the Valley",
+    "description" : "The Electro Lord's defeat has weakened the Nepian's hold on the valley, but they're not giving up easily. More scouts and warriors are moving in to replace their fallen leader. I need you to clear the valley of these reinforcements. This will give us time to prepare for the next phase of our mission.",
+    "requirements" : "Narvark wants you to eliminate 8 Nepian scouts and 3 Nepian warriors throughout the valley",
+    "completiontext" : "Excellent work! The valley is much cleaner now. The Nepian's reinforcements have been cut off, and we can feel the dimensional energy stabilizing slightly. This gives us the breathing room we need.",
     "questdata" : {
         "questnumber": 6,
-        "verb" : "kill",
-        "type" : "Nepian Observer",
-        "ammount" : 1000
+        "verb" : "eliminate",
+        "type" : "Nepian forces",
+        "amount" : 11
     }
 }

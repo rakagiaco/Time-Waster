@@ -1,0 +1,12 @@
+{   
+    "name" : "Empire's Ruins",
+    "description" : "The gateway has opened a path to the Crystalline Empire's ruins. These ancient structures contain the knowledge we need to understand and potentially restore the Reality Anchors. However, the ruins are dangerous - they're filled with corrupted crystal constructs and dimensional anomalies. I need you to explore the ruins and recover the Empire's knowledge.",
+    "requirements" : "Narvark wants you to explore the Crystalline Empire ruins and recover ancient knowledge",
+    "completiontext" : "Remarkable! The Empire's knowledge has been recovered. These ancient texts reveal the true nature of the Reality Anchors and how they maintained the dimensional barriers. With this knowledge, we can begin the process of restoring the Convergence Valley.",
+    "questdata" : {
+        "questnumber": 12,
+        "verb" : "recover",
+        "type" : "ancient knowledge",
+        "amount" : 1
+    }
+}

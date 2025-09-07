@@ -360,7 +360,7 @@ export class PauseMenu {
                 worldScene.characterGearUI.getGearSlotState() : null;
 
             // Call SaveSystem with proper parameters
-            const success = SaveSystem.saveGame(player, enemies, trees, items, gameState, gearSlotState);
+            const success = SaveSystem.saveGame(player, enemies, trees, items, gameState, gearSlotState, worldScene);
 
             if (!success) {
                 console.error('Failed to save game');
@@ -548,6 +548,10 @@ export class PauseMenu {
 
     public isMenuVisible(): boolean {
         return this.isVisible;
+    }
+
+    public getPauseContainer(): Phaser.GameObjects.Container | null {
+        return this.menuContainer;
     }
 
     public reinitialize(): void {

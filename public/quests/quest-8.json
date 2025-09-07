@@ -1,0 +1,12 @@
+{   
+    "name" : "Pure Dimensional Energy",
+    "description" : "The crystal fragments have given me an idea. The gateway requires pure dimensional energy to activate, but the valley's energy is corrupted by the Nepian. However, I've discovered that certain areas of the valley still contain pockets of pure energy. I need you to collect these energy crystals from the northern regions.",
+    "requirements" : "Narvark wants you to collect 6 pure dimensional energy crystals",
+    "completiontext" : "Perfect! These energy crystals are exactly what we need. They contain the pure dimensional energy required to activate the gateway. With these, we can safely travel to the Crystalline Empire's ruins.",
+    "questdata" : {
+        "questnumber": 8,
+        "verb" : "collect",
+        "type" : "energy crystal",
+        "amount" : 6
+    }
+}

@@ -1,0 +1,12 @@
+{   
+    "name" : "Gateway Activation",
+    "description" : "With the Nepian threat neutralized and all the required components gathered, we can now attempt to activate the gateway to the Crystalline Empire's ruins. This is a delicate operation that requires precise timing and the right energy signature. I need you to activate the gateway and secure the passage.",
+    "requirements" : "Narvark wants you to activate the mine gateway to the Crystalline Empire",
+    "completiontext" : "The gateway is active! The dimensional passage to the Crystalline Empire's ruins is now open. I can feel the ancient magic flowing through the portal. We're ready to explore the Empire's ruins and learn the secrets of the Reality Anchors.",
+    "questdata" : {
+        "questnumber": 11,
+        "verb" : "activate",
+        "type" : "dimensional gateway",
+        "amount" : 1
+    }
+}

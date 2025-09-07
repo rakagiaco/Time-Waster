@@ -103,12 +103,12 @@ export class Menu extends Phaser.Scene {
         const centerX = (this.game.config.width as number) / 2;
         const centerY = (this.game.config.height as number) / 2;
 
-        const title = this.add.bitmapText(centerX, centerY - 180, '8-bit', 'TIME WASTER', 72);
+        const title = this.add.bitmapText(centerX, centerY - 180, 'pixel-white', 'TIME WASTER', 72);
         title.setOrigin(0.5);
 
         // Get a random remark from the system
         const randomRemark = MenuRemarksSystem.getRandomRemark();
-        const subtitle = this.add.bitmapText(centerX, centerY - 120, '8-bit', randomRemark, 20);
+        const subtitle = this.add.bitmapText(centerX, centerY - 120, 'pixel-white', randomRemark, 20);
         subtitle.setOrigin(0.5);
     }
 
@@ -190,7 +190,7 @@ export class Menu extends Phaser.Scene {
         buttonBg.fillCircle(70, 8, 3);
 
         // Button text
-        const buttonText = this.add.bitmapText(0, 0, '8-bit', text, 18);
+        const buttonText = this.add.bitmapText(0, 0, 'pixel-white', text, 18);
         buttonText.setOrigin(0.5);
         buttonText.setTint(0x654321); // Dark brown text
 
@@ -257,7 +257,7 @@ export class Menu extends Phaser.Scene {
         const message = this.add.bitmapText(
             (this.game.config.width as number) / 2,
             ((this.game.config.height as number) / 2) + 350,
-            '8-bit',
+            'pixel-white',
             'No saved game found!',
             20
         );

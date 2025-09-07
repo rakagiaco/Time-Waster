@@ -1,0 +1,12 @@
+{   
+    "name" : "The Nepian Stronghold",
+    "description" : "Our intelligence suggests that the Nepian have established a major stronghold in the valley's eastern regions. They're using it as a staging ground for their invasion of the remaining stable realms. We need to strike at their heart before they can launch their attack. I need you to assault their stronghold and eliminate their leader.",
+    "requirements" : "Narvark wants you to assault the Nepian stronghold and defeat the Nepian Commander",
+    "completiontext" : "Outstanding! The Nepian Commander has been defeated, and their stronghold is in ruins. This is a major victory - we've crippled their ability to launch large-scale attacks. The valley is now truly secure, and we can proceed with our plan to restore the Reality Anchors.",
+    "questdata" : {
+        "questnumber": 10,
+        "verb" : "defeat",
+        "type" : "Nepian Commander",
+        "amount" : 1
+    }
+}

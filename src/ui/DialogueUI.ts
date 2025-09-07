@@ -1,62 +1,45 @@
-import Phaser from 'phaser';
-// import { DialogueData, DialogueResponse } from '../prefabs/NPC';
+/**
+ * Modern Dialogue UI System
+ * 
+ * A sleek, non-intrusive dialogue system inspired by World of Warcraft's UI.
+ * Features compact design, modern styling, and smooth animations.
+ */
 
-// Local type definitions
+import Phaser from 'phaser';
+
 export interface DialogueData {
     id: string;
     text: string;
     responses?: DialogueResponse[];
-    reward?: any;
+    speaker?: string;
 }
 
 export interface DialogueResponse {
     text: string;
-    action: string;
-    nextDialogue?: string;
     nextDialogueId?: string;
+    action?: string;
     condition?: () => boolean;
 }
 
-/**
- * DialogueUI - Handles scrolling dialogue with button responses
- * Creates a medieval scroll-style dialogue interface
- */
 export class DialogueUI {
     private scene: Phaser.Scene;
-    private isActive: boolean = false;
-    private currentDialogue: DialogueData | null = null;
-    private npcReference: any = null; // Reference to the NPC for distance checking
-    // @ts-ignore - Intentionally unused for future functionality
-    private _lastLoggedDistance: number = -1; // Track last logged distance to avoid spam
-    
-    // UI Elements
     private dialogueContainer: Phaser.GameObjects.Container | null = null;
-    private scrollBackground: Phaser.GameObjects.Graphics | null = null;
-    private dialogueText: Phaser.GameObjects.BitmapText | null = null;
-    private responseButtons: Phaser.GameObjects.Container[] = [];
-    private continueButton: Phaser.GameObjects.Graphics | null = null;
-    private continueText: Phaser.GameObjects.BitmapText | null = null;
-    private rewardDisplay: Phaser.GameObjects.Container | null = null;
-    private closeButton: Phaser.GameObjects.Graphics | null = null;
-    private closeButtonText: Phaser.GameObjects.BitmapText | null = null;
-    
-    // Animation properties
-    private textDisplaySpeed: number = 30; // Characters per second
-    private currentTextIndex: number = 0;
-    private fullText: string = '';
-    private isTyping: boolean = false;
-    private typeTimer: number = 0;
-    
-    // Paragraph system
-    private paragraphs: string[] = [];
-    private currentParagraphIndex: number = 0;
-    private isWaitingForInput: boolean = false;
-    
-    // UI dimensions
-    private readonly UI_WIDTH = 700;
-    private readonly UI_HEIGHT = 400;
+    private npcReference: any = null;
+    private currentDialogue: DialogueData | null = null;
+    private isActive: boolean = false;
+    private isAnimating: boolean = false;
+    private dialogueSegments: string[] = []; // Support for multi-part dialogues
+    private currentSegmentIndex: number = 0;
+    private currentTypewriter: Phaser.Time.TimerEvent | null = null; // Track current animation
+    private isProcessingClick: boolean = false; // Prevent rapid clicking
+    private currentAnimationId: number = 0; // Track current animation ID
+    private dialogueText: Phaser.GameObjects.BitmapText | null = null; // Dialogue text display
 
-    private readonly TEXT_PADDING = 50;
+    // Modern UI dimensions - compact and non-intrusive
+    private readonly DIALOGUE_WIDTH = 350; // Reduced width to prevent overflow
+    private readonly DIALOGUE_HEIGHT = 140; // Increased height to prevent bottom overflow
+    private readonly RESPONSE_WIDTH = 350;
+    private readonly RESPONSE_HEIGHT = 40;
 
     constructor(scene: Phaser.Scene) {
         this.scene = scene;
@@ -72,15 +55,13 @@ export class DialogueUI {
             this.hideDialogue();
         });
         
-        // Handle input
-        this.scene.input.keyboard?.on('keydown-SPACE', () => {
-            if (this.isActive) {
-                this.handleContinue();
-            }
+        this.scene.events.on('closeDialogue', () => {
+            this.hideDialogue();
         });
         
-        this.scene.input.keyboard?.on('keydown-ENTER', () => {
-            if (this.isActive) {
+        // Keyboard support
+        this.scene.input.keyboard?.on('keydown-SPACE', () => {
+            if (this.isActive && !this.isAnimating) {
                 this.handleContinue();
             }
         });
@@ -91,102 +72,101 @@ export class DialogueUI {
         
         this.isActive = true;
         this.currentDialogue = dialogue;
-        this.npcReference = npc; // Store NPC reference for distance checking
-        this.createDialogueUI();
-        this.startTextAnimation(dialogue.text);
+        this.npcReference = npc;
         
-        // Showing dialogue
-        // Dialogue text
-        // NPC reference set
-        if (this.npcReference) {
-            // NPC reference has ally
-        }
+        // Split long dialogue text into segments
+        this.dialogueSegments = this.splitDialogueIntoSegments(dialogue.text);
+        this.currentSegmentIndex = 0;
+        
+        this.createModernDialogueUI();
+        this.startTextAnimation(this.dialogueSegments[0]);
     }
 
-    private createDialogueUI(): void {
-        const centerX = this.scene.cameras.main.width / 2;
-        const centerY = this.scene.cameras.main.height / 2;
+    private createModernDialogueUI(): void {
+        // Clean up any existing dialogue container first
+        if (this.dialogueContainer) {
+            this.dialogueContainer.destroy();
+            this.dialogueContainer = null;
+        }
         
-        // Create main container
-        this.dialogueContainer = this.scene.add.container(centerX, centerY);
-        this.dialogueContainer.setDepth(20000);
+        const screenWidth = this.scene.cameras.main.width;
+        const screenHeight = this.scene.cameras.main.height;
+        
+        // Position in bottom-middle, non-intrusive
+        const x = screenWidth / 2;
+        const y = screenHeight - 20;
+        
+        this.dialogueContainer = this.scene.add.container(x, y);
+        this.dialogueContainer.setDepth(50000); // Much higher depth to ensure it's above everything
         this.dialogueContainer.setScrollFactor(0);
         
-        // Create scroll background
-        this.createScrollBackground();
+        console.log(`DialogueUI: Created container at (${x}, ${y}) with depth 50000`);
         
-        // Create dialogue text area
+        // Create modern dialogue panel
+        this.createDialoguePanel();
+        
+        // Create dialogue text
         this.createDialogueText();
         
-        // Create continue button
-        this.createContinueButton();
-        
-        // Create close button
-        this.createCloseButton();
+        // Don't create buttons yet - wait for text animation to complete
     }
 
-    private createScrollBackground(): void {
+    private createDialoguePanel(): void {
         if (!this.dialogueContainer) return;
         
-        this.scrollBackground = this.scene.add.graphics();
-        this.dialogueContainer.add(this.scrollBackground);
+        // Modern panel background with subtle transparency
+        const panel = this.scene.add.graphics();
+        this.dialogueContainer.add(panel);
         
-        // Draw medieval scroll background
-        this.scrollBackground.fillStyle(0xF5E6C3); // Parchment color
-        this.scrollBackground.fillRoundedRect(
-            -this.UI_WIDTH / 2, -this.UI_HEIGHT / 2,
-            this.UI_WIDTH, this.UI_HEIGHT,
-            15
+        // Main panel with modern styling - centered horizontally
+        const panelX = -this.DIALOGUE_WIDTH / 2;
+        panel.fillStyle(0x1a1a1a, 0.95); // Dark background with transparency
+        panel.fillRoundedRect(panelX, -this.DIALOGUE_HEIGHT, this.DIALOGUE_WIDTH, this.DIALOGUE_HEIGHT, 8);
+        
+        // Subtle border
+        panel.lineStyle(2, 0x4a4a4a, 0.8);
+        panel.strokeRoundedRect(panelX, -this.DIALOGUE_HEIGHT, this.DIALOGUE_WIDTH, this.DIALOGUE_HEIGHT, 8);
+        
+        // Inner highlight
+        panel.lineStyle(1, 0x666666, 0.6);
+        panel.strokeRoundedRect(panelX + 2, -this.DIALOGUE_HEIGHT + 2, this.DIALOGUE_WIDTH - 4, this.DIALOGUE_HEIGHT - 4, 6);
+        
+        // Make the dialogue panel clickable to skip animation or continue
+        const clickArea = this.scene.add.rectangle(
+            panelX + this.DIALOGUE_WIDTH / 2, -this.DIALOGUE_HEIGHT / 2,
+            this.DIALOGUE_WIDTH, this.DIALOGUE_HEIGHT
         );
+        clickArea.setInteractive();
+        clickArea.setAlpha(0); // Invisible but clickable
+        clickArea.on('pointerdown', () => this.handleDialogueClick());
+        this.dialogueContainer.add(clickArea);
         
-        // Add scroll border
-        this.scrollBackground.lineStyle(3, 0x8B4513); // Brown border
-        this.scrollBackground.strokeRoundedRect(
-            -this.UI_WIDTH / 2, -this.UI_HEIGHT / 2,
-            this.UI_WIDTH, this.UI_HEIGHT,
-            15
-        );
-        
-        // Add scroll details
-        this.addScrollDetails();
-    }
-
-    private addScrollDetails(): void {
-        if (!this.scrollBackground) return;
-        
-        // Add corner decorations
-        const cornerSize = 20;
-        this.scrollBackground.fillStyle(0x8B4513);
-        
-        // Top-left corner
-        this.scrollBackground.fillCircle(-this.UI_WIDTH / 2 + cornerSize, -this.UI_HEIGHT / 2 + cornerSize, 8);
-        // Top-right corner
-        this.scrollBackground.fillCircle(this.UI_WIDTH / 2 - cornerSize, -this.UI_HEIGHT / 2 + cornerSize, 8);
-        // Bottom-left corner
-        this.scrollBackground.fillCircle(-this.UI_WIDTH / 2 + cornerSize, this.UI_HEIGHT / 2 - cornerSize, 8);
-        // Bottom-right corner
-        this.scrollBackground.fillCircle(this.UI_WIDTH / 2 - cornerSize, this.UI_HEIGHT / 2 - cornerSize, 8);
-        
-        // Add scroll texture lines
-        this.scrollBackground.lineStyle(1, 0xD2B48C, 0.3);
-        for (let i = 0; i < 5; i++) {
-            const y = -this.UI_HEIGHT / 2 + 50 + (i * 40);
-            this.scrollBackground.lineBetween(-this.UI_WIDTH / 2 + 30, y, this.UI_WIDTH / 2 - 30, y);
+        // Speaker name if available - centered
+        if (this.currentDialogue?.speaker) {
+            const speakerText = this.scene.add.bitmapText(
+                panelX + 15, -this.DIALOGUE_HEIGHT + 15,
+                'pixel-white', this.currentDialogue.speaker, 14
+            );
+            speakerText.setTint(0xFFD700); // Gold color for speaker name
+            this.dialogueContainer.add(speakerText);
         }
+        
+        // Dialogue text area
+        this.createDialogueText();
     }
 
     private createDialogueText(): void {
-        if (!this.dialogueContainer) return;
+        if (!this.dialogueContainer || !this.currentDialogue) return;
+        
+        const textY = this.currentDialogue.speaker ? -this.DIALOGUE_HEIGHT + 35 : -this.DIALOGUE_HEIGHT + 20;
+        const panelX = -this.DIALOGUE_WIDTH / 2;
         
         this.dialogueText = this.scene.add.bitmapText(
-            0, -this.UI_HEIGHT / 2 + 100,
-            '8-bit', '', 25
+            panelX + 20, textY,
+            'pixel-white', '', 12
         );
-        this.dialogueText.setTint(0x000000); // Black text for better visibility
-        this.dialogueText.setOrigin(0.5, 0);
-        this.dialogueText.setMaxWidth(this.UI_WIDTH - this.TEXT_PADDING * 2);
-        this.dialogueText.setCenterAlign();
-        this.dialogueText.setLineSpacing(8); // Add extra line spacing
+        this.dialogueText.setTint(0xFFFFFF);
+        this.dialogueText.setMaxWidth(this.DIALOGUE_WIDTH - 40); // Increased padding for better text spacing
         
         this.dialogueContainer.add(this.dialogueText);
     }
@@ -194,427 +174,302 @@ export class DialogueUI {
     private createContinueButton(): void {
         if (!this.dialogueContainer) return;
         
-        const buttonY = this.UI_HEIGHT / 2 - 50;
+        const buttonY = -15;
+        const panelX = -this.DIALOGUE_WIDTH / 2;
         
-        this.continueButton = this.scene.add.graphics();
-        this.dialogueContainer.add(this.continueButton);
-        
-        // Draw button background
-        this.continueButton.fillStyle(0x8B4513);
-        this.continueButton.fillRoundedRect(-60, buttonY - 15, 120, 30, 8);
-        
-        this.continueButton.lineStyle(2, 0x654321);
-        this.continueButton.strokeRoundedRect(-60, buttonY - 15, 120, 30, 8);
-        
-        // Add button text
-        this.continueText = this.scene.add.bitmapText(
-            0, buttonY,
-            'pixel-black', 'CONTINUE', 16
-        );
-        this.continueText.setTint(0x000000); // Black text for better visibility
-        this.continueText.setOrigin(0.5, 0.5);
-        
-        this.dialogueContainer.add(this.continueText);
-        
-        // Make button interactive
-        this.continueButton.setInteractive(
-            new Phaser.Geom.Rectangle(-60, buttonY - 15, 120, 30),
-            Phaser.Geom.Rectangle.Contains
+        const continueBtn = this.createModernButton(
+            panelX + this.DIALOGUE_WIDTH - 80, buttonY,
+            60, 25, 'Continue', () => this.handleContinue()
         );
         
-        this.continueButton.on('pointerdown', () => {
-            this.handleContinue();
-        });
-        
-        this.continueButton.on('pointerover', () => {
-            this.continueButton?.clear();
-            this.continueButton?.fillStyle(0x654321);
-            this.continueButton?.fillRoundedRect(-60, buttonY - 15, 120, 30, 8);
-            this.continueButton?.lineStyle(2, 0x8B4513);
-            this.continueButton?.strokeRoundedRect(-60, buttonY - 15, 120, 30, 8);
-        });
-        
-        this.continueButton.on('pointerout', () => {
-            this.continueButton?.clear();
-            this.continueButton?.fillStyle(0x8B4513);
-            this.continueButton?.fillRoundedRect(-60, buttonY - 15, 120, 30, 8);
-            this.continueButton?.lineStyle(2, 0x654321);
-            this.continueButton?.strokeRoundedRect(-60, buttonY - 15, 120, 30, 8);
-        });
-    }
-
-    private createCloseButton(): void {
-        if (!this.dialogueContainer) return;
-        
-        const buttonX = this.UI_WIDTH / 2 - 25;
-        const buttonY = -this.UI_HEIGHT / 2 + 25;
-        
-        this.closeButton = this.scene.add.graphics();
-        this.dialogueContainer.add(this.closeButton);
-        
-        // Draw close button background (small circle)
-        this.closeButton.fillStyle(0x8B4513);
-        this.closeButton.fillCircle(buttonX, buttonY, 15);
-        
-        this.closeButton.lineStyle(2, 0x654321);
-        this.closeButton.strokeCircle(buttonX, buttonY, 15);
-        
-        // Add X text
-        this.closeButtonText = this.scene.add.bitmapText(
-            buttonX, buttonY,
-            'pixel-black', 'X', 16
-        );
-        this.closeButtonText.setTint(0x000000);
-        this.closeButtonText.setOrigin(0.5, 0.5);
-        
-        this.dialogueContainer.add(this.closeButtonText);
-        
-        // Make button interactive
-        this.closeButton.setInteractive(
-            new Phaser.Geom.Circle(buttonX, buttonY, 15),
-            Phaser.Geom.Circle.Contains
-        );
-        
-        this.closeButton.on('pointerdown', () => {
-            this.hideDialogue();
-        });
-        
-        this.closeButton.on('pointerover', () => {
-            this.closeButton?.clear();
-            this.closeButton?.fillStyle(0x654321);
-            this.closeButton?.fillCircle(buttonX, buttonY, 15);
-            this.closeButton?.lineStyle(2, 0x8B4513);
-            this.closeButton?.strokeCircle(buttonX, buttonY, 15);
-        });
-        
-        this.closeButton.on('pointerout', () => {
-            this.closeButton?.clear();
-            this.closeButton?.fillStyle(0x8B4513);
-            this.closeButton?.fillCircle(buttonX, buttonY, 15);
-            this.closeButton?.lineStyle(2, 0x654321);
-            this.closeButton?.strokeCircle(buttonX, buttonY, 15);
-        });
-    }
-
-    private startTextAnimation(text: string): void {
-        // Break text into paragraphs (split by double newlines or periods followed by space and capital)
-        this.paragraphs = this.breakIntoParagraphs(text);
-        this.currentParagraphIndex = 0;
-        this.isWaitingForInput = false;
-        
-        if (this.dialogueText) {
-            this.dialogueText.setText('');
-        }
-        
-        // Start with the first paragraph
-        this.showNextParagraph();
-    }
-
-    /**
-     * Breaks long text into manageable paragraphs
-     */
-    private breakIntoParagraphs(text: string): string[] {
-        // Split by periods followed by space and capital letter, or by double newlines
-        const sentences = text.split(/(?<=\.)\s+(?=[A-Z])/);
-        const paragraphs: string[] = [];
-        
-        let currentParagraph = '';
-        let sentenceCount = 0;
-        
-        for (const sentence of sentences) {
-            currentParagraph += sentence + ' ';
-            sentenceCount++;
-            
-            // Create a new paragraph every 3-4 sentences or if we hit a natural break
-            if (sentenceCount >= 3 || sentence.includes('.') && currentParagraph.length > 200) {
-                paragraphs.push(currentParagraph.trim());
-                currentParagraph = '';
-                sentenceCount = 0;
-            }
-        }
-        
-        // Add any remaining text as the last paragraph
-        if (currentParagraph.trim()) {
-            paragraphs.push(currentParagraph.trim());
-        }
-        
-        return paragraphs;
-    }
-
-    /**
-     * Shows the next paragraph in the sequence
-     */
-    private showNextParagraph(): void {
-        if (this.currentParagraphIndex >= this.paragraphs.length) {
-            // All paragraphs shown, show response buttons
-            this.showResponseButtons();
-            return;
-        }
-        
-        const paragraph = this.paragraphs[this.currentParagraphIndex];
-        this.fullText = paragraph;
-        this.currentTextIndex = 0;
-        this.isTyping = true;
-        this.typeTimer = 0;
-        this.isWaitingForInput = false;
-        
-    }
-
-    public update(delta: number): void {
-        if (!this.isActive) return;
-        
-        // Check distance to NPC and auto-close if too far
-        this.checkDistanceAndClose();
-        
-        if (!this.isTyping) return;
-        
-        this.typeTimer += delta;
-        const charsPerSecond = this.textDisplaySpeed;
-        const charsToShow = Math.floor(this.typeTimer * charsPerSecond);
-        
-        if (charsToShow > this.currentTextIndex) {
-            this.currentTextIndex = Math.min(charsToShow, this.fullText.length);
-            
-            if (this.dialogueText) {
-                this.dialogueText.setText(this.fullText.substring(0, this.currentTextIndex));
-            }
-            
-            if (this.currentTextIndex >= this.fullText.length) {
-                this.isTyping = false;
-                this.isWaitingForInput = true;
-                // Show continue button to advance to next paragraph
-                this.showContinueButton();
-            }
-        }
-    }
-
-    private checkDistanceAndClose(): void {
-        if (!this.npcReference) return;
-        
-        // Get player from World scene (cast to any to access player property)
-        const worldScene = this.scene as any;
-        const player = worldScene.player;
-        
-        if (!player) {
-            return;
-        }
-        
-        const npc = this.npcReference.ally || this.npcReference;
-        
-        if (!npc) {
-            return;
-        }
-        
-        const distance = Phaser.Math.Distance.Between(
-            player.x, player.y,
-            npc.x, npc.y
-        );
-        
-        // Only log distance changes of more than 5 pixels to avoid spam
-        // Close dialogue if player is more than 80 pixels away (same as interaction range)
-        if (distance > 80) {
-            this.hideDialogue();
-        }
-    }
-
-    private showContinueButton(): void {
-        if (!this.dialogueContainer) return;
-        
-        // Show continue button
-        if (this.continueButton) {
-            this.continueButton.setVisible(true);
-        }
-        if (this.continueText) {
-            this.continueText.setVisible(true);
-        }
-    }
-
-    private showResponseButtons(): void {
-        if (!this.currentDialogue || !this.dialogueContainer) return;
-        
-        // Hide continue button
-        if (this.continueButton) {
-            this.continueButton.setVisible(false);
-        }
-        if (this.continueText) {
-            this.continueText.setVisible(false);
-        }
-        
-        // Show reward display if present
-        if (this.currentDialogue.reward) {
-            this.createRewardDisplay();
-        }
-        
-        // Show response buttons if available
-        if (this.currentDialogue.responses && this.currentDialogue.responses.length > 0) {
-            this.createResponseButtons();
-        } else {
-            // Show continue button for dialogue without responses
-            if (this.continueButton) {
-                this.continueButton.setVisible(true);
-            }
-            if (this.continueText) {
-                this.continueText.setVisible(true);
-            }
-        }
+        this.dialogueContainer.add(continueBtn);
     }
 
     private createResponseButtons(): void {
-        if (!this.currentDialogue || !this.dialogueContainer) return;
+        if (!this.dialogueContainer || !this.currentDialogue?.responses) return;
         
-        const responses = this.currentDialogue.responses!;
-        const buttonSpacing = 50;
-        const startY = this.UI_HEIGHT / 2 - 80;
+        const responses = this.currentDialogue.responses;
+        const startY = -this.DIALOGUE_HEIGHT - 20; // Position buttons below the dialogue panel
+        const buttonSpacing = 50; // Increased spacing between buttons for better readability
         
         responses.forEach((response: DialogueResponse, index: number) => {
             const buttonY = startY - (index * buttonSpacing);
             
-            const buttonContainer = this.scene.add.container(0, buttonY);
-            this.dialogueContainer!.add(buttonContainer);
             
-            // Create button background
-            const buttonBg = this.scene.add.graphics();
-            buttonContainer.add(buttonBg);
-            
-            buttonBg.fillStyle(0x8B4513);
-            buttonBg.fillRoundedRect(-200, -15, 400, 30, 8);
-            
-            buttonBg.lineStyle(2, 0x654321);
-            buttonBg.strokeRoundedRect(-200, -15, 400, 30, 8);
-            
-            // Create button text
-            const buttonText = this.scene.add.bitmapText(
-                0, 0,
-                'pixel-black', response.text, 14
-            );
-            buttonText.setTint(0x000000); // Black text for better visibility
-            buttonText.setOrigin(0.5, 0.5);
-            buttonText.setMaxWidth(380);
-            buttonText.setCenterAlign();
-            
-            buttonContainer.add(buttonText);
-            
-            // Make button interactive
-            buttonBg.setInteractive(
-                new Phaser.Geom.Rectangle(-200, -15, 400, 30),
-                Phaser.Geom.Rectangle.Contains
+            const responseBtn = this.createModernButton(
+                0, buttonY,
+                this.RESPONSE_WIDTH, this.RESPONSE_HEIGHT,
+                response.text, () => this.handleResponse(response)
             );
             
-            buttonBg.on('pointerdown', () => {
-                this.handleResponse(response);
-            });
-            
-            buttonBg.on('pointerover', () => {
-                buttonBg.clear();
-                buttonBg.fillStyle(0x654321);
-                buttonBg.fillRoundedRect(-200, -15, 400, 30, 8);
-                buttonBg.lineStyle(2, 0x8B4513);
-                buttonBg.strokeRoundedRect(-200, -15, 400, 30, 8);
-            });
-            
-            buttonBg.on('pointerout', () => {
-                buttonBg.clear();
-                buttonBg.fillStyle(0x8B4513);
-                buttonBg.fillRoundedRect(-200, -15, 400, 30, 8);
-                buttonBg.lineStyle(2, 0x654321);
-                buttonBg.strokeRoundedRect(-200, -15, 400, 30, 8);
-            });
-            
-            this.responseButtons.push(buttonContainer);
+            this.dialogueContainer!.add(responseBtn);
         });
     }
 
-    private createRewardDisplay(): void {
-        if (!this.currentDialogue || !this.dialogueContainer || !this.currentDialogue.reward) return;
+    private createModernButton(x: number, y: number, width: number, height: number, text: string, callback: () => void): Phaser.GameObjects.Container {
+        const button = this.scene.add.container(x, y);
         
-        const reward = this.currentDialogue.reward;
-        const rewardY = this.UI_HEIGHT / 2 - 120; // Position above response buttons
+        // Modern button background
+        const buttonBg = this.scene.add.graphics();
+        button.add(buttonBg);
         
-        // Create reward container
-        const rewardContainer = this.scene.add.container(0, rewardY);
-        this.dialogueContainer.add(rewardContainer);
+        // Button styling
+        buttonBg.fillStyle(0x2a2a2a, 0.9);
+        buttonBg.fillRoundedRect(-width/2, -height/2, width, height, 6);
         
-        // Create reward background (inventory slot style)
-        const rewardBg = this.scene.add.graphics();
-        rewardContainer.add(rewardBg);
+        buttonBg.lineStyle(2, 0x4a4a4a, 0.8);
+        buttonBg.strokeRoundedRect(-width/2, -height/2, width, height, 6);
         
-        // Draw inventory slot background with better styling
-        rewardBg.fillStyle(0x2a2a2a, 0.95);
-        rewardBg.fillRoundedRect(-32, -32, 64, 64, 8);
+        // Button text - calculate size based on button dimensions
+        const textSize = Math.min(12, Math.floor(height * 0.6)); // Scale text to fit button height
+        const buttonText = this.scene.add.bitmapText(0, 0, 'pixel-white', text, textSize);
+        buttonText.setOrigin(0.5);
+        buttonText.setTint(0xFFFFFF);
+        buttonText.setMaxWidth(width - 30); // Increased padding for better text spacing
+        buttonText.setCenterAlign();
+        button.add(buttonText);
         
-        rewardBg.lineStyle(3, 0x8B4513, 1);
-        rewardBg.strokeRoundedRect(-32, -32, 64, 64, 8);
+        // Make the button background interactive instead of the container
+        buttonBg.setInteractive(new Phaser.Geom.Rectangle(-width/2, -height/2, width, height), Phaser.Geom.Rectangle.Contains);
         
-        rewardBg.lineStyle(2, 0x654321, 0.8);
-        rewardBg.strokeRoundedRect(-30, -30, 60, 60, 6);
+        // Modern hover effects
+        buttonBg.on('pointerover', () => {
+            button.setScale(1.02);
+            buttonText.setTint(0xFFD700); // Gold on hover
+            buttonBg.clear();
+            buttonBg.fillStyle(0x3a3a3a, 0.95);
+            buttonBg.fillRoundedRect(-width/2, -height/2, width, height, 6);
+            buttonBg.lineStyle(2, 0x666666, 0.9);
+            buttonBg.strokeRoundedRect(-width/2, -height/2, width, height, 6);
+        });
         
-        rewardBg.lineStyle(1, 0x4a4a4a, 0.6);
-        rewardBg.strokeRoundedRect(-28, -28, 56, 56, 4);
+        buttonBg.on('pointerout', () => {
+            button.setScale(1.0);
+            buttonText.setTint(0xFFFFFF);
+            buttonBg.clear();
+            buttonBg.fillStyle(0x2a2a2a, 0.9);
+            buttonBg.fillRoundedRect(-width/2, -height/2, width, height, 6);
+            buttonBg.lineStyle(2, 0x4a4a4a, 0.8);
+            buttonBg.strokeRoundedRect(-width/2, -height/2, width, height, 6);
+        });
         
-        // Add item sprite (gold coin) with fallback
-        let itemSprite: Phaser.GameObjects.Sprite;
-        if (this.scene.textures.exists('gold-coin')) {
-            itemSprite = this.scene.add.sprite(0, 0, 'gold-coin');
-        } else {
-            // Fallback: create a simple gold circle
-            itemSprite = this.scene.add.sprite(0, 0, 'gold-coin-fallback');
-            if (!this.scene.textures.exists('gold-coin-fallback')) {
-                // Create a simple gold circle texture
-                const graphics = this.scene.add.graphics();
-                graphics.fillStyle(0xffd700);
-                graphics.fillCircle(16, 16, 12);
-                graphics.generateTexture('gold-coin-fallback', 32, 32);
-                graphics.destroy();
+        buttonBg.on('pointerdown', callback);
+        
+        return button;
+    }
+
+    private startTextAnimation(text: string): void {
+        if (!this.dialogueText) return;
+        
+        // Clean up any existing animation
+        this.stopCurrentAnimation();
+        
+        this.isAnimating = true;
+        this.dialogueText.setText('');
+        
+        // Increment animation ID to invalidate any previous animations
+        this.currentAnimationId++;
+        const animationId = this.currentAnimationId;
+        
+        // Break text into lines that fit within the dialogue width
+        const maxWidth = this.DIALOGUE_WIDTH - 40; // Match the increased padding
+        const lines = this.wrapText(text, maxWidth);
+        const fullText = lines.join('\n');
+        
+        let currentText = '';
+        let index = 0;
+        
+        this.currentTypewriter = this.scene.time.addEvent({
+            delay: 30, // Faster typing speed
+            callback: () => {
+                // Check if this animation is still the current one
+                if (this.currentAnimationId === animationId && this.isAnimating) {
+                    if (index < fullText.length) {
+                        currentText += fullText[index];
+                        this.dialogueText!.setText(currentText);
+                        index++;
+                    } else {
+                        this.isAnimating = false;
+                        this.currentTypewriter = null;
+                        // Show continue button if there are more segments, or response buttons if this is the last segment
+                        this.showSegmentButtons();
+                    }
+                }
+            },
+            loop: true
+        });
+    }
+
+    private wrapText(text: string, maxWidth: number): string[] {
+        const words = text.split(' ');
+        const lines: string[] = [];
+        let currentLine = '';
+        
+        // Very conservative character width estimation for pixel font
+        const charWidth = 10; // Increased to provide better spacing and prevent overflow
+        
+        for (const word of words) {
+            const testLine = currentLine + (currentLine ? ' ' : '') + word;
+            
+            // Calculate estimated width
+            const estimatedWidth = testLine.length * charWidth;
+            
+            if (estimatedWidth > maxWidth && currentLine) {
+                lines.push(currentLine);
+                currentLine = word;
+            } else {
+                currentLine = testLine;
             }
-            itemSprite = this.scene.add.sprite(0, 0, 'gold-coin-fallback');
         }
-        itemSprite.setScale(0.7);
-        rewardContainer.add(itemSprite);
         
-        // Add quantity text with better styling
-        const quantityText = this.scene.add.bitmapText(
-            28, -28,
-            'pixel-white', reward.amount.toString(), 14
-        );
-        quantityText.setTint(0xffffff); // White text for better visibility
-        quantityText.setOrigin(1, 0);
-        // Add background to quantity text
-        const quantityBg = this.scene.add.graphics();
-        quantityBg.fillStyle(0x000000, 0.8);
-        quantityBg.fillRoundedRect(quantityText.x - quantityText.width - 4, quantityText.y - 2, quantityText.width + 8, quantityText.height + 4, 4);
-        quantityBg.setPosition(0, 0);
-        rewardContainer.add(quantityBg);
-        rewardContainer.add(quantityText);
+        if (currentLine) {
+            lines.push(currentLine);
+        }
         
-        // Add "Reward:" label
-        const rewardLabel = this.scene.add.bitmapText(
-            -80, 0,
-            'pixel-white', 'Reward:', 14
-        );
-        rewardLabel.setTint(0xffd700); // Gold color
-        rewardLabel.setOrigin(0, 0.5);
-        rewardContainer.add(rewardLabel);
+        return lines;
+    }
+
+    private splitDialogueIntoSegments(text: string): string[] {
+        // Split dialogue at sentence boundaries to create manageable segments
+        const sentences = text.split(/(?<=[.!?])\s+/);
+        const segments: string[] = [];
+        let currentSegment = '';
         
-        this.rewardDisplay = rewardContainer;
+        for (const sentence of sentences) {
+            const testSegment = currentSegment + (currentSegment ? ' ' : '') + sentence;
+            const maxWidth = this.DIALOGUE_WIDTH - 40; // Match the increased padding
+            const lines = this.wrapText(testSegment, maxWidth);
+            
+            // If adding this sentence would create more than 4 lines, start a new segment
+            if (lines.length > 4) {
+                if (currentSegment) {
+                    segments.push(currentSegment.trim());
+                    currentSegment = sentence;
+                } else {
+                    // Single sentence is too long, split it
+                    segments.push(sentence);
+                }
+            } else {
+                currentSegment = testSegment;
+            }
+        }
+        
+        if (currentSegment) {
+            segments.push(currentSegment.trim());
+        }
+        
+        return segments.length > 0 ? segments : [text];
+    }
+
+    private handleDialogueClick(): void {
+        // Prevent rapid clicking
+        if (this.isProcessingClick) return;
+        
+        this.isProcessingClick = true;
+        
+        if (this.isAnimating) {
+            // Skip animation if still typing
+            this.skipAnimation();
+        } else {
+            // Move to next segment or close dialogue
+            this.nextSegment();
+        }
+        
+        // Reset click processing after a very short delay to prevent rapid clicking
+        this.scene.time.delayedCall(50, () => {
+            this.isProcessingClick = false;
+        });
+    }
+
+    private stopCurrentAnimation(): void {
+        // Invalidate current animation by incrementing ID
+        this.currentAnimationId++;
+        
+        if (this.currentTypewriter) {
+            this.currentTypewriter.destroy();
+            this.currentTypewriter = null;
+        }
+        this.isAnimating = false;
+    }
+
+    private skipAnimation(): void {
+        // Stop current animation
+        this.stopCurrentAnimation();
+        
+        if (this.dialogueText && this.dialogueSegments.length > 0) {
+            const maxWidth = this.DIALOGUE_WIDTH - 40; // Match the increased padding
+            const lines = this.wrapText(this.dialogueSegments[this.currentSegmentIndex], maxWidth);
+            this.dialogueText.setText(lines.join('\n'));
+        }
+        // Show continue button if there are more segments, or response buttons if this is the last segment
+        this.showSegmentButtons();
+    }
+
+    private nextSegment(): void {
+        this.currentSegmentIndex++;
+        
+        if (this.currentSegmentIndex < this.dialogueSegments.length) {
+            // Show next segment
+            this.startTextAnimation(this.dialogueSegments[this.currentSegmentIndex]);
+        } else {
+            // All segments shown, show response buttons or close
+            if (this.currentDialogue?.responses && this.currentDialogue.responses.length > 0) {
+                this.createResponseButtons();
+            } else {
+            this.hideDialogue();
+            }
+        }
+    }
+
+    private showSegmentButtons(): void {
+        if (!this.dialogueContainer) return;
+        
+        // Check if this is the last segment
+        const isLastSegment = this.currentSegmentIndex >= this.dialogueSegments.length - 1;
+        
+        if (isLastSegment) {
+            // Last segment - show response buttons if available, otherwise show continue button
+            if (this.currentDialogue?.responses && this.currentDialogue.responses.length > 0) {
+                this.createResponseButtons();
+            } else {
+                this.createContinueButton();
+            }
+        } else {
+            // Not the last segment - show continue button to go to next segment
+            this.createContinueButton();
+        }
+    }
+
+
+    private handleContinue(): void {
+        // Prevent rapid clicking
+        if (this.isProcessingClick) return;
+        
+        this.isProcessingClick = true;
+        
+        if (this.isAnimating) {
+            // Skip animation if still typing
+            this.skipAnimation();
+        } else {
+            // Move to next segment or close dialogue
+            this.nextSegment();
+        }
+        
+        // Reset click processing after a very short delay to prevent rapid clicking
+        this.scene.time.delayedCall(50, () => {
+            this.isProcessingClick = false;
+        });
     }
 
     private handleResponse(response: DialogueResponse): void {
-        
-        // Check conditions
-        if (response.condition && !response.condition()) {
-            return;
-        }
+        if (this.isAnimating || this.isProcessingClick) return;
         
         // Handle actions
         if (response.action) {
             this.scene.events.emit('dialogueAction', response.action);
             
-            // Direct handling for specific actions
-            if (response.action === 'show_snarky_remark') {
-                if (this.scene.data && this.scene.data.get('npc')) {
-                    const npc = this.scene.data.get('npc');
-                    npc.startQuestDeclinedDialogue();
-                }
+            if (response.action === 'show_snarky_remark' && this.npcReference) {
+                this.npcReference.startQuestDeclinedDialogue();
             }
         }
         
@@ -622,40 +477,17 @@ export class DialogueUI {
         if (response.nextDialogueId) {
             this.scene.events.emit('dialogueNext', response.nextDialogueId);
             
-            // Also try to find and call the NPC directly
-            if (this.scene.data && this.scene.data.get('npc')) {
-                const npc = this.scene.data.get('npc');
-                npc.handleDialogueNext(response.nextDialogueId);
+            if (this.npcReference) {
+                this.npcReference.handleDialogueNext(response.nextDialogueId);
                 
-                // Direct handling for quest_accepted
                 if (response.nextDialogueId === 'quest_accepted') {
-                    npc.startQuestAcceptedDialogue();
+                    this.npcReference.startQuestAcceptedDialogue();
                 }
             }
         }
         
-        // Close dialogue if no next dialogue
+        // Close if no next dialogue
         if (!response.nextDialogueId && !response.action) {
-            this.hideDialogue();
-        }
-    }
-
-    private handleContinue(): void {
-        if (this.isTyping) {
-            // Skip typing animation
-            this.isTyping = false;
-            this.currentTextIndex = this.fullText.length;
-            if (this.dialogueText) {
-                this.dialogueText.setText(this.fullText);
-            }
-            this.isWaitingForInput = true;
-            this.showContinueButton();
-        } else if (this.isWaitingForInput) {
-            // Move to next paragraph
-            this.currentParagraphIndex++;
-            this.showNextParagraph();
-        } else {
-            // Close dialogue
             this.hideDialogue();
         }
     }
@@ -664,42 +496,31 @@ export class DialogueUI {
         if (!this.isActive) return;
         
         this.isActive = false;
+        this.stopCurrentAnimation();
+        this.isProcessingClick = false; // Reset click processing
         this.currentDialogue = null;
-        this.isTyping = false;
-        this.isWaitingForInput = false;
+        this.npcReference = null;
+        this.dialogueSegments = [];
+        this.currentSegmentIndex = 0;
         
-        // Reset paragraph system
-        this.paragraphs = [];
-        this.currentParagraphIndex = 0;
+        // Force invalidate any remaining animations
+        this.currentAnimationId += 1000;
         
-        // Clear response buttons
-        this.responseButtons.forEach(button => button.destroy());
-        this.responseButtons = [];
-        
-        // Clear reward display
-        if (this.rewardDisplay) {
-            this.rewardDisplay.destroy();
-            this.rewardDisplay = null;
-        }
-        
-        // Destroy UI elements
         if (this.dialogueContainer) {
             this.dialogueContainer.destroy();
             this.dialogueContainer = null;
         }
         
-        this.scrollBackground = null;
-        this.dialogueText = null;
-        this.continueButton = null;
-        this.continueText = null;
-        this.closeButton = null;
-        this.closeButtonText = null;
-        this.npcReference = null;
-        this._lastLoggedDistance = -1;
-        
-        // Emit event to notify NPC that dialogue has ended
         this.scene.events.emit('dialogueEnded');
+    }
+
+    public getDialogueContainer(): Phaser.GameObjects.Container | null {
+        return this.dialogueContainer;
+    }
         
+    public update(_delta: number): void {
+        // Update method called by World scene
+        // Currently no continuous updates needed, but keeping for compatibility
     }
 
     public isDialogueActive(): boolean {
@@ -708,7 +529,5 @@ export class DialogueUI {
 
     public destroy(): void {
         this.hideDialogue();
-        this.scene.events.off('showDialogue');
-        this.scene.events.off('hideDialogue');
     }
 }

@@ -1,12 +1,12 @@
 {   
-    "name" : "Quelling the Nepian Threat",
-    "description" : "Traveler, I wonder if we might actually be on to something here. You see, I have been trying to find a solution to the famine for quite some time myself. I have spent countless years researching the valley's curse. Never, until now, have I made any significant discoveries. Thanks to you, traveler, I now feel hopeful for the first time since I can remember. Traveler, we must continue to push the Nepian back. There are more Nepian just southeast of here. Please, slay them and collect some of their blood. Be warned traveler, these Nepian are stronger than the last ones you faced.",
-    "requirements" : "Xavius Silverleaf wants you to collect 4 phials of Lesser Nepian blood",
-    "completiontext" : "Traveler! Welcome back! Have you collected what is required?",
+    "name" : "Essence of the Void",
+    "description" : "Your success against the scouts has given me an idea. The Nepian's blood contains concentrated Void energy. If we can collect enough of it, we might be able to create a weapon against them. I need you to collect the blood of three Nepian warriors - they're stronger than scouts but still manageable. Be careful, their blood is highly corrosive.",
+    "requirements" : "Narvark wants you to collect 3 vials of Nepian warrior blood",
+    "completiontext" : "Perfect! This blood is exactly what I need. The Void energy is pure and concentrated. With this, I can begin crafting a weapon against the corruption.",
     "questdata" : {
         "questnumber": 3,
         "verb" : "collect",
-        "type" : "lesser nepian blood",
-        "ammount" : 4
+        "type" : "Nepian blood",
+        "amount" : 3
     }
 }
