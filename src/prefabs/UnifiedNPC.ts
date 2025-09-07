@@ -559,6 +559,11 @@ export class UnifiedNPC extends Entity {
     public startQuestAcceptedDialogue(): void {
         if (!this.currentQuest) return;
         
+        // Prevent multiple quest starts
+        if (this.questAccepted) {
+            console.log(`NPC: Quest ${this.currentQuest.id} already accepted, skipping duplicate start`);
+            return;
+        }
         
         // Mark quest as accepted and reset declined flag
         this.questAccepted = true;
@@ -612,6 +617,11 @@ export class UnifiedNPC extends Entity {
             return;
         }
         
+        // Prevent duplicate quest completion
+        if (this.completedQuests.has(this.currentQuest.id)) {
+            console.log(`NPC: Quest ${this.currentQuest.id} already completed, skipping duplicate completion`);
+            return;
+        }
         
         // Use the quest system to complete the quest
         const questSystem = this.scene.data.get('questSystem');

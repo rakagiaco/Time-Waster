@@ -49,6 +49,13 @@ export class QuestUI {
 
     private onQuestAccepted(questData: QuestData): void {
         console.log('QuestUI: Quest accepted, data:', questData);
+        
+        // Prevent duplicate quest acceptance
+        if (this.currentQuest && this.currentQuest.id === questData.id) {
+            console.log('QuestUI: Quest already active, ignoring duplicate acceptance');
+            return;
+        }
+        
         this.currentQuest = questData;
         this.showQuestUI();
         // updateQuestDisplay() will be called after the UI is created in showQuestUI()
@@ -79,6 +86,13 @@ export class QuestUI {
     private showQuestUI(): void {
         if (this.isVisible) return;
         
+        // Clean up any existing container first
+        if (this.questContainer) {
+            console.log('QuestUI: Cleaning up existing container before creating new one');
+            this.questContainer.destroy();
+            this.questContainer = null;
+        }
+        
         const screenWidth = this.scene.cameras.main.width;
         const screenHeight = this.scene.cameras.main.height;
         
@@ -93,8 +107,8 @@ export class QuestUI {
 
         console.log(`QuestUI: Created container at (${startX}, ${y}) with depth 15000`);
         
-        // Add a small delay to ensure the scene is fully ready before creating text objects
-        this.scene.time.delayedCall(100, () => {
+        // Add a longer delay to ensure the scene and WebGL context are fully ready before creating text objects
+        this.scene.time.delayedCall(500, () => {
             this.createQuestPanel();
             this.isVisible = true;
             
@@ -495,5 +509,25 @@ export class QuestUI {
         }
         
         console.log('QuestUI: Active quests restoration complete');
+    }
+
+    public reset(): void {
+        console.log('QuestUI: Resetting for new game');
+        this.hideQuestUI();
+        this.currentQuest = null;
+        this.isVisible = false;
+    }
+
+    public destroy(): void {
+        console.log('QuestUI: Destroying');
+        this.hideQuestUI();
+        this.currentQuest = null;
+        this.isVisible = false;
+        
+        // Remove all event listeners
+        this.scene.events.off('questAccepted');
+        this.scene.events.off('questProgress');
+        this.scene.events.off('questCompleted');
+        this.scene.events.off('questFailed');
     }
 }

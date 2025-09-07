@@ -59,7 +59,13 @@ export class QuestSystem {
         
         // Check if quest is already active
         if (this.activeQuests.has(questId)) {
-            console.log(`Quest ${questId} is already active, skipping start`);
+            console.log(`QuestSystem: Quest ${questId} is already active, skipping start`);
+            return;
+        }
+        
+        // Check if quest is already completed
+        if (this.completedQuests.has(questId)) {
+            console.log(`QuestSystem: Quest ${questId} is already completed, skipping start`);
             return;
         }
         

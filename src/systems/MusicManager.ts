@@ -12,21 +12,19 @@ export class MusicManager {
     private isPlaying: boolean = false;
     private isNightTime: boolean = false;
     
-    // Playlists (only songs that are actually loaded)
+    // Playlists (all songs now loaded)
     private daySongs: string[] = [
-        'shuffle-divo'
-        // Other songs commented out until they're loaded
-        // 'shuffle-j178', 
-        // 'shuffle-maude',
-        // 'shuffle-wahwah'
+        'shuffle-divo',
+        'shuffle-j178', 
+        'shuffle-maude',
+        'shuffle-wahwah'
     ];
     
     private nightSongs: string[] = [
-        // All night songs commented out until they're loaded
-        // 'shuffle-dream2',
-        // 'shuffle-jeeno',
-        // 'shuffle-lucid',
-        // 'shuffle-n187'
+        'shuffle-dream2',
+        'shuffle-jeeno',
+        'shuffle-lucid',
+        'shuffle-n187'
     ];
     
     // Shuffle tracking
@@ -127,20 +125,27 @@ export class MusicManager {
         this.dayPlayedSongs = [];
         this.nightPlayedSongs = [];
         this.isNightTime = false;
+        this.isPlaying = false;
+        
+        // Force stop all music in the scene
+        if (this.scene && this.scene.sound) {
+            this.scene.sound.stopAll();
+        }
     }
 
     /**
      * Stop the shuffle playlist
      */
     public stopPlaylist(): void {
-        if (!this.isPlaying) {
-            return;
-        }
-        
         this.isPlaying = false;
         
         if (this.currentMusic) {
             this.fadeOutAndStop();
+        }
+        
+        // Force stop all music in the scene as backup
+        if (this.scene && this.scene.sound) {
+            this.scene.sound.stopAll();
         }
     }
 

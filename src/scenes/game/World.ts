@@ -42,6 +42,7 @@ export class World extends Phaser.Scene {
     private trees: Tree[] = [];
     private tilemap!: Phaser.Tilemaps.Tilemap;
     private objlayer!: Phaser.Tilemaps.ObjectLayer | null;
+    private processedQuestCompletions?: Set<string>;
 
     private miniMapCamera!: Phaser.Cameras.Scene2D.Camera;
     private minimapMask!: Phaser.GameObjects.Graphics;
@@ -83,6 +84,12 @@ export class World extends Phaser.Scene {
         if (this.questSystem && !data.loadSaveData) {
             console.log('Resetting existing quest system for new game');
             this.questSystem.reset();
+        }
+        
+        // Reset QuestUI if it exists
+        if (this.questUI && !data.loadSaveData) {
+            console.log('Resetting existing QuestUI for new game');
+            this.questUI.reset();
         }
         // Don't reset quest system to undefined - let it persist or be recreated in create()
         this.questGiverNPC = undefined as any;
@@ -131,7 +138,11 @@ export class World extends Phaser.Scene {
             }
             this.dayNightCycle = new DayNightCycle(this, savedTime);
 
-            // Music Manager
+            // Music Manager - ensure clean state
+            if (this.musicManager) {
+                this.musicManager.stopPlaylist();
+                this.musicManager.reset();
+            }
             this.musicManager = new MusicManager(this);
             this.musicManager.reset();
             
@@ -304,7 +315,14 @@ export class World extends Phaser.Scene {
                 console.error('Narvark NPC not found!');
             }
 
-            // Setup Dialogue UI
+            // Setup Dialogue UI - clean up existing instance first
+            if (this.dialogueUI) {
+                try {
+                    this.dialogueUI.destroy();
+                } catch (error) {
+                    console.error('Error destroying existing dialogue UI:', error);
+                }
+            }
             this.dialogueUI = new DialogueUI(this);
 
         // Setup interaction controls
@@ -349,7 +367,14 @@ export class World extends Phaser.Scene {
                 }
             });
 
-            // Setup quest UI
+            // Setup quest UI - clean up existing instance first
+            if (this.questUI) {
+                try {
+                    (this.questUI as any).destroy();
+                } catch (error) {
+                    console.error('Error destroying existing quest UI:', error);
+                }
+            }
             this.questUI = new QuestUI(this);
             // console.log('Quest UI setup complete');
 
@@ -1339,6 +1364,21 @@ export class World extends Phaser.Scene {
         console.log(`Quest completed: ${questData.questName}`);
         console.log(`Reward: ${questData.reward.amount} ${questData.reward.type}`);
         
+        // Prevent duplicate quest completion processing
+        const questId = questData.id;
+        if (this.processedQuestCompletions && this.processedQuestCompletions.has(questId)) {
+            console.log(`Quest ${questId} already processed, skipping duplicate completion`);
+            return;
+        }
+        
+        // Initialize processed quest completions set if it doesn't exist
+        if (!this.processedQuestCompletions) {
+            this.processedQuestCompletions = new Set();
+        }
+        
+        // Mark this quest as processed
+        this.processedQuestCompletions.add(questId);
+        
         // Remove quest icons from items since quest is completed
         this.removeQuestIconsFromItems(questData.questId);
         
@@ -1454,6 +1494,15 @@ export class World extends Phaser.Scene {
     private collectItem(item: Item | LongSword): void {
         try {
             console.log(`collectItem called for: ${item.getItemType()}, Active: ${item.active}, Visible: ${item.visible}`);
+            
+            // Check if item is already being collected to prevent duplicates
+            if (item.getData('isBeingCollected')) {
+                console.log(`Item ${item.getItemType()} is already being collected, skipping duplicate`);
+                return;
+            }
+            
+            // Mark item as being collected
+            item.setData('isBeingCollected', true);
             
             // Check if item is a weapon
             if (item instanceof LongSword) {

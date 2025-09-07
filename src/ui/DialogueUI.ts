@@ -34,6 +34,8 @@ export class DialogueUI {
     private isProcessingClick: boolean = false; // Prevent rapid clicking
     private currentAnimationId: number = 0; // Track current animation ID
     private dialogueText: Phaser.GameObjects.BitmapText | null = null; // Dialogue text display
+    private continueButton: Phaser.GameObjects.Container | null = null; // Continue button
+    private responseButtons: Phaser.GameObjects.Container[] = []; // Response buttons
 
     // Modern UI dimensions - compact and non-intrusive
     private readonly DIALOGUE_WIDTH = 350; // Reduced width to prevent overflow
@@ -68,7 +70,10 @@ export class DialogueUI {
     }
 
     public showDialogue(dialogue: DialogueData, npc?: any): void {
-        if (this.isActive) return;
+        if (this.isActive) {
+            console.log('DialogueUI: Dialogue already active, ignoring duplicate show request');
+            return;
+        }
         
         this.isActive = true;
         this.currentDialogue = dialogue;
@@ -85,9 +90,15 @@ export class DialogueUI {
     private createModernDialogueUI(): void {
         // Clean up any existing dialogue container first
         if (this.dialogueContainer) {
+            console.log('DialogueUI: Cleaning up existing container before creating new one');
             this.dialogueContainer.destroy();
             this.dialogueContainer = null;
         }
+        
+        // Reset all text elements
+        this.dialogueText = null;
+        this.continueButton = null;
+        this.responseButtons = [];
         
         const screenWidth = this.scene.cameras.main.width;
         const screenHeight = this.scene.cameras.main.height;
@@ -169,6 +180,14 @@ export class DialogueUI {
         this.dialogueText.setMaxWidth(this.DIALOGUE_WIDTH - 40); // Increased padding for better text spacing
         
         this.dialogueContainer.add(this.dialogueText);
+    }
+
+    private clearDialogueText(): void {
+        if (this.dialogueText) {
+            this.dialogueText.setText('');
+            this.dialogueText.setVisible(false);
+            this.dialogueText.setVisible(true);
+        }
     }
 
     private createContinueButton(): void {
@@ -268,7 +287,9 @@ export class DialogueUI {
         this.stopCurrentAnimation();
         
         this.isAnimating = true;
-        this.dialogueText.setText('');
+        
+        // Clear the text completely and force a render update
+        this.clearDialogueText();
         
         // Increment animation ID to invalidate any previous animations
         this.currentAnimationId++;
@@ -400,6 +421,9 @@ export class DialogueUI {
         this.stopCurrentAnimation();
         
         if (this.dialogueText && this.dialogueSegments.length > 0) {
+            // Clear text completely first
+            this.clearDialogueText();
+            
             const maxWidth = this.DIALOGUE_WIDTH - 40; // Match the increased padding
             const lines = this.wrapText(this.dialogueSegments[this.currentSegmentIndex], maxWidth);
             this.dialogueText.setText(lines.join('\n'));
@@ -498,6 +522,7 @@ export class DialogueUI {
     public hideDialogue(): void {
         if (!this.isActive) return;
         
+        console.log('DialogueUI: Hiding dialogue and cleaning up');
         this.isActive = false;
         this.stopCurrentAnimation();
         this.isProcessingClick = false; // Reset click processing
@@ -513,6 +538,11 @@ export class DialogueUI {
             this.dialogueContainer.destroy();
             this.dialogueContainer = null;
         }
+        
+        // Reset all text elements
+        this.dialogueText = null;
+        this.continueButton = null;
+        this.responseButtons = [];
         
         this.scene.events.emit('dialogueEnded');
     }
@@ -532,5 +562,16 @@ export class DialogueUI {
 
     public destroy(): void {
         this.hideDialogue();
+        
+        // Remove all event listeners
+        this.scene.events.off('showDialogue');
+        this.scene.events.off('hideDialogue');
+        this.scene.events.off('closeDialogue');
+        
+        // Remove keyboard listeners
+        this.scene.input.keyboard?.off('keydown-SPACE');
+        
+        // Force invalidate any remaining animations
+        this.currentAnimationId += 1000;
     }
 }

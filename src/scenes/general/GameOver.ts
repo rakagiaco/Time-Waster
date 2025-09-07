@@ -8,6 +8,16 @@ export class GameOver extends Phaser.Scene {
     }
 
     create(): void {
+        // Stop any existing music first
+        if (this.sound) {
+            this.sound.stopAll();
+        }
+
+        // Start defeat music with a small delay to ensure sound system is ready
+        this.time.delayedCall(100, () => {
+            this.startDefeatMusic();
+        });
+
         // Create death screen background
         this.createDeathBackground();
 
@@ -95,6 +105,7 @@ export class GameOver extends Phaser.Scene {
         // Menu button
         this.createMedievalButton(centerX, centerY + 120, 'MAIN MENU', () => {
             this.sound.play('click', { volume: 0.5 });
+            this.fadeOutDefeatMusic();
             this.startFadeOut(() => this.scene.start('menuScene'));
         });
 
@@ -231,9 +242,90 @@ export class GameOver extends Phaser.Scene {
     }
 
     /**
+     * Starts the defeat music with looping and fade in
+     */
+    private startDefeatMusic(): void {
+        try {
+            // Check if sound system is available
+            if (!this.sound) {
+                // Retry after a short delay
+                this.time.delayedCall(200, () => {
+                    this.startDefeatMusic();
+                });
+                return;
+            }
+
+            // Check if music is already playing to avoid duplicates
+            const existingMusic = this.sound.get('defeat-music');
+            if (existingMusic && existingMusic.isPlaying) {
+                return;
+            }
+
+            // Stop any existing defeat music first
+            if (existingMusic) {
+                existingMusic.destroy();
+            }
+
+            // Create and play the defeat music
+            const music = this.sound.add('defeat-music', {
+                volume: 0, // Start at 0 volume for fade in
+                loop: true   // Loop the music continuously
+            });
+
+            // Force volume to 0 immediately to prevent any loud initial notes
+            music.setVolume(0);
+
+            music.play();
+
+            // Start fade in immediately to prevent any loud initial notes
+            this.time.delayedCall(10, () => {
+                this.tweens.add({
+                    targets: music,
+                    volume: 0.15, // Lower target volume for death screen
+                    duration: 5000, // 5 second fade in (increased from 3 seconds)
+                    ease: 'Power2',
+                    onComplete: () => {
+                        // Defeat music faded in and looping
+                    }
+                });
+            });
+
+        } catch (error) {
+            console.error('Error starting defeat music:', error);
+        }
+    }
+
+    /**
+     * Fades out the defeat music smoothly
+     */
+    private fadeOutDefeatMusic(): void {
+        try {
+            const music = this.sound.get('defeat-music');
+            if (music && music.isPlaying) {
+                // Create a fade out tween
+                this.tweens.add({
+                    targets: music,
+                    volume: 0,
+                    duration: 1000, // 1 second fade
+                    ease: 'Power2',
+                    onComplete: () => {
+                        music.stop();
+                        // Defeat music faded out and stopped
+                    }
+                });
+            }
+        } catch (error) {
+            console.error('Error fading out defeat music:', error);
+        }
+    }
+
+    /**
      * Fades to the game scene with optional save data loading
      */
     private fadeToGame(loadSaveData: boolean): void {
+        // Start fading out the defeat music
+        this.fadeOutDefeatMusic();
+
         // Create fade overlay
         const fadeOverlay = this.add.rectangle(
             (this.game.config.width as number) / 2,
@@ -248,8 +340,12 @@ export class GameOver extends Phaser.Scene {
         this.tweens.add({
             targets: fadeOverlay,
             alpha: 1,
-            duration: 500,
+            duration: 1000, // 1 second fade (same as main menu)
+            ease: 'Power2',
             onComplete: () => {
+                // Stop any existing music before starting new game
+                this.sound.stopAll();
+                
                 // Start the game scene
                 this.scene.start('worldScene', { 
                     inv: loadSaveData ? undefined : undefined, 
@@ -333,5 +429,16 @@ export class GameOver extends Phaser.Scene {
             ease: 'Power2',
             onComplete: callback
         });
+    }
+
+    /**
+     * Called when the scene is shut down - fades out the defeat music
+     */
+    shutdown(): void {
+        try {
+            this.fadeOutDefeatMusic();
+        } catch (error) {
+            console.error('Error in GameOver shutdown:', error);
+        }
     }
 }

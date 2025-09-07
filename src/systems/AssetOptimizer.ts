@@ -113,16 +113,17 @@ export class AssetOptimizer {
             { key: 'page-turn', type: 'audio', url: 'audio/page-turn.mp3' },
             { key: 'game-over', type: 'audio', url: 'audio/game-over.wav' },
             { key: 'main-menu-music', type: 'audio', url: 'audio/music/mainmenu/Time Waster (1).mp3' },
+            { key: 'defeat-music', type: 'audio', url: 'audio/music/deathmenu/Defeat.mp3' },
             
-            // Shuffle playlist music (testing with just one file first)
+            // Shuffle playlist music - enabling more songs for variety
             { key: 'shuffle-divo', type: 'audio', url: 'audio/music/Shuffle/Divo.mp3' },
-            // { key: 'shuffle-j178', type: 'audio', url: 'audio/music/Shuffle/J178.mp3' },
-            // { key: 'shuffle-maude', type: 'audio', url: 'audio/music/Shuffle/Maude.mp3' },
-            // { key: 'shuffle-wahwah', type: 'audio', url: 'audio/music/Shuffle/WahWah.mp3' },
-            // { key: 'shuffle-dream2', type: 'audio', url: 'audio/music/Shuffle/night/Dream2.mp3' },
-            // { key: 'shuffle-jeeno', type: 'audio', url: 'audio/music/Shuffle/night/Jeeno.mp3' },
-            // { key: 'shuffle-lucid', type: 'audio', url: 'audio/music/Shuffle/night/Lucid.mp3' },
-            // { key: 'shuffle-n187', type: 'audio', url: 'audio/music/Shuffle/night/N187.mp3' },
+            { key: 'shuffle-j178', type: 'audio', url: 'audio/music/Shuffle/J178.mp3' },
+            { key: 'shuffle-maude', type: 'audio', url: 'audio/music/Shuffle/Maude.mp3' },
+            { key: 'shuffle-wahwah', type: 'audio', url: 'audio/music/Shuffle/WahWah.mp3' },
+            { key: 'shuffle-dream2', type: 'audio', url: 'audio/music/Shuffle/night/Dream2.mp3' },
+            { key: 'shuffle-jeeno', type: 'audio', url: 'audio/music/Shuffle/night/Jeeno.mp3' },
+            { key: 'shuffle-lucid', type: 'audio', url: 'audio/music/Shuffle/night/Lucid.mp3' },
+            { key: 'shuffle-n187', type: 'audio', url: 'audio/music/Shuffle/night/N187.mp3' },
             
             // TILESET ASSETS - All tilesets referenced in the tilemap
             { key: 'Water_tiles', type: 'image', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Environment/Tilesets/Water_tiles.png' },
