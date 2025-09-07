@@ -100,7 +100,7 @@ export class QuestSystem {
         // Player already has required items
         
         // Always emit quest progress event to update QuestUI with current count
-        this.scene.events.emit('questProgress', questProgress.currentAmount);
+        this.scene.events.emit('questProgress', questId, questProgress.currentAmount);
         
         // If quest is already ready for completion, emit the event
         if (questProgress.isReadyForCompletion) {
@@ -137,8 +137,8 @@ export class QuestSystem {
                     console.log(`QuestSystem: Quest ${questId} progress update - Item: ${itemType}, Quest needs: ${questData.questdata.type}, Inventory count: ${currentInventoryCount}, Progress: ${progress.currentAmount}/${progress.requiredAmount}`);
                 }
                 
-                // Emit quest progress event for QuestUI
-                this.scene.events.emit('questProgress', progress.currentAmount);
+                // Emit quest progress event for QuestUI with quest ID
+                this.scene.events.emit('questProgress', questId, progress.currentAmount);
                 
                 // Check if quest requirements are met (but don't complete yet)
                 if (progress.currentAmount >= progress.requiredAmount && !progress.isReadyForCompletion) {

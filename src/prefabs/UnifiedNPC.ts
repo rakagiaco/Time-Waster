@@ -667,7 +667,9 @@ export class UnifiedNPC extends Entity {
                 }
                 
                 // Close dialogue and return to game
-                this.scene.events.emit('hideDialogue');
+                if (this.scene && this.scene.events) {
+                    this.scene.events.emit('hideDialogue');
+                }
                 
                 // Move to next quest
                 this.advanceToNextQuest();

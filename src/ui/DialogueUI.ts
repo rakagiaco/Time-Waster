@@ -178,8 +178,8 @@ export class DialogueUI {
         const panelX = -this.DIALOGUE_WIDTH / 2;
         
         const continueBtn = this.createModernButton(
-            panelX + this.DIALOGUE_WIDTH - 80, buttonY,
-            60, 25, 'Continue', () => this.handleContinue()
+            panelX + this.DIALOGUE_WIDTH - 90, buttonY, // Moved slightly left to accommodate wider button
+            80, 25, 'Continue', () => this.handleContinue() // Increased width from 60 to 80
         );
         
         this.dialogueContainer.add(continueBtn);
@@ -220,12 +220,15 @@ export class DialogueUI {
         buttonBg.lineStyle(2, 0x4a4a4a, 0.8);
         buttonBg.strokeRoundedRect(-width/2, -height/2, width, height, 6);
         
-        // Button text - calculate size based on button dimensions
+        // Button text - calculate size based on button dimensions and text length
         const textSize = Math.min(12, Math.floor(height * 0.6)); // Scale text to fit button height
         const buttonText = this.scene.add.bitmapText(0, 0, 'pixel-white', text, textSize);
         buttonText.setOrigin(0.5);
         buttonText.setTint(0xFFFFFF);
-        buttonText.setMaxWidth(width - 30); // Increased padding for better text spacing
+        
+        // Calculate appropriate max width based on button size and text length
+        const maxTextWidth = Math.max(width - 20, Math.min(width - 10, text.length * 8)); // Dynamic width based on text length
+        buttonText.setMaxWidth(maxTextWidth);
         buttonText.setCenterAlign();
         button.add(buttonText);
         

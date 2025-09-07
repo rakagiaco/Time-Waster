@@ -20,9 +20,9 @@ export class QuestUI {
     private scene: Phaser.Scene;
     private questContainer: Phaser.GameObjects.Container | null = null;
     private questBackground: Phaser.GameObjects.Graphics | null = null;
-    private questTitle: Phaser.GameObjects.BitmapText | null = null;
-    private questDescription: Phaser.GameObjects.BitmapText | null = null;
-    private questProgress: Phaser.GameObjects.BitmapText | null = null;
+    private questTitle: Phaser.GameObjects.Text | null = null;
+    private questDescription: Phaser.GameObjects.Text | null = null;
+    private questProgress: Phaser.GameObjects.Text | null = null;
     private progressBar: Phaser.GameObjects.Graphics | null = null;
     private progressBarBg: Phaser.GameObjects.Graphics | null = null;
     private currentQuest: QuestData | null = null;
@@ -30,7 +30,7 @@ export class QuestUI {
 
     // Modern UI dimensions - compact and sleek
     private readonly QUEST_WIDTH = 280;
-    private readonly QUEST_HEIGHT = 120;
+    private readonly QUEST_HEIGHT = 130; // Increased from 120 to 130 to accommodate progress text
     private readonly PADDING = 15;
     private readonly PROGRESS_BAR_WIDTH = 200;
     private readonly PROGRESS_BAR_HEIGHT = 8;
@@ -48,13 +48,14 @@ export class QuestUI {
     }
 
     private onQuestAccepted(questData: QuestData): void {
+        console.log('QuestUI: Quest accepted, data:', questData);
         this.currentQuest = questData;
         this.showQuestUI();
-        this.updateQuestDisplay();
+        // updateQuestDisplay() will be called after the UI is created in showQuestUI()
     }
 
-    private onQuestProgress(currentAmount: number): void {
-        if (this.currentQuest) {
+    private onQuestProgress(questId: number, currentAmount: number): void {
+        if (this.currentQuest && this.currentQuest.id === questId.toString()) {
             this.currentQuest.current = currentAmount;
             this.updateQuestDisplay();
         }
@@ -89,28 +90,34 @@ export class QuestUI {
         this.questContainer = this.scene.add.container(startX, y);
         this.questContainer.setDepth(15000);
         this.questContainer.setScrollFactor(0);
-        
+
         console.log(`QuestUI: Created container at (${startX}, ${y}) with depth 15000`);
         
-        this.createQuestPanel();
-        this.isVisible = true;
-        
-        // Slide in animation
-        this.scene.tweens.add({
-            targets: this.questContainer,
-            x: endX,
-            duration: 500,
-            ease: 'Power2.easeOut'
+        // Add a small delay to ensure the scene is fully ready before creating text objects
+        this.scene.time.delayedCall(100, () => {
+            this.createQuestPanel();
+            this.isVisible = true;
+            
+            // Update the quest display after the panel is created
+            this.updateQuestDisplay();
+            
+            // Slide in animation
+            this.scene.tweens.add({
+                targets: this.questContainer,
+                x: endX,
+                duration: 500,
+                ease: 'Power2.easeOut'
+            });
         });
     }
 
     private createQuestPanel(): void {
         if (!this.questContainer) return;
-        
+
         // Modern quest panel background
         this.questBackground = this.scene.add.graphics();
         this.questContainer.add(this.questBackground);
-        
+
         // Main panel with modern styling
         this.questBackground.fillStyle(0x1a1a1a, 0.95);
         this.questBackground.fillRoundedRect(
@@ -153,31 +160,60 @@ export class QuestUI {
         questIcon.strokeCircle(-this.QUEST_WIDTH + 25, 20, 8);
         this.questContainer.add(questIcon);
         
-        // Quest title - dynamic sizing based on quest UI height
-        const titleSize = Math.min(14, Math.floor(this.QUEST_HEIGHT * 0.12)); // Scale to fit quest UI height
-        this.questTitle = this.scene.add.bitmapText(
-            -this.QUEST_WIDTH + 45, 15,
-            'pixel-white', '', titleSize
-        );
-        this.questTitle.setTint(0xFFD700);
-        // Set maximum width to prevent text from bleeding off the quest UI
-        this.questTitle.setMaxWidth(this.QUEST_WIDTH - 60); // Account for icon space and padding
-        this.questContainer.add(this.questTitle);
+        // Quest title - using regular Text with proper initialization checks
+        try {
+            this.questTitle = this.scene.add.text(
+                -this.QUEST_WIDTH + 45, 15,
+                '', {
+                    fontSize: '14px',
+                    color: '#FFD700',
+                    fontFamily: 'Arial, sans-serif',
+                    wordWrap: { width: this.QUEST_WIDTH - 60 }
+                }
+            );
+            this.questContainer.add(this.questTitle);
+        } catch (error) {
+            console.warn('QuestUI: Error creating quest title text:', error);
+            // Fallback: create a simple text without advanced styling
+            this.questTitle = this.scene.add.text(
+                -this.QUEST_WIDTH + 45, 15,
+                '', {
+                    fontSize: '14px',
+                    color: '#FFD700'
+                }
+            );
+            this.questContainer.add(this.questTitle);
+        }
     }
 
     private createQuestContent(): void {
         if (!this.questContainer) return;
-        
-        // Quest description - dynamic sizing based on quest UI height
-        const descriptionSize = Math.min(10, Math.floor(this.QUEST_HEIGHT * 0.08)); // Scale to fit quest UI height
-        this.questDescription = this.scene.add.bitmapText(
-            -this.QUEST_WIDTH + this.PADDING, 45, // Moved down to account for title wrapping
-            'pixel-white', '', descriptionSize
-        );
-        this.questDescription.setTint(0xCCCCCC);
-        this.questDescription.setMaxWidth(this.QUEST_WIDTH - (this.PADDING * 2));
-        this.questContainer.add(this.questDescription);
-        
+
+        // Quest description - using regular Text with proper initialization checks
+        try {
+            this.questDescription = this.scene.add.text(
+                -this.QUEST_WIDTH + this.PADDING, 45,
+                '', {
+                    fontSize: '10px',
+                    color: '#CCCCCC',
+                    fontFamily: 'Arial, sans-serif',
+                    wordWrap: { width: this.QUEST_WIDTH - (this.PADDING * 2) }
+                }
+            );
+            this.questContainer.add(this.questDescription);
+        } catch (error) {
+            console.warn('QuestUI: Error creating quest description text:', error);
+            // Fallback: create a simple text without advanced styling
+            this.questDescription = this.scene.add.text(
+                -this.QUEST_WIDTH + this.PADDING, 45,
+                '', {
+                    fontSize: '10px',
+                    color: '#CCCCCC'
+                }
+            );
+            this.questContainer.add(this.questDescription);
+        }
+
         // Progress bar background
         this.progressBarBg = this.scene.add.graphics();
         this.questContainer.add(this.progressBarBg);
@@ -186,26 +222,48 @@ export class QuestUI {
         this.progressBar = this.scene.add.graphics();
         this.questContainer.add(this.progressBar);
         
-        // Progress text - dynamic sizing based on quest UI height
-        const progressSize = Math.min(10, Math.floor(this.QUEST_HEIGHT * 0.08)); // Scale to fit quest UI height
-        this.questProgress = this.scene.add.bitmapText(
-            -this.QUEST_WIDTH + this.PADDING, 95, // Moved down to account for progress bar being lower
-            'pixel-white', '', progressSize
-        );
-        this.questProgress.setTint(0xFFFFFF);
-        this.questContainer.add(this.questProgress);
+        // Progress text - using regular Text with proper initialization checks
+        try {
+            this.questProgress = this.scene.add.text(
+                -this.QUEST_WIDTH + this.PADDING, 100, // Moved from 95 to 100 for better positioning
+                '', {
+                    fontSize: '10px',
+                    color: '#FFFFFF',
+                    fontFamily: 'Arial, sans-serif'
+                }
+            );
+            this.questContainer.add(this.questProgress);
+        } catch (error) {
+            console.warn('QuestUI: Error creating quest progress text:', error);
+            // Fallback: create a simple text without advanced styling
+            this.questProgress = this.scene.add.text(
+                -this.QUEST_WIDTH + this.PADDING, 100, // Moved from 95 to 100 for better positioning
+                '', {
+                    fontSize: '10px',
+                    color: '#FFFFFF'
+                }
+            );
+            this.questContainer.add(this.questProgress);
+        }
     }
 
     private updateQuestDisplay(): void {
-        if (!this.currentQuest || !this.isVisible) return;
+        console.log('QuestUI: updateQuestDisplay called, currentQuest:', this.currentQuest, 'isVisible:', this.isVisible);
+        if (!this.currentQuest || !this.isVisible) {
+            console.log('QuestUI: updateQuestDisplay early return - no quest or not visible');
+            return;
+        }
         
         // Update title
         if (this.questTitle) {
             try {
+                console.log('QuestUI: Setting quest title to:', this.currentQuest.title);
                 this.questTitle.setText(this.currentQuest.title);
             } catch (error) {
                 console.warn('QuestUI: Error updating quest title:', error);
             }
+        } else {
+            console.warn('QuestUI: questTitle is null, cannot update title');
         }
         
         // Update description
@@ -274,44 +332,67 @@ export class QuestUI {
     private updateProgressText(): void {
         if (!this.questProgress || !this.currentQuest) return;
         
-        // Safety check to ensure the BitmapText is properly initialized
         try {
             const progressText = `${this.currentQuest.current}/${this.currentQuest.amount}`;
             this.questProgress.setText(progressText);
+            
+            // Change color based on completion
+            if (this.currentQuest.current >= this.currentQuest.amount) {
+                this.questProgress.setStyle({ color: '#4CAF50' }); // Green when complete
+                } else {
+                this.questProgress.setStyle({ color: '#FFFFFF' }); // White when in progress
+            }
         } catch (error) {
-            console.warn('QuestUI: Error updating progress text, BitmapText may not be ready:', error);
-            return;
-        }
-        
-        // Change color based on completion
-        if (this.currentQuest.current >= this.currentQuest.amount) {
-            this.questProgress.setTint(0x4CAF50); // Green when complete
-        } else {
-            this.questProgress.setTint(0xFFFFFF); // White when in progress
+            console.warn('QuestUI: Error updating progress text:', error);
         }
     }
 
     private showCompletionAnimation(): void {
         if (!this.questContainer) return;
         
-        // Add completion effect - dynamic sizing based on quest UI height
-        const completionSize = Math.min(16, Math.floor(this.QUEST_HEIGHT * 0.13)); // Scale to fit quest UI height
-        const completionText = this.scene.add.bitmapText(
-            -this.QUEST_WIDTH / 2, this.QUEST_HEIGHT / 2,
-            'pixel-white', 'QUEST COMPLETE!', completionSize
-        );
-        completionText.setOrigin(0.5);
-        completionText.setTint(0x4CAF50);
-        this.questContainer.add(completionText);
-        
-        // Animate completion
-        this.scene.tweens.add({
-            targets: completionText,
-            alpha: 0,
-            y: completionText.y - 20,
-            duration: 2000,
-            ease: 'Power2'
-        });
+        // Add completion effect - using regular Text with proper initialization checks
+        try {
+            const completionText = this.scene.add.text(
+                -this.QUEST_WIDTH / 2, this.QUEST_HEIGHT / 2,
+                'QUEST COMPLETE!', {
+                    fontSize: '16px',
+                    color: '#4CAF50',
+                    fontFamily: 'Arial, sans-serif'
+                }
+            );
+            completionText.setOrigin(0.5);
+            this.questContainer.add(completionText);
+            
+            // Animate completion
+            this.scene.tweens.add({
+                targets: completionText,
+                alpha: 0,
+                y: completionText.y - 20,
+                duration: 2000,
+                ease: 'Power2'
+            });
+        } catch (error) {
+            console.warn('QuestUI: Error creating completion animation text:', error);
+            // Fallback: create a simple text without advanced styling
+            const completionText = this.scene.add.text(
+                -this.QUEST_WIDTH / 2, this.QUEST_HEIGHT / 2,
+                'QUEST COMPLETE!', {
+                    fontSize: '16px',
+                    color: '#4CAF50'
+                }
+            );
+            completionText.setOrigin(0.5);
+            this.questContainer.add(completionText);
+            
+            // Animate completion
+            this.scene.tweens.add({
+                targets: completionText,
+                alpha: 0,
+                y: completionText.y - 20,
+                duration: 2000,
+                ease: 'Power2'
+            });
+        }
     }
 
     private hideQuestUI(): void {
@@ -325,18 +406,18 @@ export class QuestUI {
             const endX = screenWidth + 300; // Slide off-screen to the right
             
             // Slide out animation
-            this.scene.tweens.add({
-                targets: this.questContainer,
-                x: endX,
+        this.scene.tweens.add({
+            targets: this.questContainer,
+            x: endX,
                 duration: 500,
                 ease: 'Power2.easeIn',
-                onComplete: () => {
+            onComplete: () => {
                     this.questContainer?.destroy();
                     this.questContainer = null;
-                }
-            });
-        }
-        
+            }
+        });
+    }
+
         this.questBackground = null;
         this.questTitle = null;
         this.questDescription = null;
@@ -362,7 +443,7 @@ export class QuestUI {
             console.warn('QuestUI: Quest system not available for restoration');
             return;
         }
-
+        
         // Get active quests from quest system
         const activeQuests = questSystem.getActiveQuests();
         console.log('QuestUI: Active quests to restore:', Array.from(activeQuests.keys()));
@@ -388,7 +469,7 @@ export class QuestUI {
                 if (questData) {
                     this.currentQuest = {
                         id: currentQuestId.toString(),
-                        title: questData.name,
+                    title: questData.name,
                         description: questData.requirements, // Use requirements instead of description
                         current: questProgress.currentAmount,
                         amount: questProgress.requiredAmount,
@@ -400,11 +481,7 @@ export class QuestUI {
                     
                     // Show the quest UI with restored progress
                     this.showQuestUI();
-                    
-                    // Add a small delay to ensure UI is fully created before updating
-                    this.scene.time.delayedCall(100, () => {
-                        this.updateQuestDisplay();
-                    });
+                    // updateQuestDisplay() will be called automatically in showQuestUI()
                     
                     console.log(`QuestUI: ✅ Successfully restored quest ${currentQuestId} with progress ${questProgress.currentAmount}/${questProgress.requiredAmount}`);
                 } else {

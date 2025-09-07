@@ -84,7 +84,7 @@ export class World extends Phaser.Scene {
             console.log('Resetting existing quest system for new game');
             this.questSystem.reset();
         }
-        this.questSystem = undefined as any;
+        // Don't reset quest system to undefined - let it persist or be recreated in create()
         this.questGiverNPC = undefined as any;
         
         console.log('World scene arrays reset');
@@ -381,6 +381,10 @@ export class World extends Phaser.Scene {
                         if (this.questUI) {
                             this.questUI.restoreActiveQuests();
                         }
+                        
+                        // Add quest icons to existing items after quest system is restored
+                        console.log('World: Adding quest icons to existing items after quest system restoration...');
+                        this.addQuestIconsToExistingItems();
                         
                         // Restore NPC state from quest system
                         this.npcs.forEach(npc => {
@@ -1175,11 +1179,12 @@ export class World extends Phaser.Scene {
             // Add quest icons to existing items if relevant quests are active
             this.items.forEach((item) => {
                 try {
-                    if (item && item.active && item.getItemType() === 'dimensional herb') {
-                        this.addQuestIconToNewItem(item, 'dimensional herb');
+                    if (item && item.active) {
+                        const itemType = item.getItemType();
+                        this.addQuestIconToNewItem(item, itemType);
                     }
                 } catch (error) {
-                    console.error('Error adding quest icon to herb:', error);
+                    console.error('Error adding quest icon to item:', error);
                 }
             });
 
@@ -1848,10 +1853,6 @@ export class World extends Phaser.Scene {
 
         // Draw collision objects from collision layer
         let collisionObjectCount = 0;
-        const totalChildren = this.children.list.length;
-        const collisionChildren = this.children.list.filter(child => child.getData('collisionObject') === true);
-        
-        console.log(`Debug: Found ${totalChildren} total children, ${collisionChildren.length} collision objects`);
         
         this.children.list.forEach(child => {
             if (child.getData('collisionObject') === true) {
