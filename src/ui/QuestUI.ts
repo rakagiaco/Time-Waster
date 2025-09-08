@@ -69,11 +69,26 @@ export class QuestUI {
     }
 
     private onQuestCompleted(questData: QuestData): void {
-        if (this.currentQuest && this.currentQuest.id === questData.id) {
+        console.log('QuestUI: Quest completed event received for quest:', questData.id);
+        console.log('QuestUI: Current quest ID:', this.currentQuest?.id);
+        
+        // Check both id and questId fields for compatibility (with type conversion)
+        const questIdMatches = this.currentQuest && (
+            this.currentQuest.id == questData.id || 
+            this.currentQuest.id == questData.questId ||
+            String(this.currentQuest.id) === String(questData.id) ||
+            String(this.currentQuest.id) === String(questData.questId)
+        );
+        
+        if (questIdMatches) {
+            console.log('QuestUI: Showing completion animation and scheduling hide');
             this.showCompletionAnimation();
             this.scene.time.delayedCall(1500, () => { // Reduced from 3000ms to 1500ms
+                console.log('QuestUI: Hiding quest UI after delay');
                 this.hideQuestUI();
             });
+        } else {
+            console.log('QuestUI: Quest ID mismatch or no current quest, not hiding UI');
         }
     }
 
@@ -174,28 +189,23 @@ export class QuestUI {
         questIcon.strokeCircle(-this.QUEST_WIDTH + 25, 20, 8);
         this.questContainer.add(questIcon);
         
-        // Quest title - using regular Text with proper initialization checks
+        // Quest title - using BitmapText for crisp rendering
         try {
-            this.questTitle = this.scene.add.text(
+            this.questTitle = this.scene.add.bitmapText(
                 -this.QUEST_WIDTH + 45, 15,
-                '', {
-                    fontSize: '14px',
-                    color: '#FFD700',
-                    fontFamily: 'Arial, sans-serif',
-                    wordWrap: { width: this.QUEST_WIDTH - 60 }
-                }
+                'pixel-white', '', 14
             );
+            this.questTitle.setTint(0xFFD700); // Gold color
+            this.questTitle.setMaxWidth(this.QUEST_WIDTH - 60);
             this.questContainer.add(this.questTitle);
         } catch (error) {
             console.warn('QuestUI: Error creating quest title text:', error);
-            // Fallback: create a simple text without advanced styling
-            this.questTitle = this.scene.add.text(
+            // Fallback: create a simple bitmap text
+            this.questTitle = this.scene.add.bitmapText(
                 -this.QUEST_WIDTH + 45, 15,
-                '', {
-                    fontSize: '14px',
-                    color: '#FFD700'
-                }
+                'pixel-white', '', 12
             );
+            this.questTitle.setTint(0xFFD700);
             this.questContainer.add(this.questTitle);
         }
     }
@@ -203,28 +213,23 @@ export class QuestUI {
     private createQuestContent(): void {
         if (!this.questContainer) return;
 
-        // Quest description - using regular Text with proper initialization checks
+        // Quest description - using BitmapText for crisp rendering
         try {
-            this.questDescription = this.scene.add.text(
+            this.questDescription = this.scene.add.bitmapText(
                 -this.QUEST_WIDTH + this.PADDING, 45,
-                '', {
-                    fontSize: '10px',
-                    color: '#CCCCCC',
-                    fontFamily: 'Arial, sans-serif',
-                    wordWrap: { width: this.QUEST_WIDTH - (this.PADDING * 2) }
-                }
+                'pixel-white', '', 10
             );
+            this.questDescription.setTint(0xCCCCCC); // Light gray color
+            this.questDescription.setMaxWidth(this.QUEST_WIDTH - (this.PADDING * 2));
             this.questContainer.add(this.questDescription);
         } catch (error) {
             console.warn('QuestUI: Error creating quest description text:', error);
-            // Fallback: create a simple text without advanced styling
-            this.questDescription = this.scene.add.text(
+            // Fallback: create a simple bitmap text
+            this.questDescription = this.scene.add.bitmapText(
                 -this.QUEST_WIDTH + this.PADDING, 45,
-                '', {
-                    fontSize: '10px',
-                    color: '#CCCCCC'
-                }
+                'pixel-white', '', 8
             );
+            this.questDescription.setTint(0xCCCCCC);
             this.questContainer.add(this.questDescription);
         }
 
@@ -236,27 +241,22 @@ export class QuestUI {
         this.progressBar = this.scene.add.graphics();
         this.questContainer.add(this.progressBar);
         
-        // Progress text - using regular Text with proper initialization checks
+        // Progress text - using BitmapText for crisp rendering
         try {
-            this.questProgress = this.scene.add.text(
+            this.questProgress = this.scene.add.bitmapText(
                 -this.QUEST_WIDTH + this.PADDING, 100, // Moved from 95 to 100 for better positioning
-                '', {
-                    fontSize: '10px',
-                    color: '#FFFFFF',
-                    fontFamily: 'Arial, sans-serif'
-                }
+                'pixel-white', '', 10
             );
+            this.questProgress.setTint(0xFFFFFF); // White color
             this.questContainer.add(this.questProgress);
         } catch (error) {
             console.warn('QuestUI: Error creating quest progress text:', error);
-            // Fallback: create a simple text without advanced styling
-            this.questProgress = this.scene.add.text(
+            // Fallback: create a simple bitmap text
+            this.questProgress = this.scene.add.bitmapText(
                 -this.QUEST_WIDTH + this.PADDING, 100, // Moved from 95 to 100 for better positioning
-                '', {
-                    fontSize: '10px',
-                    color: '#FFFFFF'
-                }
+                'pixel-white', '', 8
             );
+            this.questProgress.setTint(0xFFFFFF);
             this.questContainer.add(this.questProgress);
         }
     }
@@ -352,9 +352,9 @@ export class QuestUI {
             
             // Change color based on completion
             if (this.currentQuest.current >= this.currentQuest.amount) {
-                this.questProgress.setStyle({ color: '#4CAF50' }); // Green when complete
+                this.questProgress.setTint(0x4CAF50); // Green when complete
                 } else {
-                this.questProgress.setStyle({ color: '#FFFFFF' }); // White when in progress
+                this.questProgress.setTint(0xFFFFFF); // White when in progress
             }
         } catch (error) {
             console.warn('QuestUI: Error updating progress text:', error);

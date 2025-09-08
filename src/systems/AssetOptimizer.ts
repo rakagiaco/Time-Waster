@@ -5,13 +5,13 @@
  * ArrayBuffer allocation failures while preserving all features.
  */
 
-import { MemoryManager } from './MemoryManager';
+// import { MemoryManager } from './MemoryManager'; // unused
 
 export class AssetOptimizer {
     private static readonly MAX_TEXTURES = 100; // Increased limit
     private static readonly MAX_AUDIO_FILES = 50; // Allow all audio files
-    private static readonly MAX_SPRITESHEETS = 30; // Increased limit
-    private static memoryManager = MemoryManager.getInstance();
+    // private static readonly MAX_SPRITESHEETS = 30; // Increased limit - unused
+    // private static memoryManager = MemoryManager.getInstance(); // unused
     
     /**
      * Get optimized asset list for loading
@@ -31,6 +31,14 @@ export class AssetOptimizer {
             { key: 'player', type: 'spritesheet', url: 'spritesheets/player/newplayersprite/knight_1.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
             { key: 'enemy-1', type: 'spritesheet', url: 'spritesheets/enemy-1.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
             { key: 'enemy-2', type: 'spritesheet', url: 'spritesheets/enemy-2.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
+            
+        // Orc Shaman sprites - using separate spritesheets for each direction
+        { key: 'orc-shaman-idle', type: 'spritesheet', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Idle/Idle-Sheet.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
+        { key: 'orc-shaman-run-right', type: 'spritesheet', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Run/Run-Sheet Right.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
+        { key: 'orc-shaman-run-left', type: 'spritesheet', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Run/Run-Sheet Left.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
+        { key: 'orc-shaman-run-up', type: 'spritesheet', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Run/Run-Sheet Up.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
+        { key: 'orc-shaman-run-down', type: 'spritesheet', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Run/Run-Sheet Down.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
+        { key: 'orc-shaman-death', type: 'spritesheet', url: 'assetpacks/Pixel Crawler - Free Pack 2.0.4/Pixel Crawler - Free Pack/Entities/Mobs/Orc Crew/Orc - Shaman/Death/Death-Sheet.png', frameConfig: { frameWidth: 32, frameHeight: 32 } },
             
             // Essential UI images
             { key: 'menu-button', type: 'image', url: 'img/menu-button.png' },
@@ -68,7 +76,7 @@ export class AssetOptimizer {
             { key: 'deathscreen', type: 'image', url: 'Backgrounds/deathscreen.png' },
             
             // Essential quest icons
-            { key: 'quest-icon', type: 'image', url: 'spritesheets/quest-icon.png' },
+            { key: 'quest-icon', type: 'spritesheet', url: 'spritesheets/quest-icon.png', frameConfig: { frameWidth: 16, frameHeight: 16 } },
             { key: 'quest-complete-icon', type: 'image', url: 'spritesheets/quest-complete-icon.png' },
             
             // Essential UI elements
@@ -190,7 +198,7 @@ export class AssetOptimizer {
     /**
      * Check if we should load an asset based on memory limits
      */
-    public static shouldLoadAsset(assetType: string, currentCount: number): boolean {
+    public static shouldLoadAsset(_assetType: string, _currentCount: number): boolean {
         // Temporarily disable memory restrictions due to incorrect memory reporting
         // TODO: Fix memory reporting system
         return true;

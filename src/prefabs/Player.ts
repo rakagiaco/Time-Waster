@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { Entity } from './Entity';
 import { Inventory } from './Inventory';
-import { Item } from './Item';
+// Item import removed - proximity pickup now handled by World scene
 import { StateMachine, State } from '../lib/StateMachine';
 import { updatePlayerMovement } from '../lib/HelperFunc';
 import { Lantern } from '../systems/Lantern';
@@ -76,10 +76,7 @@ class PlayerIdleState extends State {
         //     player.animsFSM.transition('attacking-heavy');
         // }
 
-        // Check for proximity pickup input
-        if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
-            player.performProximityPickup();
-        }
+        // Proximity pickup now handled by World scene
 
         // Check for lantern toggle input (single press only)
         if (keyLantern && Phaser.Input.Keyboard.JustDown(keyLantern)) {
@@ -137,10 +134,7 @@ class PlayerWalkingState extends State {
         //     player.animsFSM.transition('attacking-heavy');
         // }
 
-        // Check for proximity pickup input
-        if (keyInteract && keyInteract.isDown && !player.pickupCooldown) {
-            player.performProximityPickup();
-        }
+        // Proximity pickup now handled by World scene
 
         // Check for lantern toggle input (single press only)
         if (keyLantern && Phaser.Input.Keyboard.JustDown(keyLantern)) {
@@ -702,96 +696,7 @@ export class Player extends Entity {
         this.questStatus = status;
     }
 
-    public performProximityPickup(): void {
-        const pickupRadius = 60; // Proximity radius for pickup
-        let itemsCollected = 0;
-        const collectedItems = new Map<string, number>(); // Track items by type and count
-
-        // Set pickup cooldown
-        this.pickupCooldown = true;
-        this.scene.time.delayedCall(1000, () => { // 1 second cooldown
-            this.pickupCooldown = false;
-        });
-
-        // Find all collectible items in the scene
-        this.scene.children.list.forEach(child => {
-            if (child instanceof Item) {
-                const item = child as Item;
-                const distance = Phaser.Math.Distance.Between(this.x, this.y, item.x, item.y);
-
-                if (distance <= pickupRadius) {
-                    const itemType = item.getItemType();
-                    
-                    // Check if it's a collectible item (fruit or mysterious herb)
-                    if (this.isFruitItem(itemType) || this.isMysteriousHerb(itemType)) {
-                        // Handle all items as regular items
-                        this.p1Inventory.add(itemType, 1);
-                        
-                        // Track collected items for consolidated feedback
-                        collectedItems.set(itemType, (collectedItems.get(itemType) || 0) + 1);
-
-                        // Play collection sound
-                        const soundEffect = item.getSoundEffect();
-                        if (soundEffect) {
-                            this.scene.sound.play(soundEffect.sound, { volume: soundEffect.volume });
-                        }
-
-                        // Emit item collected event for quest system
-                        this.scene.events.emit('itemCollected', itemType, 1);
-
-                        // Destroy the item
-                        item.destroy();
-                        itemsCollected++;
-                    }
-                }
-            }
-        });
-
-        // Find all weapons in the scene (LongSword instances)
-        this.scene.children.list.forEach(child => {
-            if (child.constructor.name === 'LongSword') {
-                const weapon = child as any; // LongSword instance
-                const distance = Phaser.Math.Distance.Between(this.x, this.y, weapon.x, weapon.y);
-
-                if (distance <= pickupRadius) {
-                    const itemType = weapon.getItemType();
-                    
-                    // Handle weapon pickup
-                    this.p1Inventory.add(itemType, 1);
-                    
-                    // Track collected items for consolidated feedback
-                    collectedItems.set(itemType, (collectedItems.get(itemType) || 0) + 1);
-
-                    // Play collection sound
-                    const soundEffect = weapon.getSoundEffect();
-                    if (soundEffect) {
-                        this.scene.sound.play(soundEffect.sound, { volume: soundEffect.volume });
-                    }
-
-                    // Emit item collected event for quest system
-                    this.scene.events.emit('itemCollected', itemType, 1);
-
-                    // Destroy the weapon
-                    weapon.destroy();
-                    itemsCollected++;
-                }
-            }
-        });
-
-        // Show consolidated pickup feedback
-        if (itemsCollected > 0) {
-            this.showConsolidatedPickupFeedback(collectedItems);
-        }
-
-        // Show general pickup feedback if items were collected
-        if (itemsCollected > 0) {
-            // Update inventory UI if it exists
-            const worldScene = this.scene as any;
-            if (worldScene.inventoryUI) {
-                worldScene.inventoryUI.updateInventoryDisplay();
-            }
-        }
-    }
+    // Proximity pickup now handled by World scene
 
     public toggleLantern(): void {
         if (this.lantern) {
@@ -799,50 +704,11 @@ export class Player extends Entity {
         }
     }
 
-    private isFruitItem(itemType: string): boolean {
-        const fruitTypes = ['apple', 'pinecone', 'ancient-fruit', 'cherry', 'fruit', 'tree-of-life-fruit'];
-        return fruitTypes.includes(itemType);
-    }
-
-    private isMysteriousHerb(itemType: string): boolean {
-        const herbTypes = ['mysterious herb', 'mysterious-herb', 'bush-1', 'dimensional herb', 'dimensional-herb'];
-        return herbTypes.includes(itemType);
-    }
+    // Fruit and herb detection methods removed - proximity pickup now handled by World scene
 
 
 
-    private showConsolidatedPickupFeedback(collectedItems: Map<string, number>): void {
-        // Create individual +1 messages for each item collected
-        let yOffset = 0;
-        
-        collectedItems.forEach((count, itemType) => {
-            // Create a separate +1 message for each individual item
-            for (let i = 0; i < count; i++) {
-                const pickupText = this.scene.add.bitmapText(
-                    this.x + Phaser.Math.Between(-10, 10),
-                    this.y - 50 - yOffset,
-                    'pixel-white',
-                    `+1 ${itemType}`,
-                    12
-                );
-                pickupText.setOrigin(0.5);
-
-                // Animate the text floating up and fading out
-                this.scene.tweens.add({
-                    targets: pickupText,
-                    y: pickupText.y - 30,
-                    alpha: 0,
-                    duration: 1500,
-                    ease: 'Power2',
-                    onComplete: () => {
-                        pickupText.destroy();
-                    }
-                });
-                
-                yOffset += 20; // Space out multiple messages
-            }
-        });
-    }
+    // Consolidated pickup feedback method removed - proximity pickup now handled by World scene
 
     public saveGame(): void {
         // Save quest status

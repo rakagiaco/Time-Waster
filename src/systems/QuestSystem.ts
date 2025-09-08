@@ -196,15 +196,20 @@ export class QuestSystem {
         this.activeQuests.delete(questId);
         
         // Emit quest completion event with proper QuestData structure and reward
-        this.scene.events.emit('questCompleted', {
-            id: questId.toString(), // Convert to string to match QuestUI interface
+        const questCompletionData = {
+            id: questId, // Keep as number for quest icon cleanup
+            questId: questId, // Add questId field for compatibility
+            questName: questData.name, // Add questName field for compatibility
             title: questData.name,
             description: questData.description,
             type: questData.questdata.type,
             amount: questData.questdata.amount,
             current: questData.questdata.amount, // Quest is complete, so current equals amount
             reward: reward // Include the reward information
-        });
+        };
+        
+        console.log('QuestSystem: Emitting quest completed event:', questCompletionData);
+        this.scene.events.emit('questCompleted', questCompletionData);
         
         // Don't automatically start the next quest - let the NPC handle it through dialogue
         
@@ -238,7 +243,7 @@ export class QuestSystem {
         const rewards: { [key: number]: any } = {
             1: { type: 'gold-coin', amount: 10 }, // Dimensional herbs quest
             2: { type: 'gold-coin', amount: 15 }, // Nepian scouts quest
-            3: { type: 'gold-coin', amount: 20 }, // Nepian blood quest
+            3: { type: 'gold-coin', amount: 10 }, // Nepian blood quest
             4: { type: 'gold-coin', amount: 50 }, // Electro Lord quest
             5: { type: 'gold-coin', amount: 100 }, // Mine gateway quest
             6: { type: 'gold-coin', amount: 150 }, // Valley cleansing quest
@@ -333,6 +338,20 @@ export class QuestSystem {
 
     public getQuestProgress(questId: number): QuestProgress | null {
         return this.activeQuests.get(questId) || null;
+    }
+
+    /**
+     * Check if there are any active quests
+     */
+    public hasActiveQuests(): boolean {
+        return this.activeQuests.size > 0;
+    }
+
+    /**
+     * Get the number of active quests
+     */
+    public getActiveQuestsCount(): number {
+        return this.activeQuests.size;
     }
 
     /**

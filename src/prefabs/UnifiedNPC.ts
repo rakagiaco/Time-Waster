@@ -671,10 +671,7 @@ export class UnifiedNPC extends Entity {
                 // Mark quest as completed in NPC
                 this.completedQuests.add(this.currentQuest.id);
                 
-                // Add reward to player inventory immediately
-                if (this.player) {
-                    this.player.p1Inventory.add('gold-coin', 10);
-                }
+                // Reward will be handled by the World scene's quest completion event handler
                 
                 // Close dialogue and return to game
                 if (this.scene && this.scene.events) {
@@ -1002,7 +999,7 @@ export class UnifiedNPC extends Entity {
     // Visual and Interaction Methods
     public showQuestIcon(): void {
         if (!this.questIcon) {
-            this.questIcon = this.scene.add.sprite(this.x, this.y - 40, 'quest-icon');
+            this.questIcon = this.scene.add.sprite(this.x, this.y - 40, 'quest-icon', 0);
             this.questIcon.setScale(2);
             this.questIcon.play('quest-icon-bounce');
         }

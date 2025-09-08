@@ -80,11 +80,7 @@ export class World extends Phaser.Scene {
         this.items = [];
         this.trees = [];
         
-        // Reset quest system state only for new game, not for save game load
-        if (this.questSystem && !data.loadSaveData) {
-            console.log('Resetting existing quest system for new game');
-            this.questSystem.reset();
-        }
+        // Quest system reset will be handled in create() method after quest system is initialized
         
         // Reset QuestUI if it exists
         if (this.questUI && !data.loadSaveData) {
@@ -146,6 +142,9 @@ export class World extends Phaser.Scene {
             this.musicManager = new MusicManager(this);
             this.musicManager.reset();
             
+            // Create quest icon animation first (needed for quest icons)
+            this.createQuestIconAnimation();
+
             // Start music manager with correct initial time state
             const initialIsNight = this.dayNightCycle.isCurrentlyNight();
             this.musicManager.startPlaylist(initialIsNight);
@@ -155,6 +154,9 @@ export class World extends Phaser.Scene {
             this.createNPCs();
             this.createItems();
             this.createTrees();
+
+            // Clean up any existing quest icons after entities are created
+            this.cleanupAllQuestIcons();
 
             // Entity collision is now handled in setupCollisionDetection()
 
@@ -283,6 +285,12 @@ export class World extends Phaser.Scene {
             // Setup Quest System and NPC
             this.questSystem = new QuestSystem(this, this.player);
             this.data.set('questSystem', this.questSystem); // Store quest system in scene data
+            
+            // Reset quest system for new game (not for save game load)
+            if (!data.loadSaveData) {
+                console.log('Resetting quest system for new game');
+                this.questSystem.reset();
+            }
             
             // Now that quest system is initialized, add quest icons to existing items
             // Use a small delay to ensure everything is properly set up
@@ -460,6 +468,12 @@ export class World extends Phaser.Scene {
             try {
                 if (enemy && enemy.active && enemy.body) {
                     enemy.update();
+                    
+                    // Update quest icon position to follow enemy
+                    const questIcon = enemy.getData('questIcon');
+                    if (questIcon && questIcon.active) {
+                        questIcon.setPosition(enemy.x, enemy.y - 30);
+                    }
                 }
             } catch (error) {
                 console.error('Error updating enemy:', error);
@@ -539,7 +553,7 @@ export class World extends Phaser.Scene {
             return;
         }
         
-        console.log(`Found ${collisionLayer.objects.length} collision objects`);
+        // console.log(`Found ${collisionLayer.objects.length} collision objects`);
         
         // Create a single static group for all collision objects
         const collisionGroup = this.physics.add.staticGroup();
@@ -560,7 +574,7 @@ export class World extends Phaser.Scene {
                 collisionBody.body.setCircle(radius);
                 collisionBody.setVisible(false); // Make it invisible
                 
-                console.log(`✓ Created circle collision ${index} at (${centerX}, ${centerY}) with radius ${radius}`);
+                // console.log(`✓ Created circle collision ${index} at (${centerX}, ${centerY}) with radius ${radius}`);
             } else if (obj.x !== undefined && obj.y !== undefined && obj.width !== undefined && obj.height !== undefined) {
                 // Handle rectangle collision objects
                 const centerX = obj.x + obj.width / 2;
@@ -570,7 +584,7 @@ export class World extends Phaser.Scene {
                 collisionBody.body.setSize(obj.width, obj.height);
                 collisionBody.setVisible(false); // Make it invisible
                 
-                console.log(`✓ Created rectangle collision ${index} at (${centerX}, ${centerY}) size ${obj.width}x${obj.height}`);
+                // console.log(`✓ Created rectangle collision ${index} at (${centerX}, ${centerY}) size ${obj.width}x${obj.height}`);
             } else {
                 console.warn(`⚠️ Skipping collision object ${index} - invalid geometry`);
                 console.warn(`  Object data:`, obj);
@@ -596,17 +610,17 @@ export class World extends Phaser.Scene {
             }
         });
         
-        console.log(`✓ Created collision group with ${collisionGroup.children.size} objects`);
+        // console.log(`✓ Created collision group with ${collisionGroup.children.size} objects`);
         
         // Log collision object statistics
-        const ellipseCount = collisionLayer.objects.filter(obj => obj.ellipse).length;
-        const rectangleCount = collisionLayer.objects.filter(obj => !obj.ellipse && obj.width && obj.height).length;
-        const skippedCount = collisionLayer.objects.length - ellipseCount - rectangleCount;
-        console.log(`  - Ellipse objects: ${ellipseCount}`);
-        console.log(`  - Rectangle objects: ${rectangleCount}`);
-        if (skippedCount > 0) {
-            console.log(`  - Skipped objects: ${skippedCount}`);
-        }
+        // const ellipseCount = collisionLayer.objects.filter(obj => obj.ellipse).length;
+        // const rectangleCount = collisionLayer.objects.filter(obj => !obj.ellipse && obj.width && obj.height).length;
+        // const skippedCount = collisionLayer.objects.length - ellipseCount - rectangleCount;
+        // console.log(`  - Ellipse objects: ${ellipseCount}`);
+        // console.log(`  - Rectangle objects: ${rectangleCount}`);
+        // if (skippedCount > 0) {
+        //     console.log(`  - Skipped objects: ${skippedCount}`);
+        // }
     }
 
 
@@ -892,7 +906,7 @@ export class World extends Phaser.Scene {
                 console.warn(`❌ Tileset failed to load: ${name}`);
             }
         });
-        console.log(`✓ Total tilesets loaded: ${allTilesets.length}/${tilesetNames.length}`);
+        // console.log(`✓ Total tilesets loaded: ${allTilesets.length}/${tilesetNames.length}`);
         console.log('=== TILESET LOADING ANALYSIS COMPLETE ===');
         
         // Create visible layers in the correct order (bottom to top)
@@ -1012,13 +1026,13 @@ export class World extends Phaser.Scene {
                 let enemy: Enemy;
                 if (element.name === 'boss_spawn') {
                     enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-1').setSize(12.5, 45).setOffset(9, 2.5).anims.play('boss-1-idle-anim') as Enemy;
-                    this.addQuestIconToEnemy(enemy, 'Electro Lord'); // Quest 4 requires Electro Lord
+                    // Quest icons will be added by quest system when quests start
                 } else if (element.name === 'enemy_spawn') {
-                    enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-1-anim').setScale(1.5).anims.play('enemy-idle-anim') as Enemy;
-                    this.addQuestIconToEnemy(enemy, 'Nepian Scout'); // Quest 2 requires Nepian Scouts
+                    enemy = new Enemy(this, element.x as number, element.y as number, 'orc-shaman-idle').setScale(1.5).anims.play('orc-shaman-idle-right') as Enemy;
+                    // Quest icons will be added by quest system when quests start
                 } else if (element.name === 'enemy_spawn_2') {
-                    enemy = new Enemy(this, element.x as number, element.y as number, 'enemy-2-anim').setScale(1.5).anims.play('enemy2-idle-anim') as Enemy;
-                    this.addQuestIconToEnemy(enemy, 'Nepian Observer'); // Quest 5/6 might require observers
+                    enemy = new Enemy(this, element.x as number, element.y as number, 'orc-shaman-idle').setScale(1.5).anims.play('orc-shaman-idle-right') as Enemy;
+                    // Quest icons will be added by quest system when quests start
                 }
                 
                 if (enemy!) {
@@ -1117,8 +1131,7 @@ export class World extends Phaser.Scene {
         
         this.items.push(herb);
         
-        // Add quest icon if quest 1 is active (dimensional herb quest)
-        this.addQuestIconToNewItem(herb, herbType);
+        // Quest icons will be added by quest system when quests start
         
         console.log(`✓ Herb created successfully. Total items: ${this.items.length}`);
     }
@@ -1164,14 +1177,12 @@ export class World extends Phaser.Scene {
                     console.log(`Adding quest icon for new ${itemType} - quest ${questId} is active`);
                     
                     // Add quest icon with sparkle animation
-                    const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon');
+                    const questIcon = this.add.sprite(item.x, item.y - 25, 'quest-icon', 0);
                     questIcon.setScale(1.0); // Larger, more visible quest icon
                     questIcon.setDepth(150); // Above the item
                     
-                    // Check if animation exists before playing
-                    if (questIcon.anims.exists('quest-icon-bounce')) {
-                        questIcon.anims.play('quest-icon-bounce', true); // Use bounce animation for sparkle effect
-                    }
+                    // Play quest icon animation
+                    questIcon.anims.play('quest-icon-bounce', true);
                     
                     // Add sparkle animation to the herb itself
                     this.addSparkleAnimationToItem(item);
@@ -1189,6 +1200,33 @@ export class World extends Phaser.Scene {
     }
 
     /**
+     * Create quest icon animation for this scene
+     */
+    private createQuestIconAnimation(): void {
+        try {
+            if (this.textures.exists('quest-icon')) {
+                // Check if animation already exists to prevent duplicate creation
+                if (!this.anims.exists('quest-icon-bounce')) {
+                    this.anims.create({
+                        key: 'quest-icon-bounce',
+                        frames: this.anims.generateFrameNumbers('quest-icon', { start: 0, end: 3 }),
+                        frameRate: 4,
+                        repeat: -1,
+                        yoyo: false
+                    });
+                    console.log('✓ Quest icon animation created in World scene');
+                } else {
+                    console.log('✓ Quest icon animation already exists in World scene');
+                }
+            } else {
+                console.warn('Quest-icon texture not found, cannot create animation');
+            }
+        } catch (error) {
+            console.warn('Error creating quest icon animation:', error);
+        }
+    }
+
+    /**
      * Add quest icons to existing items after quest system is initialized
      */
     private addQuestIconsToExistingItems(): void {
@@ -1198,8 +1236,13 @@ export class World extends Phaser.Scene {
                 return;
             }
 
-            // Clean up any existing quest icons to start fresh
-            this.cleanupAllQuestIcons();
+            // Only add quest icons if there are active quests
+            if (!this.questSystem.hasActiveQuests()) {
+                console.log('No active quests, skipping quest icon addition');
+                return;
+            }
+
+            console.log(`Adding quest icons for ${this.questSystem.getActiveQuestsCount()} active quests`);
             
             // Add quest icons to existing items if relevant quests are active
             this.items.forEach((item) => {
@@ -1275,6 +1318,17 @@ export class World extends Phaser.Scene {
             }
         });
         
+        // Clean up quest icons from all NPCs
+        this.npcs.forEach(npc => {
+            if (npc && npc.active) {
+                const questIcon = npc.getData('questIcon');
+                if (questIcon) {
+                    questIcon.destroy();
+                    npc.setData('questIcon', null);
+                }
+            }
+        });
+        
         console.log('✓ Cleaned up all existing quest icons');
     }
 
@@ -1342,8 +1396,14 @@ export class World extends Phaser.Scene {
                 (questRequirement.includes('scout') && enemyTypeLower.includes('scout')) ||
                 (questRequirement.includes('electro') && enemyTypeLower.includes('electro'))) {
                 
+                // Check if quest icon already exists
+                if (enemy.getData('questIcon')) {
+                    console.log(`Quest icon already exists for ${enemyType}, skipping quest ${questId}`);
+                    break;
+                }
+                
                 // Add quest icon above enemy
-                const questIcon = this.add.sprite(enemy.x, enemy.y - 30, 'quest-icon');
+                const questIcon = this.add.sprite(enemy.x, enemy.y - 30, 'quest-icon', 0);
                 questIcon.setScale(0.7);
                 questIcon.setDepth(150); // Above the enemy
                 questIcon.anims.play('quest-icon-bounce', true);
@@ -1451,11 +1511,21 @@ export class World extends Phaser.Scene {
         // Remove quest icons from enemies that match the completed quest
         this.enemies.forEach(enemy => {
             if (enemy && enemy.active) {
-                const questIcon = enemy.getData('questIcon');
-                if (questIcon) {
-                    questIcon.destroy();
-                    enemy.setData('questIcon', null);
-                    console.log(`Removed quest icon from enemy - quest ${completedQuestId} completed`);
+                const enemyType = enemy.getData('enemyType') || 'unknown';
+                const enemyTypeLower = enemyType.toLowerCase();
+                
+                // Check if this enemy matches the completed quest requirement
+                if (questItemType === enemyTypeLower || 
+                    (questItemType.includes('nepian') && enemyTypeLower.includes('nepian')) ||
+                    (questItemType.includes('scout') && enemyTypeLower.includes('scout')) ||
+                    (questItemType.includes('electro') && enemyTypeLower.includes('electro'))) {
+                    
+                    const questIcon = enemy.getData('questIcon');
+                    if (questIcon) {
+                        questIcon.destroy();
+                        enemy.setData('questIcon', null);
+                        console.log(`Removed quest icon from ${enemyType} - quest ${completedQuestId} completed`);
+                    }
                 }
             }
         });
@@ -1717,8 +1787,7 @@ export class World extends Phaser.Scene {
             
             this.items.push(herb);
             
-            // Add quest icon if quest 1 is active (dimensional herb quest)
-            this.addQuestIconToNewItem(herb, 'dimensional herb');
+            // Quest icons will be added by quest system when quests start
             
             // Herb pickup now handled by proximity-based mouse pickup system
             
@@ -1883,27 +1952,30 @@ export class World extends Phaser.Scene {
         this.debugManager.clearDebugText();
         this.debugManager.clearDebugGraphics();
 
-        // Draw collision boxes for all entities
-        if (this.player) {
-            this.debugManager.drawCollisionBox(this.player, 0x00ff00); // Green for player
+        // Draw collision boxes for all entities (only if enabled)
+        if (this.debugManager && this.debugManager.getCollisionBoxVisibility()) {
+            if (this.player) {
+                this.debugManager.drawCollisionBox(this.player, 0x00ff00); // Green for player
+            }
+
+            this.enemies.forEach(enemy => {
+                this.debugManager.drawCollisionBox(enemy, 0xff0000); // Red for enemies
+            });
+
+            this.npcs.forEach(npc => {
+                this.debugManager.drawCollisionBox(npc, 0x0000ff); // Blue for NPCs
+            });
+
+            this.trees.forEach(tree => {
+                this.debugManager.drawCollisionBox(tree, 0x8B4513); // Brown for trees
+            });
         }
 
-        this.enemies.forEach(enemy => {
-            this.debugManager.drawCollisionBox(enemy, 0xff0000); // Red for enemies
-        });
-
-        this.npcs.forEach(npc => {
-            this.debugManager.drawCollisionBox(npc, 0x0000ff); // Blue for NPCs
-        });
-
-        this.trees.forEach(tree => {
-            this.debugManager.drawCollisionBox(tree, 0x8B4513); // Brown for trees
-        });
-
-        // Draw collision objects from collision layer
-        let collisionObjectCount = 0;
-        
-        this.children.list.forEach(child => {
+        // Draw collision objects from collision layer (only if enabled)
+        if (this.debugManager && this.debugManager.getCollisionBoxVisibility()) {
+            let collisionObjectCount = 0;
+            
+            this.children.list.forEach(child => {
             if (child.getData('collisionObject') === true) {
                 const isCircle = child.getData('isCircle');
                 const radius = child.getData('radius');
@@ -1940,9 +2012,10 @@ export class World extends Phaser.Scene {
             }
         });
 
-        // Add debug info for collision objects
-        if (collisionObjectCount > 0) {
-            this.debugManager.addInfoText(10, 200, `Collision Objects: ${collisionObjectCount}`, 0xffff00);
+            // Add debug info for collision objects
+            if (collisionObjectCount > 0) {
+                this.debugManager.addInfoText(10, 200, `Collision Objects: ${collisionObjectCount}`, 0xffff00);
+            }
         }
 
         // Add info text for entities
@@ -2547,6 +2620,13 @@ export class World extends Phaser.Scene {
             }
 
             // QuestUI cleanup handled by Phaser automatically
+            
+            // Clean up quest icons
+            try {
+                this.cleanupAllQuestIcons();
+            } catch (error) {
+                console.error('Error cleaning up quest icons:', error);
+            }
 
             if (this.characterGearUI) {
                 try {

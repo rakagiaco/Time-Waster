@@ -48,11 +48,12 @@ export class Loader extends Phaser.Scene {
             if (AssetOptimizer.shouldLoadAsset(asset.type, 0)) {
                 switch (asset.type) {
                     case 'image':
-                        console.log(`Loading image: ${asset.key} from /${asset.url}`);
+                        // console.log(`Loading image: ${asset.key} from /${asset.url}`);
                         this.load.image(asset.key, `/${asset.url}`);
                         break;
                         
                     case 'spritesheet':
+                        console.log(`Loading spritesheet: ${asset.key} from /${asset.url} with config:`, asset.frameConfig);
                         this.load.spritesheet(asset.key, `/${asset.url}`, asset.frameConfig);
                         break;
                         
@@ -62,7 +63,7 @@ export class Loader extends Phaser.Scene {
                         
                     case 'audio':
                         // Load audio with debugging
-                        console.log(`Loading audio: ${asset.key} from ${asset.url}`);
+                        // console.log(`Loading audio: ${asset.key} from ${asset.url}`);
                         this.load.audio(asset.key, `/${asset.url}`);
                         break;
                         
@@ -89,14 +90,21 @@ export class Loader extends Phaser.Scene {
      * created here to ensure they're available when needed.
      */
     create(): void {
-        // Add audio loading error handling
+        // Add loading success handlers
         this.load.on('filecomplete-audio', (key: string) => {
             console.log(`✓ Audio loaded successfully: ${key}`);
+        });
+        
+        this.load.on('filecomplete-spritesheet', (key: string) => {
+            console.log(`✓ Spritesheet loaded successfully: ${key}`);
         });
         
         this.load.on('loaderror', (file: any) => {
             if (file.type === 'audio') {
                 console.error(`❌ Audio loading failed: ${file.key} - ${file.url}`);
+                console.error(`Error details:`, file.error);
+            } else if (file.type === 'spritesheet') {
+                console.error(`❌ Spritesheet loading failed: ${file.key} - ${file.url}`);
                 console.error(`Error details:`, file.error);
             }
         });
@@ -107,6 +115,13 @@ export class Loader extends Phaser.Scene {
         console.log('=== LOADER SCENE CREATE ===');
         console.log('All assets loaded, starting menu scene');
         console.log('Available textures:', Object.keys(this.textures.list));
+        
+        // Debug: Check if orc-shaman textures exist
+        console.log('Orc Shaman texture check:');
+        console.log('- orc-shaman-idle exists:', this.textures.exists('orc-shaman-idle'));
+        console.log('- orc-shaman-run exists:', this.textures.exists('orc-shaman-run'));
+        console.log('- orc-shaman-death exists:', this.textures.exists('orc-shaman-death'));
+        
         console.log('=== END LOADER SCENE CREATE ===');
         
         // Start the menu scene
@@ -199,30 +214,107 @@ export class Loader extends Phaser.Scene {
                 });
             }
             
-            // Quest icon bounce animation
-            if (this.textures.exists('quest-icon')) {
-                // Check if quest-icon is a spritesheet or single image
-                const questIconTexture = this.textures.get('quest-icon');
-                if (questIconTexture && questIconTexture.frames && Array.isArray(questIconTexture.frames) && questIconTexture.frames.length > 0) {
-                    // It's a spritesheet, use frame numbers
-                    this.anims.create({
-                        key: 'quest-icon-bounce',
-                        frames: this.anims.generateFrameNumbers('quest-icon', { start: 0, end: 0 }),
-                        frameRate: 2,
-                        repeat: -1,
-                        yoyo: true
-                    });
-                } else {
-                    // It's a single image, create animation with the texture key
-                    this.anims.create({
-                        key: 'quest-icon-bounce',
-                        frames: [{ key: 'quest-icon', frame: 0 }],
-                        frameRate: 2,
-                        repeat: -1,
-                        yoyo: true
-                    });
-                }
+            // Orc Shaman animations - using 32x32 frame size
+            if (this.textures.exists('orc-shaman-idle')) {
+                // Try different frame arrangement - maybe it's organized differently
+                this.anims.create({
+                    key: 'orc-shaman-idle-right',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-idle', { start: 0, end: 3 }),
+                    frameRate: 4,
+                    repeat: -1
+                });
+                
+                this.anims.create({
+                    key: 'orc-shaman-idle-left',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-idle', { start: 4, end: 7 }),
+                    frameRate: 4,
+                    repeat: -1
+                });
+                
+                this.anims.create({
+                    key: 'orc-shaman-idle-down',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-idle', { start: 8, end: 11 }),
+                    frameRate: 4,
+                    repeat: -1
+                });
+                
+                this.anims.create({
+                    key: 'orc-shaman-idle-up',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-idle', { start: 12, end: 15 }),
+                    frameRate: 4,
+                    repeat: -1
+                });
             }
+            
+            // Orc Shaman run animations - using separate spritesheets for each direction
+            console.log('Creating Orc Shaman run animations from separate spritesheets...');
+            
+            if (this.textures.exists('orc-shaman-run-right')) {
+                console.log('Creating orc-shaman-run-right animation');
+                this.anims.create({
+                    key: 'orc-shaman-run-right',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-run-right', { start: 0, end: 5 }),
+                    frameRate: 8, // 8 fps as specified by user
+                    repeat: -1
+                });
+            } else {
+                console.log('orc-shaman-run-right texture not found');
+            }
+            
+            if (this.textures.exists('orc-shaman-run-left')) {
+                console.log('Creating orc-shaman-run-left animation');
+                this.anims.create({
+                    key: 'orc-shaman-run-left',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-run-left', { start: 0, end: 5 }),
+                    frameRate: 8, // 8 fps as specified by user
+                    repeat: -1
+                });
+            } else {
+                console.log('orc-shaman-run-left texture not found');
+            }
+            
+            if (this.textures.exists('orc-shaman-run-down')) {
+                console.log('Creating orc-shaman-run-down animation');
+                this.anims.create({
+                    key: 'orc-shaman-run-down',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-run-down', { start: 0, end: 1 }),
+                    frameRate: 4, // 4 fps as specified by user
+                    repeat: -1
+                });
+            } else {
+                console.log('orc-shaman-run-down texture not found');
+            }
+            
+            if (this.textures.exists('orc-shaman-run-up')) {
+                console.log('Creating orc-shaman-run-up animation');
+                this.anims.create({
+                    key: 'orc-shaman-run-up',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-run-up', { start: 0, end: 1 }),
+                    frameRate: 4, // 4 fps as specified by user
+                    repeat: -1
+                });
+            } else {
+                console.log('orc-shaman-run-up texture not found');
+            }
+            
+            if (this.textures.exists('orc-shaman-death')) {
+                // Death animations - 14 frames total: 7 frames for death right, 7 frames for death left
+                this.anims.create({
+                    key: 'orc-shaman-death-right',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-death', { start: 0, end: 6 }),
+                    frameRate: 8,
+                    repeat: 0
+                });
+                
+                this.anims.create({
+                    key: 'orc-shaman-death-left',
+                    frames: this.anims.generateFrameNumbers('orc-shaman-death', { start: 7, end: 13 }),
+                    frameRate: 8,
+                    repeat: 0
+                });
+            }
+            
+            // Quest icon animation will be created in World scene where it's needed
             
             console.log('✓ Essential animations created successfully');
         } catch (error) {

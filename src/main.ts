@@ -86,19 +86,8 @@ const config: Phaser.Types.Core.GameConfig = {
         noAudio: false               // Enable audio but with limits
     },
     
-    // WebGL context attributes (optimized for memory efficiency)
-    webgl: {
-        contextCreationConfig: {
-            alpha: false,               // Disable alpha to save memory
-            depth: false,               // Disable depth buffer to save memory
-            antialias: false,           // Disable antialiasing
-            premultipliedAlpha: false,  // Disable premultiplied alpha
-            stencil: false,             // Disable stencil buffer
-            preserveDrawingBuffer: false, // Don't preserve drawing buffer
-            failIfMajorPerformanceCaveat: false,
-            powerPreference: "low-power" // Use low power to reduce memory usage
-        }
-    },
+    // WebGL context attributes are handled automatically by Phaser
+    // Custom webgl configuration removed to avoid TypeScript errors
     
     // Memory management callbacks
     callbacks: {

@@ -7,15 +7,15 @@ import { Item } from './Item';
 
 // Enemy States
 class EnemyPatrolState extends State {
-    enter(_scene: Phaser.Scene, enemy: Enemy): void {
+    enter(scene: Phaser.Scene, enemy: Enemy): void {
         enemy.setVelocity(0, 0);
         enemy.patrolTimer = 0;
         enemy.patrolDirection = Math.random() > 0.5 ? 1 : -1; // Random initial direction
 
-        // Check if animation exists before playing
-        const walkAnim = enemy.getWalkAnimationName();
-        if (enemy.anims.exists(walkAnim)) {
-            enemy.anims.play(walkAnim, true);
+        // Start with idle animation
+        const idleAnim = enemy.getIdleAnimationName('right');
+        if (scene.anims.exists(idleAnim)) {
+            enemy.anims.play(idleAnim, true);
         }
     }
 
@@ -32,6 +32,26 @@ class EnemyPatrolState extends State {
 
         // Enhanced patrol movement with more dynamic behavior
         enemy.patrol();
+        
+        // Update animation based on movement direction
+        const direction = enemy.getDirectionFromVelocity();
+        const isMoving = enemy.body && (Math.abs(enemy.body.velocity.x) > 1 || Math.abs(enemy.body.velocity.y) > 1);
+        
+        if (isMoving) {
+            // Use run animation when moving
+            const runAnim = enemy.getWalkAnimationName(direction);
+            console.log(`Enemy moving - direction: ${direction}, runAnim: ${runAnim}, exists: ${scene.anims.exists(runAnim)}`);
+            if (scene.anims.exists(runAnim)) {
+                enemy.anims.play(runAnim, true);
+            }
+        } else {
+            // Use idle animation when not moving
+            const idleAnim = enemy.getIdleAnimationName(direction);
+            console.log(`Enemy idle - direction: ${direction}, idleAnim: ${idleAnim}, exists: ${scene.anims.exists(idleAnim)}`);
+            if (scene.anims.exists(idleAnim)) {
+                enemy.anims.play(idleAnim, true);
+            }
+        }
     }
 }
 
@@ -41,7 +61,8 @@ class EnemyAlertState extends State {
         enemy.alertTimer = 0;
 
         // Play alert animation or sound
-        const idleAnim = enemy.getIdleAnimationName();
+        const direction = enemy.getDirectionFromVelocity();
+        const idleAnim = enemy.getIdleAnimationName(direction);
         enemy.safePlayAnimation(idleAnim);
 
         // Show alert indicator (could be a visual effect)
@@ -75,9 +96,10 @@ class EnemyPursuingState extends State {
         enemy.pursuitTimer = 0;
         enemy.lastPlayerPosition = { x: 0, y: 0 };
 
-        // Check if animation exists before playing
-        const walkAnim = enemy.getWalkAnimationName();
-        enemy.safePlayAnimation(walkAnim);
+        // Start with run animation since we're pursuing
+        const direction = enemy.getDirectionFromVelocity();
+        const runAnim = enemy.getWalkAnimationName(direction);
+        enemy.safePlayAnimation(runAnim);
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -102,6 +124,24 @@ class EnemyPursuingState extends State {
         // Enhanced pursuit with pathfinding-like behavior
         enemy.pursuePlayer();
 
+        // Update animation based on movement direction
+        const direction = enemy.getDirectionFromVelocity();
+        const isMoving = enemy.body && (Math.abs(enemy.body.velocity.x) > 1 || Math.abs(enemy.body.velocity.y) > 1);
+        
+        if (isMoving) {
+            // Use run animation when pursuing
+            const runAnim = enemy.getWalkAnimationName(direction);
+            if (scene.anims.exists(runAnim)) {
+                enemy.anims.play(runAnim, true);
+            }
+        } else {
+            // Use idle animation when not moving
+            const idleAnim = enemy.getIdleAnimationName(direction);
+            if (scene.anims.exists(idleAnim)) {
+                enemy.anims.play(idleAnim, true);
+            }
+        }
+
         // If pursuing for too long without reaching player, try different approach
         if (enemy.pursuitTimer > 5000) { // 5 seconds
             enemy.safeTransitionToState('flanking');
@@ -117,7 +157,8 @@ class EnemySearchingState extends State {
         enemy.lastKnownPlayerPosition = enemy.lastPlayerPosition;
 
         // Play search animation
-        const idleAnim = enemy.getIdleAnimationName();
+        const direction = enemy.getDirectionFromVelocity();
+        const idleAnim = enemy.getIdleAnimationName(direction);
         enemy.safePlayAnimation(idleAnim);
     }
 
@@ -165,9 +206,10 @@ class EnemyFlankingState extends State {
         enemy.flankTimer = 0;
         enemy.flankDirection = Math.random() > 0.5 ? 1 : -1;
 
-        // Play different animation for flanking
-        const walkAnim = enemy.getWalkAnimationName();
-        enemy.safePlayAnimation(walkAnim);
+        // Play run animation for flanking
+        const direction = enemy.getDirectionFromVelocity();
+        const runAnim = enemy.getWalkAnimationName(direction);
+        enemy.safePlayAnimation(runAnim);
     }
 
     execute(scene: Phaser.Scene, enemy: Enemy): void {
@@ -191,6 +233,24 @@ class EnemyFlankingState extends State {
 
         // Flanking behavior - try to approach from the side
         enemy.flankPlayer();
+
+        // Update animation based on movement direction
+        const direction = enemy.getDirectionFromVelocity();
+        const isMoving = enemy.body && (Math.abs(enemy.body.velocity.x) > 1 || Math.abs(enemy.body.velocity.y) > 1);
+        
+        if (isMoving) {
+            // Use run animation when flanking
+            const runAnim = enemy.getWalkAnimationName(direction);
+            if (scene.anims.exists(runAnim)) {
+                enemy.anims.play(runAnim, true);
+            }
+        } else {
+            // Use idle animation when not moving
+            const idleAnim = enemy.getIdleAnimationName(direction);
+            if (scene.anims.exists(idleAnim)) {
+                enemy.anims.play(idleAnim, true);
+            }
+        }
 
         // Return to normal pursuit after flanking attempt
         if (enemy.flankTimer > 2000) { // 2 seconds
@@ -239,7 +299,8 @@ class EnemyAttackingState extends State {
 class EnemyDeadState extends State {
     enter(scene: Phaser.Scene, enemy: Enemy): void {
         // Check if animation exists before playing
-        const deathAnim = enemy.getDeathAnimationName();
+        const direction = enemy.getDirectionFromVelocity();
+        const deathAnim = enemy.getDeathAnimationName(direction);
         enemy.safePlayAnimation(deathAnim);
 
         enemy.setVelocity(0, 0);
@@ -332,8 +393,9 @@ export class Enemy extends Entity {
     private patrolPattern: 'horizontal' | 'circular' | 'random' | 'stationary' = 'horizontal';
     private patrolCenter: { x: number; y: number } = { x: 0, y: 0 };
     private patrolRadius: number = 50;
+    private lastDirection: string = 'right';
 
-    constructor(scene: Phaser.Scene, x: number, y: number, texture: string) {
+    constructor(scene: Phaser.Scene, x: number, y: number, texture: string = 'orc-shaman-idle') {
         super(scene, x, y, texture);
 
         // Set enemy-specific properties
@@ -1167,42 +1229,125 @@ export class Enemy extends Entity {
     }
 
     /**
-     * Get the appropriate walk animation name based on enemy type
+     * Get the appropriate walk animation name based on enemy type and direction
      */
-    public getWalkAnimationName(): string {
+    public getWalkAnimationName(direction?: string): string {
         if (this.isBoss) {
             return 'boss-1-walk';
         } else if (this.entity_type === 'Nepian Observer') {
             return 'enemy-2-walk';
         } else {
-            return 'enemy-1-walk';
+            // Use Orc Shaman run animations (replacing walk)
+            return this.getOrcShamanRunAnimation(direction);
         }
     }
 
     /**
-     * Get the appropriate idle animation name based on enemy type
+     * Get the appropriate idle animation name based on enemy type and direction
      */
-    public getIdleAnimationName(): string {
+    public getIdleAnimationName(direction?: string): string {
         if (this.isBoss) {
             return 'boss-1-idle';
         } else if (this.entity_type === 'Nepian Observer') {
             return 'enemy-2-idle';
         } else {
-            return 'enemy-1-idle';
+            // Use Orc Shaman idle animations
+            return this.getOrcShamanIdleAnimation(direction);
         }
     }
 
     /**
-     * Get the appropriate death animation name based on enemy type
+     * Get the appropriate death animation name based on enemy type and direction
      */
-    public getDeathAnimationName(): string {
+    public getDeathAnimationName(direction?: string): string {
         if (this.isBoss) {
             return 'boss-1-death';
         } else if (this.entity_type === 'Nepian Observer') {
             return 'enemy-2-death';
         } else {
-            return 'enemy-1-death';
+            // Use Orc Shaman death animations
+            return this.getOrcShamanDeathAnimation(direction);
         }
+    }
+
+    /**
+     * Get Orc Shaman idle animation based on direction
+     */
+    private getOrcShamanIdleAnimation(direction?: string): string {
+        switch (direction) {
+            case 'left':
+                return 'orc-shaman-idle-left';
+            case 'right':
+                return 'orc-shaman-idle-right';
+            case 'up':
+                return 'orc-shaman-idle-up';
+            case 'down':
+                return 'orc-shaman-idle-down';
+            default:
+                return 'orc-shaman-idle-right';
+        }
+    }
+
+    /**
+     * Get Orc Shaman run animation based on direction
+     */
+    private getOrcShamanRunAnimation(direction?: string): string {
+        switch (direction) {
+            case 'left':
+                return 'orc-shaman-run-left';
+            case 'right':
+                return 'orc-shaman-run-right';
+            case 'up':
+                return 'orc-shaman-run-up';
+            case 'down':
+                return 'orc-shaman-run-down';
+            default:
+                return 'orc-shaman-run-right';
+        }
+    }
+
+    /**
+     * Get Orc Shaman death animation based on direction
+     */
+    private getOrcShamanDeathAnimation(direction?: string): string {
+        switch (direction) {
+            case 'left':
+                return 'orc-shaman-death-left';
+            case 'right':
+                return 'orc-shaman-death-right';
+            default:
+                return 'orc-shaman-death-right';
+        }
+    }
+
+    /**
+     * Determine direction based on velocity
+     */
+    public getDirectionFromVelocity(): string {
+        if (!this.body) return this.lastDirection;
+        
+        const velocity = this.body.velocity;
+        const absX = Math.abs(velocity.x);
+        const absY = Math.abs(velocity.y);
+        
+        // If not moving, return last direction
+        if (absX < 1 && absY < 1) {
+            return this.lastDirection;
+        }
+        
+        // Determine primary direction
+        if (absX > absY) {
+            // Horizontal movement
+            this.lastDirection = velocity.x > 0 ? 'right' : 'left';
+        } else {
+            // Vertical movement
+            this.lastDirection = velocity.y > 0 ? 'down' : 'up';
+        }
+        
+        // Debug logging
+        console.log(`Enemy direction: ${this.lastDirection}, velocity: (${velocity.x.toFixed(2)}, ${velocity.y.toFixed(2)})`);
+        
+        return this.lastDirection;
     }
 
     /**
